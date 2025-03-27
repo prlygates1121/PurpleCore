@@ -1,0 +1,35 @@
+# Vivado generated files
+.mycpu.cache/
+.mycpu.runs/
+.mycpu.hw/
+.mycpu.ip_user_files/
+.mycpu.sim/
+.mycpu.gen/
+*.jou
+*.log
+*.bit
+*.ltx
+*.aux
+*.toc
+*.bcf
+*.dcp
+*.ngc
+*.ngo
+*.pcf
+*.rcf
+*.rpx
+*.srp
+*.tcl.bak
+*.ucf
+*.xise
+*.xml
+*.xml.bak
+*.xml_bak
+*.xpr.user*
+*.xsa
+
+# Other common ignore patterns
+*.backup*
+*.~*
+*.swp
+*.DS_Store
