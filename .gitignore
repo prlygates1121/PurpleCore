@@ -1,10 +1,10 @@
 # Vivado generated files
-.mycpu.cache/
-.mycpu.runs/
-.mycpu.hw/
-.mycpu.ip_user_files/
-.mycpu.sim/
-.mycpu.gen/
+mycpu.cache/
+mycpu.runs/
+mycpu.hw/
+mycpu.ip_user_files/
+mycpu.sim/
+mycpu.gen/
 *.jou
 *.log
 *.bit
@@ -27,6 +27,7 @@
 *.xml_bak
 *.xpr.user*
 *.xsa
+*.wcfg
 
 # Other common ignore patterns
 *.backup*
