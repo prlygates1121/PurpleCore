@@ -44,150 +44,325 @@ module core(
     wire core_mode      = uart_inst_loaded ? RUNNING : LOADING;
     wire core_reset     = reset | core_mode == LOADING;
 
-    // Instruction Decode
-    wire [6:0] opcode;
-    wire [6:0] funct7;
-    wire [2:0] funct3;
-    wire [4:0] rs1, rs2, rd;
-    wire [24:0] imm_raw;
-
-    // Immediate Generator
-    wire [31:0] imm;
-
-    // Control Logic
-    wire pc_sel;
-    wire [3:0] alu_op_sel;
-    wire alu_src1_sel, alu_src2_sel;
-    wire reg_w_en;
-    wire [1:0] reg_w_data_sel;
-    wire [1:0] D_store_width;
-    wire [1:0] D_load_width;
-    wire D_load_un;
-    wire [2:0] imm_sel;
-    wire br_un;
-    wire store = D_store_width != 2'h3;
-    wire load = D_load_width != 2'h3;
-
-    // Hazard Detection
-    reg [31:0] D_addr_prev;
-    reg store_prev;
-    reg load_prev;
-    always @(posedge clk) begin
-        if (reset) begin
-            store_prev <= 1'b0;
-            load_prev <= 1'b0;
-        end else begin
-            store_prev <= store;
-            load_prev <= load;
-        end
-    end
-    
-
-    // Program Counter
-    reg pc_sel_reg;
-    reg [31:0] addra_prev_1, addra_prev_2;
-    always @(posedge clk) begin
-        if (core_reset) begin
-            pc_sel_reg <= 1'b0;
-            addra_prev_1 <= 32'b0;
-            addra_prev_2 <= 32'b0;
-        end else begin
-            pc_sel_reg <= pc_sel;
-            addra_prev_1 <= addra;
-            addra_prev_2 <= addra_prev_1;
-        end
-    end
-
-    wire [31:0] pc, pc_prev_1, pc_prev_2;
-    wire [31:0] mem_inst;
-    wire [31:0] inst = (core_mode == LOADING | pc_sel_reg | store_prev | load_prev) ? `NOP : mem_inst;
-
-    // Branch Comparator
-    wire br_eq, br_lt;
-
-    // ALU
-    wire [31:0] alu_src1 = alu_src1_sel ? rs1_data : addra_prev_2;
-    wire [31:0] alu_src2 = alu_src2_sel ? rs2_data : imm;
-    wire [31:0] alu_result;
-
-    // Register File
-    wire [31:0] reg_w_data = reg_w_data_sel == 2'h0 ? alu_result :
-                             reg_w_data_sel == 2'h1 ? D_load_data :
-                             reg_w_data_sel == 2'h2 ? (pc_prev_2 + 4) : 32'h0;
-    wire [31:0] rs1_data, rs2_data;
-
     // Memory
     wire [3:0] wea = {4{core_mode == LOADING & uart_write}};
-    wire [31:0] addra = core_mode == LOADING ? uart_addr :
-                                      pc_sel ? alu_result :
-                              (store | load) ? pc_prev_1 :
-                                         pc;
+    wire [31:0] I_addr = core_mode == LOADING ? uart_addr : IF_I_addr;
+    wire [31:0] I_store_data = uart_inst;
+    wire [31:0] D_addr, D_store_data, D_load_data;
+    wire [1:0] D_store_width, D_load_width;
+    wire D_load_un;
 
-    wire [31:0] D_store_data = rs2_data;
-    wire [31:0] D_addr = alu_result; // alu_result
-    wire [31:0] D_load_data; 
-
+    // IO
+    assign leds_r = {leds_r_mem, core_mode};
     wire [7:1] leds_r_mem;
 
-    // io
-    assign leds_r = {leds_r_mem, core_mode};
+    // WB signals
+    wire WB_out_reg_w_en;
+    wire [31:0] WB_out_reg_w_data;
+    wire [4:0] WB_out_rd;
 
-    control_logic ctrl_logic_0(
-        .inst(inst),
-        .br_eq(br_eq),
-        .br_lt(br_lt),
+    wire [31:0] IF_I_addr, I_load_data;
+    wire [31:0] IF_out_pc_prev_2, IF_out_pc_prev_2_plus_4, IF_out_inst, IF_out_I_addr_prev_2;
+    wire [31:0] ID_in_pc_prev_2, ID_in_pc_prev_2_plus_4, ID_in_inst, ID_in_I_addr_prev_2;
+    wire [1:0] ID_out_store_width, ID_out_load_width;
 
-        .pc_sel(pc_sel),
-        .alu_op_sel(alu_op_sel),
-        .alu_src1_sel(alu_src1_sel),
-        .alu_src2_sel(alu_src2_sel),
-        .reg_w_en(reg_w_en),
-        .reg_w_data_sel(reg_w_data_sel),
-        .store_width(D_store_width),
-        .load_width(D_load_width),
-        .load_un(D_load_un),
-        .imm_sel(imm_sel),
-        .br_un(br_un)
+    IF if_0 (
+        .clk                    (clk),
+        .reset                  (core_reset),
+        .EX_pc_sel              (EX_out_pc_sel),
+        .ID_store_width         (ID_out_store_width),
+        .ID_load_width          (ID_out_load_width),
+        .EX_alu_result          (EX_out_alu_result),
+        // interface with memory
+        .I_addr                 (IF_I_addr),            // address to read from memory
+        .I_load_data            (I_load_data),          // data read from memory
+
+        .IF_pc_prev_2           (IF_out_pc_prev_2),
+        .IF_pc_prev_2_plus_4    (IF_out_pc_prev_2_plus_4),
+        .IF_inst                (IF_out_inst),
+        .IF_I_addr_prev_2       (IF_out_I_addr_prev_2)
+);
+
+    IF_ID if_id_0(
+        .clk                    (clk),
+        .reset                  (core_reset),
+
+        .IF_pc_prev_2           (IF_out_pc_prev_2),
+        .IF_pc_prev_2_plus_4    (IF_out_pc_prev_2_plus_4),
+        .IF_inst                (IF_out_inst),
+        .IF_I_addr_prev_2       (IF_out_I_addr_prev_2),
+
+        .ID_pc_prev_2           (ID_in_pc_prev_2),
+        .ID_pc_prev_2_plus_4    (ID_in_pc_prev_2_plus_4),
+        .ID_inst                (ID_in_inst),
+        .ID_I_addr_prev_2       (ID_in_I_addr_prev_2)
     );
 
-    branch_comp branch_comp_0(
-        .rs1_data(rs1_data),
-        .rs2_data(rs2_data),
-        .br_un(br_un),
-        .br_eq(br_eq),
-        .br_lt(br_lt)
+    wire [3:0] ID_out_alu_op_sel;
+    wire ID_out_alu_src1_sel;
+    wire ID_out_alu_src2_sel;
+    wire ID_out_reg_w_en;
+    wire [1:0] ID_out_reg_w_data_sel;
+    wire ID_out_load_un;
+    wire [31:0] ID_out_imm;
+    wire ID_out_br_un;
+    wire [31:0] ID_out_rs1_data;
+    wire [31:0] ID_out_rs2_data;
+    wire [4:0] ID_out_rs1;
+    wire [4:0] ID_out_rs2;
+    wire [4:0] ID_out_rd;
+    wire [31:0] ID_out_pc_prev_2;
+    wire [31:0] ID_out_pc_prev_2_plus_4;
+    wire [31:0] ID_out_I_addr_prev_2;
+    wire ID_out_jump;
+    wire [2:0] ID_out_branch_type;
+
+    wire [3:0] EX_in_alu_op_sel;
+    wire EX_in_alu_src1_sel;
+    wire EX_in_alu_src2_sel;
+    wire EX_in_reg_w_en;
+    wire [1:0] EX_in_reg_w_data_sel;
+    wire [1:0] EX_in_store_width;
+    wire [1:0] EX_in_load_width;
+    wire EX_in_load_un;
+    wire [31:0] EX_in_imm;
+    wire EX_in_br_un;
+    wire [31:0] EX_in_rs1_data;
+    wire [31:0] EX_in_rs2_data;
+    wire [4:0] EX_in_rs1;
+    wire [4:0] EX_in_rs2;
+    wire [4:0] EX_in_rd;
+    wire [31:0] EX_in_pc_prev_2;
+    wire [31:0] EX_in_pc_prev_2_plus_4;
+    wire [31:0] EX_in_I_addr_prev_2;
+    wire EX_in_jump;
+    wire [2:0] EX_in_branch_type;
+
+    ID id_0 (
+        .clk                    (clk),
+        .reset                  (core_reset),
+        .IF_pc_prev_2           (ID_in_pc_prev_2),
+        .IF_pc_prev_2_plus_4    (ID_in_pc_prev_2_plus_4),
+        .IF_inst                (ID_in_inst),
+        .IF_I_addr_prev_2       (ID_in_I_addr_prev_2),
+        .WB_reg_w_data          (WB_out_reg_w_data),
+        .WB_reg_w_en            (WB_out_reg_w_en),
+        .WB_rd                  (WB_out_rd),
+        .ID_alu_op_sel          (ID_out_alu_op_sel),
+        .ID_alu_src1_sel        (ID_out_alu_src1_sel),
+        .ID_alu_src2_sel        (ID_out_alu_src2_sel),
+        .ID_reg_w_en            (ID_out_reg_w_en),
+        .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
+        .ID_store_width         (ID_out_store_width),
+        .ID_load_width          (ID_out_load_width),
+        .ID_load_un             (ID_out_load_un),
+        .ID_imm                 (ID_out_imm),
+        .ID_br_un               (ID_out_br_un),
+        .ID_rs1_data            (ID_out_rs1_data),
+        .ID_rs2_data            (ID_out_rs2_data),
+        .ID_rs1                 (ID_out_rs1),
+        .ID_rs2                 (ID_out_rs2),
+        .ID_rd                  (ID_out_rd),
+        .ID_pc_prev_2           (ID_out_pc_prev_2),
+        .ID_pc_prev_2_plus_4    (ID_out_pc_prev_2_plus_4),
+        .ID_I_addr_prev_2       (ID_out_I_addr_prev_2),
+        .ID_jump                (ID_out_jump),
+        .ID_branch_type         (ID_out_branch_type)
     );
 
-    inst_decoder inst_decoder_0(
-        .inst(inst),
+    ID_EX id_ex_0 (
+        .clk                    (clk),
+        .reset                  (core_reset),
+        .ID_alu_op_sel          (ID_out_alu_op_sel),
+        .ID_alu_src1_sel        (ID_out_alu_src1_sel),
+        .ID_alu_src2_sel        (ID_out_alu_src2_sel),
+        .ID_reg_w_en            (ID_out_reg_w_en),
+        .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
+        .ID_store_width         (ID_out_store_width),
+        .ID_load_width          (ID_out_load_width),
+        .ID_load_un             (ID_out_load_un),
+        .ID_imm                 (ID_out_imm),
+        .ID_br_un               (ID_out_br_un),
+        .ID_rs1_data            (ID_out_rs1_data),
+        .ID_rs2_data            (ID_out_rs2_data),
+        .ID_rs1                 (ID_out_rs1),
+        .ID_rs2                 (ID_out_rs2),
+        .ID_rd                  (ID_out_rd),
+        .ID_pc_prev_2           (ID_out_pc_prev_2),
+        .ID_pc_prev_2_plus_4    (ID_out_pc_prev_2_plus_4),
+        .ID_I_addr_prev_2       (ID_out_I_addr_prev_2),
+        .ID_jump                (ID_out_jump),
+        .ID_branch_type         (ID_out_branch_type),
 
-        .opcode(opcode),
-        .funct7(funct7),
-        .funct3(funct3),
-        .rs1(rs1),
-        .rs2(rs2),
-        .rd(rd),
-        .imm(imm_raw)
+        .EX_alu_op_sel          (EX_in_alu_op_sel),
+        .EX_alu_src1_sel        (EX_in_alu_src1_sel),
+        .EX_alu_src2_sel        (EX_in_alu_src2_sel),
+        .EX_reg_w_en            (EX_in_reg_w_en),
+        .EX_reg_w_data_sel      (EX_in_reg_w_data_sel),
+        .EX_store_width         (EX_in_store_width),
+        .EX_load_width          (EX_in_load_width),
+        .EX_load_un             (EX_in_load_un),
+        .EX_imm                 (EX_in_imm),
+        .EX_br_un               (EX_in_br_un),
+        .EX_rs1_data            (EX_in_rs1_data),
+        .EX_rs2_data            (EX_in_rs2_data),
+        .EX_rs1                 (EX_in_rs1),
+        .EX_rs2                 (EX_in_rs2),
+        .EX_rd                  (EX_in_rd),
+        .EX_pc_prev_2           (EX_in_pc_prev_2),
+        .EX_pc_prev_2_plus_4    (EX_in_pc_prev_2_plus_4),
+        .EX_I_addr_prev_2       (EX_in_I_addr_prev_2),
+        .EX_jump                (EX_in_jump),
+        .EX_branch_type         (EX_in_branch_type)
     );
 
-    imm_gen imm_gen_0(
-        .imm_raw(imm_raw),
-        .imm_sel(imm_sel),
+    wire [31:0] EX_out_alu_result;
+    wire EX_out_pc_sel;
+    wire EX_out_reg_w_en;
+    wire [1:0] EX_out_reg_w_data_sel;
+    wire [1:0] EX_out_store_width;
+    wire [1:0] EX_out_load_width;
+    wire EX_out_load_un;
+    wire [31:0] EX_out_pc_prev_2_plus_4;
+    wire [4:0] EX_out_rd;
+    wire [31:0] EX_out_rs2_data;
 
-        .imm(imm)
+    wire [31:0] MEM_in_alu_result;
+    wire MEM_in_reg_w_en;
+    wire [1:0] MEM_in_reg_w_data_sel;
+    wire [1:0] MEM_in_store_width;
+    wire [1:0] MEM_in_load_width;
+    wire MEM_in_load_un;
+    wire [31:0] MEM_in_pc_prev_2_plus_4;
+    wire [4:0] MEM_in_rd;
+    wire [31:0] MEM_in_rs2_data;
+
+    EX ex_0 (
+        .ID_alu_op_sel          (EX_in_alu_op_sel),
+        .ID_alu_src1_sel        (EX_in_alu_src1_sel),
+        .ID_alu_src2_sel        (EX_in_alu_src2_sel),
+        .ID_imm                 (EX_in_imm),
+        .ID_rs1_data            (EX_in_rs1_data),
+        .ID_rs2_data            (EX_in_rs2_data),
+        .ID_br_un               (EX_in_br_un),
+        .ID_I_addr_prev_2       (EX_in_I_addr_prev_2),
+        .ID_rs1                 (EX_in_rs1),
+        // TBD
+        .ID_rs2                 (EX_in_rs2),
+        // TBD
+        .ID_rd                  (EX_in_rd),
+        .ID_store_width         (EX_in_store_width),
+        .ID_load_width          (EX_in_load_width),
+        .ID_load_un             (EX_in_load_un),
+        .ID_reg_w_en            (EX_in_reg_w_en),
+        .ID_reg_w_data_sel      (EX_in_reg_w_data_sel),
+        .ID_pc_prev_2           (EX_in_pc_prev_2),
+        .ID_pc_prev_2_plus_4    (EX_in_pc_prev_2_plus_4),
+        .ID_jump                (EX_in_jump),
+        .ID_branch_type         (EX_in_branch_type),
+        .EX_alu_result          (EX_out_alu_result),
+        .EX_pc_sel              (EX_out_pc_sel),
+        .EX_reg_w_en            (EX_out_reg_w_en),
+        .EX_reg_w_data_sel      (EX_out_reg_w_data_sel),
+        .EX_store_width         (EX_out_store_width),
+        .EX_load_width          (EX_out_load_width),
+        .EX_load_un             (EX_out_load_un),
+        .EX_pc_prev_2_plus_4    (EX_out_pc_prev_2_plus_4),
+        .EX_rd                  (EX_out_rd),
+        .EX_rs2_data            (EX_out_rs2_data)
     );
 
-    regfile regfile_0(
-        .clk(clk),
-        .reset(core_reset),
-        .write_en(reg_w_en),
-        .rs1(rs1),
-        .rs2(rs2),
-        .dest(rd),
-        .write_data(reg_w_data),
+    EX_MEM ex_mem_0 (
+        .clk                     (clk),
+        .reset                   (core_reset),
+        .EX_alu_result           (EX_out_alu_result),
+        .EX_reg_w_en             (EX_out_reg_w_en),
+        .EX_reg_w_data_sel       (EX_out_reg_w_data_sel),
+        .EX_store_width          (EX_out_store_width),
+        .EX_load_width           (EX_out_load_width),
+        .EX_load_un              (EX_out_load_un),
+        .EX_pc_prev_2_plus_4     (EX_out_pc_prev_2_plus_4),
+        .EX_rd                   (EX_out_rd),
+        .EX_rs2_data             (EX_out_rs2_data),
+        .MEM_alu_result          (MEM_in_alu_result),
+        .MEM_reg_w_en            (MEM_in_reg_w_en),
+        .MEM_reg_w_data_sel      (MEM_in_reg_w_data_sel),
+        .MEM_store_width         (MEM_in_store_width),
+        .MEM_load_width          (MEM_in_load_width),
+        .MEM_load_un             (MEM_in_load_un),
+        .MEM_pc_prev_2_plus_4    (MEM_in_pc_prev_2_plus_4),
+        .MEM_rd                  (MEM_in_rd),
+        .MEM_rs2_data            (MEM_in_rs2_data)
+    );
 
-        .rs1_data(rs1_data),
-        .rs2_data(rs2_data)
+    wire [31:0] MEM_out_alu_result;
+    wire MEM_out_reg_w_en;
+    wire [1:0] MEM_out_reg_w_data_sel;
+    wire [31:0] MEM_out_pc_prev_2_plus_4;
+    wire [4:0] MEM_out_rd;
+    wire [31:0] MEM_out_dmem_data;
+
+    wire [31:0] WB_in_alu_result;
+    wire WB_in_reg_w_en;
+    wire [1:0] WB_in_reg_w_data_sel;
+    wire [31:0] WB_in_pc_prev_2_plus_4;
+    wire [4:0] WB_in_rd;
+    wire [31:0] WB_in_dmem_data;
+
+    MEM mem_0 (
+        .EX_alu_result           (MEM_in_alu_result),
+        .EX_reg_w_en             (MEM_in_reg_w_en),
+        .EX_reg_w_data_sel       (MEM_in_reg_w_data_sel),
+        .EX_store_width          (MEM_in_store_width),
+        .EX_load_width           (MEM_in_load_width),
+        .EX_load_un              (MEM_in_load_un),
+        .EX_pc_prev_2_plus_4     (MEM_in_pc_prev_2_plus_4),
+        .EX_rd                   (MEM_in_rd),
+        .EX_rs2_data             (MEM_in_rs2_data),
+        // interface with data memory
+        .D_addr                  (D_addr),
+        .D_store_data            (D_store_data),
+        .D_store_width           (D_store_width),
+        .D_load_width            (D_load_width),
+        .D_load_un               (D_load_un),
+        .D_load_data             (D_load_data),
+        .MEM_reg_w_en            (MEM_out_reg_w_en),
+        .MEM_reg_w_data_sel      (MEM_out_reg_w_data_sel),
+        .MEM_pc_prev_2_plus_4    (MEM_out_pc_prev_2_plus_4),
+        .MEM_rd                  (MEM_out_rd),
+        .MEM_dmem_data           (MEM_out_dmem_data),
+        .MEM_alu_result          (MEM_out_alu_result)
+    );
+
+    MEM_WB mem_wb_0 (
+        .clk                     (clk),
+        .reset                   (core_reset),
+        .MEM_reg_w_en            (MEM_out_reg_w_en),
+        .MEM_reg_w_data_sel      (MEM_out_reg_w_data_sel),
+        .MEM_pc_prev_2_plus_4    (MEM_out_pc_prev_2_plus_4),
+        .MEM_rd                  (MEM_out_rd),
+        .MEM_dmem_data           (MEM_out_dmem_data),
+        .MEM_alu_result          (MEM_out_alu_result),
+        .WB_reg_w_en             (WB_in_reg_w_en),
+        .WB_reg_w_data_sel       (WB_in_reg_w_data_sel),
+        .WB_pc_prev_2_plus_4     (WB_in_pc_prev_2_plus_4),
+        .WB_rd                   (WB_in_rd),
+        .WB_dmem_data            (WB_in_dmem_data),
+        .WB_alu_result           (WB_in_alu_result)
+    );
+
+
+
+    WB wb_0 (
+        .MEM_reg_w_en            (WB_in_reg_w_en),
+        .MEM_reg_w_data_sel      (WB_in_reg_w_data_sel),
+        .MEM_pc_prev_2_plus_4    (WB_in_pc_prev_2_plus_4),
+        .MEM_rd                  (WB_in_rd),
+        .MEM_dmem_data           (WB_in_dmem_data),
+        .MEM_alu_result          (WB_in_alu_result),
+        .WB_reg_w_en             (WB_out_reg_w_en),
+        .WB_reg_w_data           (WB_out_reg_w_data),
+        .WB_rd                   (WB_out_rd)
     );
 
     memory memory_0(
@@ -196,9 +371,9 @@ module core(
 
         .I_en(1'b1),
         .I_write_en(wea),
-        .I_addr(addra),
-        .I_store_data(uart_inst),
-        .I_load_data(mem_inst),
+        .I_addr(I_addr),
+        .I_store_data(I_store_data),
+        .I_load_data(I_load_data),
 
         .D_en(1'b1),
         .D_addr(D_addr),
@@ -216,48 +391,34 @@ module core(
         .leds_r(leds_r_mem)
     );
 
-    IF IF_0(
-        .clk(clk),
-        .reset(core_reset),
-        .store(store),
-        .load(load),
-        .pc_sel(pc_sel),
-        .alu_result(alu_result),
 
-        .pc(pc),
-        .pc_prev_1(pc_prev_1),
-        .pc_prev_2(pc_prev_2)
-    );
 
-    alu alu_0(
-        .src1(alu_src1),
-        .src2(alu_src2),
-        .op_sel(alu_op_sel),
-        .result(alu_result)
-    );
 
-    reg stop;
-    reg [31:0] pc_debug, addra_debug, inst_debug;
-    reg pc_sel_debug;
-    always @(posedge clk) begin
-        if (core_reset) begin
-            stop <= 1'b0;
-        end else if (inst != 32'h0) begin
-            if (stop == 1'b0) begin
-                pc_debug <= pc; // save the pc when we first meet an illegal instruction
-                pc_sel_debug <= pc_sel;
-                addra_debug <= addra;
-                inst_debug <= inst;
-            end
-            stop <= 1'b1;
-        end
-    end
+
+    /* -------------------------------------- Debug -------------------------------------- */
+
+    // reg stop;
+    // reg [31:0] pc_debug, addra_debug, inst_debug;
+    // reg pc_sel_debug;
+    // always @(posedge clk) begin
+    //     if (core_reset) begin
+    //         stop <= 1'b0;
+    //     end else if (inst != 32'h0) begin
+    //         if (stop == 1'b0) begin
+    //             pc_debug <= pc; // save the pc when we first meet an illegal instruction
+    //             pc_sel_debug <= pc_sel;
+    //             addra_debug <= addra;
+    //             inst_debug <= inst;
+    //         end
+    //         stop <= 1'b1;
+    //     end
+    // end
 
     // assign leds_l = pc[7:0];
 
     // assign leds_l[7] = stop;
     // assign leds_l[6:0] = inst_debug[6:0];
     // assign leds_r = {pc_sel_debug, pc_debug[5:0], core_mode};
-    assign I_read = inst_debug;
+    // assign I_read = inst_debug;
 
 endmodule

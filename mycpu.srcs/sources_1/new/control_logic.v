@@ -26,15 +26,6 @@ module control_logic(
     // instruction
     input [31:0] inst,
 
-    // branch comparing result from branch comparator
-    input br_eq,
-    input br_lt,
-    
-    // decides what PC becomes
-    // 0: PC + 4
-    // 1: ALU result
-    output pc_sel,
-
     // decides what ALU does
     output [3:0] alu_op_sel,
 
@@ -78,7 +69,12 @@ module control_logic(
     output [2:0] imm_sel,
 
     // tells branch comparator whether to treat input as unsigned
-    output br_un
+    output br_un,
+
+    // whether this is a jump instruction (jal, jalr, auipc)
+    output jump,
+
+    output [2:0] branch_type
     );
 
 
@@ -115,13 +111,6 @@ module control_logic(
 
     assign br_un = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
     
-    assign pc_sel = U_auipc | I_jalr | J | B & ( funct3 == 3'h0 & br_eq |    // beq
-                                                 funct3 == 3'h1 & ~br_eq |   // bne
-                                                 funct3 == 3'h4 & br_lt |    // blt
-                                                 funct3 == 3'h5 & ~br_lt |   // bge
-                                                 funct3 == 3'h6 & br_lt |    // bltu
-                                                 funct3 == 3'h7 & ~br_lt );  // bgeu
-
     assign reg_w_en = R | U | J | I_load | I_jalr | I_arith;
 
     assign reg_w_data_sel = (J | I_jalr)  ? 2'h2 :        // PC + 4
@@ -161,5 +150,8 @@ module control_logic(
 
     assign alu_src1_sel = R | I | S;
     assign alu_src2_sel = R;
+
+    assign jump = J | I_jalr | U_auipc;
+    assign branch_type = B ? funct3 : 3'h2;
 
 endmodule

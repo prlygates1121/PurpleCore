@@ -25,3 +25,12 @@
 `define IMM_B       3'h3
 `define IMM_U       3'h4
 `define IMM_J       3'h5
+
+// branch_type [2:0]
+`define BEQ 3'h0
+`define BNE 3'h1
+`define BLT 3'h4
+`define BGE 3'h5
+`define BLTU 3'h6
+`define BGEU 3'h7
+`define NO_BRANCH 3'h2
