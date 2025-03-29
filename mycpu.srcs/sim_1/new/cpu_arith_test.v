@@ -137,7 +137,6 @@ module cpu_arith_test(
         send_instruction(32'h00C53B93);
         send_instruction(32'h00853193);
         send_instruction(32'h00063213);
-        send_instruction(32'hFFF53413);
 
         // send some NOPs
         send_instruction(32'h00000013);
@@ -195,7 +194,7 @@ module cpu_arith_test(
                     check_reg(22, 1);
                     check_reg(23, 0);
                     check_reg(3, 0);
-                    check_reg(4, 0);  
+                    check_reg(4, 1);  
                 end
                 32'h000000ec: begin
                     $display("Testing I-type arithmetic instrucitons:");

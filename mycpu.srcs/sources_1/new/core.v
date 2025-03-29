@@ -226,6 +226,12 @@ module core(
     wire [31:0] EX_out_pc_prev_2_plus_4;
     wire [4:0] EX_out_rd;
     wire [31:0] EX_out_rs2_data;
+    wire [4:0] EX_out_rs1, EX_out_rs2;
+
+    wire [31:0] MEM_alu_result_forwarded;
+    wire [31:0] WB_alu_result_forwarded;
+    wire [1:0] forward_rs1_sel;
+    wire [1:0] forward_rs2_sel;
 
     wire [31:0] MEM_in_alu_result;
     wire MEM_in_reg_w_en;
@@ -238,38 +244,46 @@ module core(
     wire [31:0] MEM_in_rs2_data;
 
     EX ex_0 (
-        .ID_alu_op_sel          (EX_in_alu_op_sel),
-        .ID_alu_src1_sel        (EX_in_alu_src1_sel),
-        .ID_alu_src2_sel        (EX_in_alu_src2_sel),
-        .ID_imm                 (EX_in_imm),
-        .ID_rs1_data            (EX_in_rs1_data),
-        .ID_rs2_data            (EX_in_rs2_data),
-        .ID_br_un               (EX_in_br_un),
-        .ID_I_addr_prev_2       (EX_in_I_addr_prev_2),
-        .ID_rs1                 (EX_in_rs1),
-        // TBD
-        .ID_rs2                 (EX_in_rs2),
-        // TBD
-        .ID_rd                  (EX_in_rd),
-        .ID_store_width         (EX_in_store_width),
-        .ID_load_width          (EX_in_load_width),
-        .ID_load_un             (EX_in_load_un),
-        .ID_reg_w_en            (EX_in_reg_w_en),
-        .ID_reg_w_data_sel      (EX_in_reg_w_data_sel),
-        .ID_pc_prev_2           (EX_in_pc_prev_2),
-        .ID_pc_prev_2_plus_4    (EX_in_pc_prev_2_plus_4),
-        .ID_jump                (EX_in_jump),
-        .ID_branch_type         (EX_in_branch_type),
-        .EX_alu_result          (EX_out_alu_result),
-        .EX_pc_sel              (EX_out_pc_sel),
-        .EX_reg_w_en            (EX_out_reg_w_en),
-        .EX_reg_w_data_sel      (EX_out_reg_w_data_sel),
-        .EX_store_width         (EX_out_store_width),
-        .EX_load_width          (EX_out_load_width),
-        .EX_load_un             (EX_out_load_un),
-        .EX_pc_prev_2_plus_4    (EX_out_pc_prev_2_plus_4),
-        .EX_rd                  (EX_out_rd),
-        .EX_rs2_data            (EX_out_rs2_data)
+        .ID_alu_op_sel              (EX_in_alu_op_sel),
+        .ID_alu_src1_sel            (EX_in_alu_src1_sel),
+        .ID_alu_src2_sel            (EX_in_alu_src2_sel),
+        .ID_imm                     (EX_in_imm),
+        .ID_rs1_data                (EX_in_rs1_data),
+        .ID_rs2_data                (EX_in_rs2_data),
+        .ID_br_un                   (EX_in_br_un),
+        .ID_I_addr_prev_2           (EX_in_I_addr_prev_2),
+        .ID_rs1                     (EX_in_rs1),
+        // TBD  
+        .ID_rs2                     (EX_in_rs2),
+        // TBD  
+        .ID_rd                      (EX_in_rd),
+        .ID_store_width             (EX_in_store_width),
+        .ID_load_width              (EX_in_load_width),
+        .ID_load_un                 (EX_in_load_un),
+        .ID_reg_w_en                (EX_in_reg_w_en),
+        .ID_reg_w_data_sel          (EX_in_reg_w_data_sel),
+        .ID_pc_prev_2               (EX_in_pc_prev_2),
+        .ID_pc_prev_2_plus_4        (EX_in_pc_prev_2_plus_4),
+        .ID_jump                    (EX_in_jump),
+        .ID_branch_type             (EX_in_branch_type),
+
+        .MEM_alu_result_forwarded   (MEM_alu_result_forwarded),
+        .WB_alu_result_forwarded    (WB_alu_result_forwarded),
+        .forward_rs1_sel            (forward_rs1_sel),
+        .forward_rs2_sel            (forward_rs2_sel),
+
+        .EX_alu_result              (EX_out_alu_result),
+        .EX_pc_sel                  (EX_out_pc_sel),
+        .EX_reg_w_en                (EX_out_reg_w_en),
+        .EX_reg_w_data_sel          (EX_out_reg_w_data_sel),
+        .EX_store_width             (EX_out_store_width),
+        .EX_load_width              (EX_out_load_width),
+        .EX_load_un                 (EX_out_load_un),
+        .EX_pc_prev_2_plus_4        (EX_out_pc_prev_2_plus_4),
+        .EX_rd                      (EX_out_rd),
+        .EX_rs2_data                (EX_out_rs2_data),
+        .EX_rs1                     (EX_out_rs1),
+        .EX_rs2                     (EX_out_rs2)
     );
 
     EX_MEM ex_mem_0 (
@@ -363,6 +377,21 @@ module core(
         .WB_reg_w_en             (WB_out_reg_w_en),
         .WB_reg_w_data           (WB_out_reg_w_data),
         .WB_rd                   (WB_out_rd)
+    );
+
+    hazard_unit u_hazard_unit (
+        .MEM_rd                      (MEM_out_rd),
+        .MEM_reg_w_en                (MEM_out_reg_w_en),
+        .MEM_alu_result              (MEM_out_alu_result),
+        .WB_rd                       (WB_out_rd),
+        .WB_reg_w_en                 (WB_out_reg_w_en),
+        .WB_alu_result               (WB_out_reg_w_data),
+        .EX_rs1                      (EX_out_rs1),
+        .EX_rs2                      (EX_out_rs2),
+        .MEM_alu_result_forwarded    (MEM_alu_result_forwarded),
+        .WB_alu_result_forwarded     (WB_alu_result_forwarded),
+        .forward_rs1_sel             (forward_rs1_sel),
+        .forward_rs2_sel             (forward_rs2_sel)
     );
 
     memory memory_0(

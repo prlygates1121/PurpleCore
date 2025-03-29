@@ -42,11 +42,15 @@ module EX(
     input ID_reg_w_en,
     input [1:0] ID_reg_w_data_sel,
 
-
     input [31:0] ID_pc_prev_2,
     input [31:0] ID_pc_prev_2_plus_4,
     input ID_jump,
     input [2:0] ID_branch_type,
+
+    input [31:0] MEM_alu_result_forwarded,
+    input [31:0] WB_alu_result_forwarded,
+    input [1:0] forward_rs1_sel,
+    input [1:0] forward_rs2_sel,
 
     output [31:0] EX_alu_result,                // -> MEM -> WB
     output EX_pc_sel,                           // -> IF
@@ -57,13 +61,21 @@ module EX(
     output EX_load_un,                          // -> MEM
     output [31:0] EX_pc_prev_2_plus_4,          // -> MEM -> WB
     output [4:0] EX_rd,                         // -> MEM -> WB
-    output [31:0] EX_rs2_data                   // -> MEM
+    output [31:0] EX_rs2_data,                  // -> MEM
+
+    output [4:0] EX_rs1,     // TBD
+    output [4:0] EX_rs2      // TBD
 
     );
 
+    wire [31:0] rs1_data = (forward_rs1_sel == 2'b01) ? MEM_alu_result_forwarded :
+                           (forward_rs1_sel == 2'b10) ? WB_alu_result_forwarded : ID_rs1_data;
+    wire [31:0] rs2_data = (forward_rs2_sel == 2'b01) ? MEM_alu_result_forwarded :
+                           (forward_rs2_sel == 2'b10) ? WB_alu_result_forwarded : ID_rs2_data;
+
     // ALU
-    wire [31:0] alu_src1 = ID_alu_src1_sel ? ID_rs1_data : ID_I_addr_prev_2;
-    wire [31:0] alu_src2 = ID_alu_src2_sel ? ID_rs2_data : ID_imm;
+    wire [31:0] alu_src1 = ID_alu_src1_sel ? rs1_data : ID_I_addr_prev_2;
+    wire [31:0] alu_src2 = ID_alu_src2_sel ? rs2_data : ID_imm;
 
     wire EX_br_eq, EX_br_lt;
     wire branch = ID_branch_type == `BEQ ? EX_br_eq :
@@ -98,4 +110,6 @@ module EX(
     assign EX_pc_prev_2_plus_4 = ID_pc_prev_2_plus_4;
     assign EX_rd = ID_rd;
     assign EX_rs2_data = ID_rs2_data;
+    assign EX_rs1 = ID_rs1;
+    assign EX_rs2 = ID_rs2;
 endmodule
