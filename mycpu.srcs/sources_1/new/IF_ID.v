@@ -24,28 +24,29 @@
 module IF_ID(
     input clk,
     input reset,
-    input [31:0] IF_pc_prev_2,
-    input [31:0] IF_pc_prev_2_plus_4,
+    input stall,
+    input [31:0] IF_pc,
+    input [31:0] IF_pc_plus_4,
     input [31:0] IF_inst,
-    input [31:0] IF_I_addr_prev_2,
+    input [31:0] IF_I_addr,
 
-    output reg [31:0] ID_pc_prev_2,
-    output reg [31:0] ID_pc_prev_2_plus_4,
+    output reg [31:0] ID_pc,
+    output reg [31:0] ID_pc_plus_4,
     output reg [31:0] ID_inst,
-    output reg [31:0] ID_I_addr_prev_2
+    output reg [31:0] ID_I_addr
     );
 
     always @(posedge clk) begin
         if (reset) begin
-            ID_pc_prev_2 <= 32'b0;
-            ID_pc_prev_2_plus_4 <= 32'b0;
+            ID_pc <= 32'b0;
+            ID_pc_plus_4 <= 32'b0;
             ID_inst <= `NOP;
-            ID_I_addr_prev_2 <= 32'b0;
-        end else begin
-            ID_pc_prev_2 <= IF_pc_prev_2;
-            ID_pc_prev_2_plus_4 <= IF_pc_prev_2_plus_4;
+            ID_I_addr <= 32'b0;
+        end else if (~stall) begin
+            ID_pc <= IF_pc;
+            ID_pc_plus_4 <= IF_pc_plus_4;
             ID_inst <= IF_inst;
-            ID_I_addr_prev_2 <= IF_I_addr_prev_2;
+            ID_I_addr <= IF_I_addr;
         end
     end
     

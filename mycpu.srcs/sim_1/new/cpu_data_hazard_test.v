@@ -81,9 +81,26 @@ module cpu_data_hazard_test (
 
         send_instruction(32'hDEADC0B7);
         send_instruction(32'hEEF08093);
-        send_instruction(32'h00108133);
-        send_instruction(32'h000081B3);
-        send_instruction(32'h00100233);
+        send_instruction(32'hFF010113);
+        send_instruction(32'h00112023);
+        send_instruction(32'h00000013);
+        send_instruction(32'h00012283);
+        send_instruction(32'h00028313);
+        send_instruction(32'h00030393);
+        send_instruction(32'h01010113);
+        send_instruction(32'hFF010113);
+        send_instruction(32'h00012403);
+        send_instruction(32'h00012483);
+        send_instruction(32'h00010537);
+        send_instruction(32'hFFF50513);
+        send_instruction(32'h00410113);
+        send_instruction(32'h00A12023);
+        send_instruction(32'h00012583);
+        send_instruction(32'h00058613);
+        send_instruction(32'h0000F6B7);
+        send_instruction(32'hEEE68693);
+        send_instruction(32'h00D12223);
+        send_instruction(32'h00412703);
 
         #(CLK_100_PERIOD * 15000);
         $finish;

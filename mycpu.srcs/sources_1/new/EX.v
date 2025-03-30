@@ -29,7 +29,7 @@ module EX(
     input [31:0] ID_rs1_data,
     input [31:0] ID_rs2_data,
     input ID_br_un,
-    input [31:0] ID_I_addr_prev_2,
+    input [31:0] ID_I_addr,
 
     input [4:0] ID_rs1,     // TBD
     input [4:0] ID_rs2,     // TBD
@@ -42,8 +42,8 @@ module EX(
     input ID_reg_w_en,
     input [1:0] ID_reg_w_data_sel,
 
-    input [31:0] ID_pc_prev_2,
-    input [31:0] ID_pc_prev_2_plus_4,
+    input [31:0] ID_pc,
+    input [31:0] ID_pc_plus_4,
     input ID_jump,
     input [2:0] ID_branch_type,
 
@@ -59,7 +59,7 @@ module EX(
     output [1:0] EX_store_width,                // -> MEM
     output [1:0] EX_load_width,                 // -> MEM
     output EX_load_un,                          // -> MEM
-    output [31:0] EX_pc_prev_2_plus_4,          // -> MEM -> WB
+    output [31:0] EX_pc_plus_4,          // -> MEM -> WB
     output [4:0] EX_rd,                         // -> MEM -> WB
     output [31:0] EX_rs2_data,                  // -> MEM
 
@@ -74,7 +74,7 @@ module EX(
                            (forward_rs2_sel == 2'b10) ? WB_alu_result_forwarded : ID_rs2_data;
 
     // ALU
-    wire [31:0] alu_src1 = ID_alu_src1_sel ? rs1_data : ID_I_addr_prev_2;
+    wire [31:0] alu_src1 = ID_alu_src1_sel ? rs1_data : ID_I_addr;
     wire [31:0] alu_src2 = ID_alu_src2_sel ? rs2_data : ID_imm;
 
     wire EX_br_eq, EX_br_lt;
@@ -87,8 +87,8 @@ module EX(
     assign EX_pc_sel = ID_jump | branch;
 
     branch_comp branch_comp_0(
-        .rs1_data(ID_rs1_data),
-        .rs2_data(ID_rs2_data),
+        .rs1_data(rs1_data),
+        .rs2_data(rs2_data),
         .br_un(ID_br_un),
 
         .br_eq(EX_br_eq),
@@ -107,9 +107,9 @@ module EX(
     assign EX_store_width = ID_store_width;
     assign EX_load_width = ID_load_width;
     assign EX_load_un = ID_load_un;
-    assign EX_pc_prev_2_plus_4 = ID_pc_prev_2_plus_4;
+    assign EX_pc_plus_4 = ID_pc_plus_4;
     assign EX_rd = ID_rd;
-    assign EX_rs2_data = ID_rs2_data;
+    assign EX_rs2_data = rs2_data;
     assign EX_rs1 = ID_rs1;
     assign EX_rs2 = ID_rs2;
 endmodule

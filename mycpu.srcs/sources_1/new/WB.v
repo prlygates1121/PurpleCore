@@ -23,7 +23,7 @@
 module WB(
     input MEM_reg_w_en,
     input [1:0] MEM_reg_w_data_sel,
-    input [31:0] MEM_pc_prev_2_plus_4,
+    input [31:0] MEM_pc_plus_4,
     input [4:0] MEM_rd,
     input [31:0] MEM_dmem_data,
     input [31:0] MEM_alu_result,
@@ -35,7 +35,7 @@ module WB(
 
     assign WB_reg_w_data = MEM_reg_w_data_sel == 2'h0 ? MEM_alu_result :
                            MEM_reg_w_data_sel == 2'h1 ? MEM_dmem_data :
-                           MEM_reg_w_data_sel == 2'h2 ? MEM_pc_prev_2_plus_4 : 32'h0;
+                           MEM_reg_w_data_sel == 2'h2 ? MEM_pc_plus_4 : 32'h0;
     assign WB_reg_w_en = MEM_reg_w_en;
     assign WB_rd = MEM_rd;
 endmodule

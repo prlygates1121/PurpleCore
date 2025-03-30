@@ -24,10 +24,10 @@ module ID(
     input clk,
     input reset,
     
-    input [31:0] IF_pc_prev_2,
-    input [31:0] IF_pc_prev_2_plus_4,
+    input [31:0] IF_pc,
+    input [31:0] IF_pc_plus_4,
     input [31:0] IF_inst,
-    input [31:0] IF_I_addr_prev_2,
+    input [31:0] IF_I_addr,
     input [31:0] WB_reg_w_data,
     input WB_reg_w_en,
     input [4:0] WB_rd,
@@ -47,9 +47,9 @@ module ID(
     output [4:0] ID_rs1,
     output [4:0] ID_rs2,
     output [4:0] ID_rd,
-    output [31:0] ID_pc_prev_2,
-    output [31:0] ID_pc_prev_2_plus_4,
-    output [31:0] ID_I_addr_prev_2,
+    output [31:0] ID_pc,
+    output [31:0] ID_pc_plus_4,
+    output [31:0] ID_I_addr,
     output ID_jump,
     output [2:0] ID_branch_type
 
@@ -139,8 +139,8 @@ module ID(
     assign ID_rs1 = rs1;
     assign ID_rs2 = rs2;
     assign ID_rd = rd;
-    assign ID_pc_prev_2 = IF_pc_prev_2;
-    assign ID_pc_prev_2_plus_4 = IF_pc_prev_2_plus_4;
-    assign ID_I_addr_prev_2 = IF_I_addr_prev_2;
+    assign ID_pc = IF_pc;
+    assign ID_pc_plus_4 = IF_pc_plus_4;
+    assign ID_I_addr = IF_I_addr;
 
 endmodule

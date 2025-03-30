@@ -61,13 +61,13 @@ module memory(
     wire [3:0] web;
 
     blk_mem main_memory(
-        .clka(clk),
+        .clka(~clk),
         .ena(I_en),
         .wea(I_write_en),
         .addra(I_addr[16:2]),
         .dina(I_store_data),
         .douta(I_load_data),
-        .clkb(clk),
+        .clkb(~clk),
         .enb(D_en),
         .web(web),
         .addrb(D_addr[16:2]),
@@ -76,12 +76,12 @@ module memory(
     );
 
     assign D_load_data = io_en ? {16'h0000, sws_l, sws_r} : (D_load_width == 2'h0 ? (byte_offset == 2'h0 ? {(D_load_un ? {24{1'b0}} : {24{load_word[7]}}), load_word[7:0]} :
-                                                                         byte_offset == 2'h1 ? {(D_load_un ? {24{1'b0}} : {24{load_word[15]}}), load_word[15:8]} :
-                                                                         byte_offset == 2'h2 ? {(D_load_un ? {24{1'b0}} : {24{load_word[24]}}), load_word[24:15]} :
-                                                                         byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : {32{1'b0}}) :
-                                                 D_load_width == 2'h1 ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
-                                                                         byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : {32{1'b0}}) :
-                                                 D_load_width == 2'h2 ? (byte_offset == 2'h0 ? load_word : {32{1'b0}}) : {32{1'b0}} );
+                                                                                     byte_offset == 2'h1 ? {(D_load_un ? {24{1'b0}} : {24{load_word[15]}}), load_word[15:8]} :
+                                                                                     byte_offset == 2'h2 ? {(D_load_un ? {24{1'b0}} : {24{load_word[24]}}), load_word[24:15]} :
+                                                                                     byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : {32{1'b0}}) :
+                                                             D_load_width == 2'h1 ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
+                                                                                     byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : {32{1'b0}}) :
+                                                             D_load_width == 2'h2 ? (byte_offset == 2'h0 ? load_word : {32{1'b0}}) : load_word);
 
     assign web = io_en ? 4'b0000 : (D_store_width == 2'h0 ? (1'b1 << byte_offset) :                                     // sb
                                     D_store_width == 2'h1 ? (byte_offset == 2'h0 ? 4'b0011 :                            // sh

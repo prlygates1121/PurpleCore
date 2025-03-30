@@ -39,9 +39,9 @@ module ID_EX(
     input [4:0] ID_rs1,
     input [4:0] ID_rs2,
     input [4:0] ID_rd,
-    input [31:0] ID_pc_prev_2,
-    input [31:0] ID_pc_prev_2_plus_4,
-    input [31:0] ID_I_addr_prev_2,
+    input [31:0] ID_pc,
+    input [31:0] ID_pc_plus_4,
+    input [31:0] ID_I_addr,
     input ID_jump,
     input [2:0] ID_branch_type,
 
@@ -60,9 +60,9 @@ module ID_EX(
     output reg [4:0] EX_rs1,
     output reg [4:0] EX_rs2,
     output reg [4:0] EX_rd,
-    output reg [31:0] EX_pc_prev_2,
-    output reg [31:0] EX_pc_prev_2_plus_4,
-    output reg [31:0] EX_I_addr_prev_2,
+    output reg [31:0] EX_pc,
+    output reg [31:0] EX_pc_plus_4,
+    output reg [31:0] EX_I_addr,
     output reg EX_jump,
     output reg [2:0] EX_branch_type
     );
@@ -84,11 +84,11 @@ module ID_EX(
             EX_rs1 <= 5'h0;
             EX_rs2 <= 5'h0;
             EX_rd <= 5'h0;
-            EX_pc_prev_2 <= 32'h0;
-            EX_pc_prev_2_plus_4 <= 32'h0;
+            EX_pc <= 32'h0;
+            EX_pc_plus_4 <= 32'h0;
             EX_jump <= 1'b0;
             EX_branch_type <= `NO_BRANCH;
-            EX_I_addr_prev_2 <= 32'h0;
+            EX_I_addr <= 32'h0;
         end else begin
             EX_alu_op_sel <= ID_alu_op_sel;
             EX_alu_src1_sel <= ID_alu_src1_sel;
@@ -105,9 +105,9 @@ module ID_EX(
             EX_rs1 <= ID_rs1;
             EX_rs2 <= ID_rs2;
             EX_rd <= ID_rd;
-            EX_pc_prev_2 <= ID_pc_prev_2;
-            EX_pc_prev_2_plus_4 <= ID_pc_prev_2_plus_4;
-            EX_I_addr_prev_2 <= ID_I_addr_prev_2;
+            EX_pc <= ID_pc;
+            EX_pc_plus_4 <= ID_pc_plus_4;
+            EX_I_addr <= ID_I_addr;
             EX_jump <= ID_jump;
             EX_branch_type <= ID_branch_type;
         end

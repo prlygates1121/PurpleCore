@@ -151,7 +151,7 @@ module control_logic(
     assign alu_src1_sel = R | I | S;
     assign alu_src2_sel = R;
 
-    assign jump = J | I_jalr | U_auipc;
+    assign jump = J | I_jalr;
     assign branch_type = B ? funct3 : 3'h2;
 
 endmodule
