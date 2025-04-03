@@ -36,7 +36,11 @@ module core(
     input [7:0] sws_r,
 
     output [7:0] leds_l,
-    output [7:0] leds_r
+    output [7:0] leds_r,
+
+    input clk_pixel,
+    input [31:0] vga_addr,
+    output [31:0] vga_data
     );
 
     parameter LOADING = 0, RUNNING = 1;
@@ -427,7 +431,11 @@ module core(
         .sws_r(sws_r),
 
         .leds_l(leds_l),
-        .leds_r(leds_r_mem)
+        .leds_r(leds_r_mem),
+
+        .clk_pixel(clk_pixel),
+        .vga_addr(vga_addr),
+        .vga_data(vga_data)
     );
 
     /* -------------------------------------- Debug -------------------------------------- */

@@ -33,7 +33,7 @@ module uart(
     );
 
     localparam [31:0] CLK_FREQ = 32'd25_000_000;
-    localparam [31:0] UART_FREQ = 32'd2_000_000; // real: 115200, test: 2_000_000
+    localparam [31:0] UART_FREQ = 32'd115200; // real: 115200, test: 2_000_000
     localparam [31:0] COUNTER_MAX = CLK_FREQ / UART_FREQ;
 
     // rx_negedge is enabled for one cycle when rx_in has a negative edge

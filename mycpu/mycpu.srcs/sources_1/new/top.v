@@ -44,67 +44,99 @@ module top(
     output [7:0] right_tube_content
 
     );
-    wire clk_25, locked;
+    wire locked = locked_main & locked_pixel;
+    wire locked_main, locked_pixel;
 
     wire uart_mem_write, uart_inst_loaded;
     wire [31:0] uart_addr, uart_inst;
 
-    // generates clk_25 from clk_100
+    wire [31:0] vga_addr, vga_data;
+
+    wire clk_main;                    // generates clk_main from clk_100
     clk_main_gen clk_main_gen_0(
-        .clk_out1(clk_25),
+        .clk_out1(clk_main),
         .reset(~reset_n),
-        .locked(locked),
+        .locked(locked_main),
         .clk_in1(clk_100)
     );
 
-    // reset_modules is sent as reset signal to all modules once clk_25 is locked
-    // it remains high for 2^8 cycles (100Mhz)
+    wire clk_pixel;                 // Pixel clock: 25.20325 MHz ~= 800 * 525 * 60
+    clk_pixel_gen clk_gen(
+        .clk_system(clk_100),
+        .reset(~reset_n),
+        .locked(locked_pixel),
+        .clk_pixel(clk_pixel)
+    );
+
+    // the init_counter starts once all clocks are locked
+    // when the init_counter reaches 0, the reset_modules signal is released
+    // this is used to reset the modules in the design
     reg [7:0] init_counter;
-    wire reset_modules = |init_counter;
+    reg reset_modules_clk100;
+
     always @(posedge clk_100) begin
         if (~reset_n) begin
             init_counter <= 8'hFF;
+            reset_modules_clk100 <= 1'b1; // hold reset
         end else if (locked) begin
             // decrement until reaching 0
             if (|init_counter) begin
                 init_counter <= init_counter - 1;
+            end else begin
+                reset_modules_clk100 <= 1'b0; // release reset
             end
+        end else begin
+            reset_modules_clk100 <= 1'b1; // hold reset
         end
     end
 
-    wire [31:0] I_read;
+    reg reset_sync_pixel_s1, reset_sync_pixel_s2;
+    always @(posedge clk_pixel) begin
+        reset_sync_pixel_s1 <= reset_modules_clk100;
+        reset_sync_pixel_s2 <= reset_sync_pixel_s1;
+    end
+
+    reg reset_sync_main_s1, reset_sync_main_s2;
+    always @(posedge clk_main) begin
+        reset_sync_main_s1 <= reset_modules_clk100;
+        reset_sync_main_s2 <= reset_sync_main_s1;
+    end
 
     core core_0(
-        .clk(clk_25),
-        .reset(reset_modules),
+        .clk(clk_main),
+        .reset(reset_sync_main_s2),
         
         .uart_addr(uart_addr),
         .uart_inst(uart_inst),
         .uart_write(uart_mem_write),
         .uart_inst_loaded(uart_inst_loaded),
 
-        .I_read(I_read),
-
         .sws_l(sws_l),
         .sws_r(sws_r),
 
         .leds_l(leds_l),
-        .leds_r(leds_r)
+        .leds_r(leds_r),
+
+        .clk_pixel(clk_pixel),
+        .vga_addr(vga_addr),
+        .vga_data(vga_data)
     );
 
-    // vga_top vga(
-    //     .clk(clk_100),
-    //     .reset(reset_modules),
-    //     .r(vga_r),
-    //     .g(vga_g),
-    //     .b(vga_b),
-    //     .h_sync(vga_h_sync),
-    //     .v_sync(vga_v_sync)
-    // );
+    vga_top vga(
+        .clk(clk_pixel),
+        .reset(reset_sync_pixel_s2),
+        .r(vga_r),
+        .g(vga_g),
+        .b(vga_b),
+        .h_sync(vga_h_sync),
+        .v_sync(vga_v_sync),
+        .vga_addr(vga_addr),
+        .vga_data(vga_data)
+    );
 
     uart_handler uart_handler_0(
-        .clk(clk_25),
-        .reset(reset_modules),
+        .clk(clk_main),
+        .reset(reset_sync_main_s2),
         .rx_in(uart_rx_in),
 
         .I_read(I_read),
@@ -117,8 +149,8 @@ module top(
     );
 
     seg_display_handler seg_display_handler_0(
-        .clk(clk_25),
-        .reset(reset_modules),
+        .clk(clk_main),
+        .reset(reset_sync_main_s2),
         .hex_digits(I_read),
         .tube_ena(tube_ena),
         .left_tube_content(left_tube_content),

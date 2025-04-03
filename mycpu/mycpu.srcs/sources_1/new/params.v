@@ -1,5 +1,5 @@
 // predefined values
-`define ADDR_SP_START 32'h0001FFFC
+`define ADDR_SP_START 32'h0000BFFC
 `define NOP 32'h00000013
 
 // alu_sel [3:0]
@@ -34,3 +34,55 @@
 `define BLTU 3'h6
 `define BGEU 3'h7
 `define NO_BRANCH 3'h2
+
+// VGA parameters
+
+// Horizontal
+// Active:          0 --------- 639 (640)
+// Front Porch:     640 ------- 655 (16)
+// Sync:            656 ------- 751 (96)
+// Back Porch:      752 ------- 799 (48)
+`define H_ACTIVE_END  639
+`define H_SYNC_START  `H_ACTIVE_END + 17
+`define H_SYNC_END    `H_SYNC_START + 95
+`define H_END         799
+
+// Vertical
+`define V_ACTIVE_END  479
+`define V_SYNC_START  `V_ACTIVE_END + 11
+`define V_SYNC_END    `V_SYNC_START + 1
+`define V_END         524
+
+// VGA color codes
+`define BLACK_CODE              4'b0000
+`define WHITE_CODE              4'b0001
+`define RED_CODE                4'b0010
+`define ORANGE_CODE             4'b0011
+`define YELLOW_CODE             4'b0100
+`define LIGHT_GREEN_CODE        4'b0101
+`define GREEN_CODE              4'b0110
+`define CYAN_GREEN_CODE         4'b0111
+`define CYAN_CODE               4'b1000
+`define SKY_BLUE_CODE           4'b1001
+`define BLUE_CODE               4'b1010
+`define PURPLE_CODE             4'b1011
+`define PINK_CODE               4'b1100
+`define ROSE_CODE               4'b1101
+`define GRAY_CODE               4'b1110
+
+// VGA color values
+`define BLACK_VALUE             12'h000
+`define WHITE_VALUE             12'hFFF
+`define RED_VALUE               12'hF00
+`define ORANGE_VALUE            12'hF80
+`define YELLOW_VALUE            12'hFF0
+`define LIGHT_GREEN_VALUE       12'h8F0
+`define GREEN_VALUE             12'h0F0
+`define CYAN_GREEN_VALUE        12'h0F8
+`define CYAN_VALUE              12'h0FF
+`define SKY_BLUE_VALUE          12'h08F
+`define BLUE_VALUE              12'h00F
+`define PURPLE_VALUE            12'h08F
+`define PINK_VALUE              12'hF0F
+`define ROSE_VALUE              12'h0F8
+`define GRAY_VALUE              12'h888

@@ -156,4 +156,5 @@ set_property IOSTANDARD LVCMOS33 [get_ports clk_100]
 set_property PACKAGE_PIN P17 [get_ports clk_100]
 
 create_clock -period 10.000 -name clk_100 -waveform {0.000 5.000} [get_ports clk_100]
-create_clock -period 39.677 -name VIRTUAL_clk_pixel_clk_pixel_gen -waveform {0.000 19.839}
+
+set_false_path -from [get_pins reset_modules_clk100_reg/C] -to [get_pins reset_sync_pixel_s1_reg/D]

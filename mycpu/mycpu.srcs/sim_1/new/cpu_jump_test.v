@@ -60,10 +60,10 @@ module cpu_jump_test(
 
     task send_instruction(input reg [31:0] inst);
         begin
-            send_byte(inst[7:0]);
-            send_byte(inst[15:8]);
-            send_byte(inst[23:16]);
             send_byte(inst[31:24]);
+            send_byte(inst[23:16]);
+            send_byte(inst[15:8]);
+            send_byte(inst[7:0]);
         end
     endtask
 
