@@ -25,7 +25,7 @@ module cpu_data_hazard_test (
     );
     parameter CLK_100_PERIOD = 10;
     parameter CLK_100_FREQ = 100_000_000;
-    parameter UART_FREQ = 2_000_000; // real: 115200, test: 2_000_000
+    parameter UART_FREQ = 115200; // real: 115200, test: 2_000_000
     parameter UART_PERIOD = CLK_100_PERIOD * (CLK_100_FREQ / UART_FREQ + 1);
 
     reg clk_100, reset_n, uart_rx_in;
@@ -55,6 +55,7 @@ module cpu_data_hazard_test (
             // stop bit
             uart_rx_in = 1'b1;
             #(UART_PERIOD);
+            // #(UART_PERIOD);
         end
     endtask
 

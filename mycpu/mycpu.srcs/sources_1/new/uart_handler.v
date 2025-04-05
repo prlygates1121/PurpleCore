@@ -130,5 +130,7 @@ module uart_handler(
     end
 
     assign mem_write = word_received;
-    assign inst_loaded = timeout_counter == 20'h888; // test: 888, real: 377
+
+    // WARNING: inappropriate max out value of the timeout_counter results in errors in program execution
+    assign inst_loaded = timeout_counter == 20'hFFF;
 endmodule

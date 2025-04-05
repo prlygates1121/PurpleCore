@@ -91,11 +91,23 @@ module uart(
         .rx_state(rx_state)
     );
 
+    reg new_byte_tx;
+    always @(posedge clk) begin
+        if (reset) begin
+            new_byte_tx <= 1'b0;
+        end else if (rx_done) begin
+            new_byte_tx <= 1'b1;
+        end else if (uart_en) begin
+            new_byte_tx <= 1'b0;
+        end
+    end
+
     uart_tx tx(
         .clk(clk),
-        .reset(reset | ~tx_en),
+        .reset(reset),
         .uart_en(uart_en),
         .tx_in(tx_in),
+        .new_byte_tx(new_byte_tx),
         .tx_out(tx_out)
     );
     
