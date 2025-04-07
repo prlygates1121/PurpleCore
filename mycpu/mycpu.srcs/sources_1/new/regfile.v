@@ -42,11 +42,7 @@ module regfile(
     always @(negedge clk) begin
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) begin
-                if (i == 2) begin
-                    registers[i] <= `ADDR_SP_START;
-                end else begin
-                    registers[i] <= 32'h0;
-                end
+                registers[i] <= i == 2 ? `ADDR_SP_START : 32'h0;
             end
         end else if (write_en & |dest) begin
             registers[dest] <= write_data;

@@ -1,5 +1,13 @@
-// predefined values
-`define ADDR_SP_START 32'h0000BFFC
+
+`define ADDR_SP_START           32'h0000_BFFC
+`define ADDR_MMIO_BASE          32'h8000_0000
+`define ADDR_MMIO_SYS_INFO      32'h0000_0000
+`define ADDR_MMIO_LED           32'h0010_0000
+`define ADDR_MMIO_SW            32'h0020_0000
+`define ADDR_MMIO_VGA           32'h0030_0000
+`define ADDR_MMIO_ASCII         32'h0040_0000
+
+// Instruction parameters
 `define NOP 32'h00000013
 
 // alu_sel [3:0]
@@ -61,14 +69,15 @@
 `define YELLOW_CODE             4'b0100
 `define LIGHT_GREEN_CODE        4'b0101
 `define GREEN_CODE              4'b0110
-`define CYAN_GREEN_CODE         4'b0111
+`define SPRING_GREEN_CODE       4'b0111
 `define CYAN_CODE               4'b1000
 `define SKY_BLUE_CODE           4'b1001
 `define BLUE_CODE               4'b1010
 `define PURPLE_CODE             4'b1011
 `define PINK_CODE               4'b1100
 `define ROSE_CODE               4'b1101
-`define GRAY_CODE               4'b1110
+`define SUPERNOVA_CODE          4'b1110
+`define GRAY_CODE               4'b1111
 
 // VGA color values
 `define BLACK_VALUE             12'h000
@@ -78,11 +87,12 @@
 `define YELLOW_VALUE            12'hFF0
 `define LIGHT_GREEN_VALUE       12'h8F0
 `define GREEN_VALUE             12'h0F0
-`define CYAN_GREEN_VALUE        12'h0F8
+`define SPRING_GREEN_VALUE      12'h0F8
 `define CYAN_VALUE              12'h0FF
 `define SKY_BLUE_VALUE          12'h08F
 `define BLUE_VALUE              12'h00F
 `define PURPLE_VALUE            12'h08F
 `define PINK_VALUE              12'hF0F
-`define ROSE_VALUE              12'h0F8
+`define ROSE_VALUE              12'hF08
+`define SUPERNOVA_VALUE         12'hFC0
 `define GRAY_VALUE              12'h888

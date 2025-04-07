@@ -140,10 +140,6 @@ module control_logic(
                         (opcode == 7'b0110111)                          ? `BSEL :    // lui
                         `ADD;
 
-    assign mem_w_en = S ? (funct3 == 3'h0 ? 4'b0001 :                   // sb
-                           funct3 == 3'h1 ? 4'b0011 :                   // sh
-                           funct3 == 3'h2 ? 4'b1111 : 4'h0) : 4'h0;     // sw
-
     assign store_width = S ? funct3[1:0] : 2'h3;
     assign load_width = I_load ? funct3[1:0] : 2'h3;
     assign load_un = I_load & (funct3 == 3'h4 | funct3 == 3'h5);

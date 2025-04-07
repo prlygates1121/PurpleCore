@@ -57,8 +57,8 @@ module core(
     wire D_load_un;
 
     // IO
-    assign leds_r = {leds_r_mem, core_mode};
-    wire [7:1] leds_r_mem;
+    assign leds_r = {leds_r_mem[7:1], core_mode};
+    wire [7:0] leds_r_mem;
 
     // WB signals
     wire WB_out_reg_w_en;

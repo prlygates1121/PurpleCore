@@ -138,9 +138,6 @@ module top(
         .clk(clk_main),
         .reset(reset_sync_main_s2),
         .rx_in(uart_rx_in),
-
-        .I_read(I_read),
-
         .tx_out(uart_tx_out),
         .inst_loaded(uart_inst_loaded),
         .addr(uart_addr),
