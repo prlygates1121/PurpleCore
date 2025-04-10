@@ -40,7 +40,9 @@ module core(
 
     input clk_pixel,
     input [31:0] vga_addr,
-    output [31:0] vga_data
+    output [31:0] vga_data,
+
+    input [7:0] key_code
     );
 
     parameter LOADING = 0, RUNNING = 1;
@@ -259,9 +261,7 @@ module core(
         .ID_br_un                   (EX_in_br_un),
         .ID_I_addr                  (EX_in_I_addr),
         .ID_rs1                     (EX_in_rs1),
-        // TBD  
         .ID_rs2                     (EX_in_rs2),
-        // TBD  
         .ID_rd                      (EX_in_rd),
         .ID_store_width             (EX_in_store_width),
         .ID_load_width              (EX_in_load_width),
@@ -409,33 +409,35 @@ module core(
     );
 
     memory memory_0(
-        .clk(clk),
-        .reset(core_reset),
+        .clk                        (clk),
+        .reset                      (core_reset),
 
-        .I_en(1'b1),
-        .I_write_en(wea),
-        .I_addr(I_addr),
-        .I_store_data(I_store_data),
-        .I_load_data(I_load_data),
+        .I_en                       (1'b1),
+        .I_write_en                 (wea),
+        .I_addr                     (I_addr),
+        .I_store_data               (I_store_data),
+        .I_load_data                (I_load_data),
 
-        .D_en(1'b1),
-        .D_addr(D_addr),
-        .D_store_data(D_store_data),
-        .D_store_width(D_store_width),
-        .D_load_data(D_load_data),
-        .D_load_width(D_load_width),
-        .D_load_un(D_load_un),
+        .D_en                       (1'b1),
+        .D_addr                     (D_addr),
+        .D_store_data               (D_store_data),
+        .D_store_width              (D_store_width),
+        .D_load_data                (D_load_data),
+        .D_load_width               (D_load_width),
+        .D_load_un                  (D_load_un),
 
 
-        .sws_l(sws_l),
-        .sws_r(sws_r),
+        .sws_l                      (sws_l),
+        .sws_r                      (sws_r),
 
-        .leds_l(leds_l),
-        .leds_r(leds_r_mem),
+        .leds_l                     (leds_l),
+        .leds_r                     (leds_r_mem),
 
-        .clk_pixel(clk_pixel),
-        .vga_addr(vga_addr),
-        .vga_data(vga_data)
+        .clk_pixel                  (clk_pixel),
+        .vga_addr                   (vga_addr),
+        .vga_data                   (vga_data),
+
+        .key_code                   (key_code)
     );
 
     /* -------------------------------------- Debug -------------------------------------- */

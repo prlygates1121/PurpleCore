@@ -48,7 +48,9 @@ module memory(
 
     input clk_pixel,
     input [31:0] vga_addr,
-    output [31:0] vga_data
+    output [31:0] vga_data,
+
+    input [7:0] key_code
 );
     wire store = D_store_width != 2'h3;
     wire load = D_load_width != 2'h3;
@@ -77,6 +79,7 @@ module memory(
     localparam [10:0] SW       = 11'd2;
     localparam [10:0] VGA      = 11'd3;
     localparam [10:0] ASCII    = 11'd4;
+    localparam [10:0] KEYBOARD = 11'd5;
 
     // io_en: the instruction is accessing memory mapped I/O
     wire io_en = D_addr[31];
@@ -88,6 +91,7 @@ module memory(
                                io_sel == SW          ? {16'h0000, sws_l, sws_r} : 
                                io_sel == VGA         ? vga_load_word :
                                io_sel == ASCII       ? (D_addr[2] ? ascii_data[D_addr[9:3]][63:32] : ascii_data[D_addr[9:3]][31:0]) :
+                               io_sel == KEYBOARD    ? {24'h0, key_code} :
                                32'h0;
 
     // load_word: the 32-bit data loaded from either the main memory or the I/O

@@ -59,18 +59,18 @@ module top(
 
     wire clk_main;                    // generates clk_main from clk_100
     clk_main_gen clk_main_gen_0(
-        .clk_out1(clk_main),
-        .reset(~reset_n),
-        .locked(locked_main),
-        .clk_in1(clk_100)
+        .clk_out1                       (clk_main),
+        .reset                          (~reset_n),
+        .locked                         (locked_main),
+        .clk_in1                        (clk_100)
     );
 
     wire clk_pixel;                 // Pixel clock: 25.20325 MHz ~= 800 * 525 * 60
     clk_pixel_gen clk_gen(
-        .clk_system(clk_100),
-        .reset(~reset_n),
-        .locked(locked_pixel),
-        .clk_pixel(clk_pixel)
+    .clk_system                         (clk_100),
+        .reset                          (~reset_n),
+        .locked                         (locked_pixel),
+        .clk_pixel                      (clk_pixel)
     );
 
     // the init_counter starts once all clocks are locked
@@ -108,70 +108,72 @@ module top(
     end
 
     core core_0(
-        .clk(clk_main),
-        .reset(reset_sync_main_s2),
+        .clk                            (clk_main),
+        .reset                          (reset_sync_main_s2),
         
-        .uart_addr(uart_addr),
-        .uart_inst(uart_inst),
-        .uart_write(uart_mem_write),
-        .uart_inst_loaded(uart_inst_loaded),
+        .uart_addr                      (uart_addr),
+        .uart_inst                      (uart_inst),
+        .uart_write                     (uart_mem_write),
+        .uart_inst_loaded               (uart_inst_loaded),
 
-        .sws_l(sws_l),
-        .sws_r(sws_r),
+        .sws_l                          (sws_l),
+        .sws_r                          (sws_r),
 
         // .leds_l(leds_l),
-        // .leds_r(leds_r),
+        .leds_r(leds_r),
 
-        .clk_pixel(clk_pixel),
-        .vga_addr(vga_addr),
-        .vga_data(vga_data)
+        .clk_pixel                      (clk_pixel),
+        .vga_addr                       (vga_addr),
+        .vga_data                       (vga_data),
+
+        .key_code                       (key_code)
     );
 
     vga_top vga(
-        .clk(clk_pixel),
-        .reset(reset_sync_pixel_s2),
-        .r(vga_r),
-        .g(vga_g),
-        .b(vga_b),
-        .h_sync(vga_h_sync),
-        .v_sync(vga_v_sync),
-        .vga_addr(vga_addr),
-        .vga_data(vga_data)
+        .clk                            (clk_pixel),
+        .reset                          (reset_sync_pixel_s2),
+        .r                              (vga_r),
+        .g                              (vga_g),
+        .b                              (vga_b),
+        .h_sync                         (vga_h_sync),
+        .v_sync                         (vga_v_sync),
+        .vga_addr                       (vga_addr),
+        .vga_data                       (vga_data)
     );
 
     uart_handler uart_handler_0(
-        .clk(clk_main),
-        .reset(reset_sync_main_s2),
-        .rx_in(uart_rx_in),
-        .tx_out(uart_tx_out),
-        .inst_loaded(uart_inst_loaded),
-        .addr(uart_addr),
-        .inst(uart_inst),
-        .mem_write(uart_mem_write)
+        .clk                            (clk_main),
+        .reset                          (reset_sync_main_s2),
+        .rx_in                          (uart_rx_in),
+        .tx_out                         (uart_tx_out),
+        .inst_loaded                    (uart_inst_loaded),
+        .addr                           (uart_addr),
+        .inst                           (uart_inst),
+        .mem_write                      (uart_mem_write)
     );
 
     wire [31:0] debug_hex_digits;
     seg_display_handler seg_display_handler_0(
-        .clk(clk_main),
-        .reset(reset_sync_main_s2),
-        .hex_digits(debug_hex_digits),
-        .tube_ena(tube_ena),
-        .left_tube_content(left_tube_content),
-        .right_tube_content(right_tube_content)
+        .clk                            (clk_main),
+        .reset                          (reset_sync_main_s2),
+        .hex_digits                     (debug_hex_digits),
+        .tube_ena                       (tube_ena),
+        .left_tube_content              (left_tube_content),
+        .right_tube_content             (right_tube_content)
     );
 
     wire debug_shift;
     wire [7:0] debug_scan_code;
     assign debug_hex_digits = {key_code, 16'hEEEE, debug_scan_code};
     keyboard keyboard_0 (
-        .debug_shift        (debug_shift),
-        .debug_scan_code    (debug_scan_code),
+        .debug_shift                    (debug_shift),
+        .debug_scan_code                (debug_scan_code),
 
-        .clk                (clk_main),
-        .reset              (reset_sync_main_s2),
-        .ps2_clk            (ps2_clk),
-        .ps2_data           (ps2_data),
-        .key_code           (key_code)
+        .clk                            (clk_main),
+        .reset                          (reset_sync_main_s2),
+        .ps2_clk                        (ps2_clk),
+        .ps2_data                       (ps2_data),
+        .key_code                       (key_code)
 );
 
     // assign leds_l = uart_addr[15:8];

@@ -185,6 +185,7 @@ module keyboard(
             `BACKSLASH_SCAN     : key_code <= caps ? `QUESTION       : `BACKSLASH;
             `SPACE_SCAN         : key_code <= `SPACE;
             `CAPS_SCAN          : key_code <= `CAPS;
+            `BKSP_SCAN          : key_code <= `BACKSPACE;
             default             : key_code <= `NONE_SCAN;
         endcase
     end

@@ -99,6 +99,7 @@
 #.equ |              , 92
 #.equ }              , 93
 #.equ ~              , 94
+.equ bksp           , 97
 
 .equ BLACK              , 0b0000
 .equ WHITE              , 0b0001
@@ -117,6 +118,16 @@
 .equ SUPERNOVA          , 0b1110
 .equ GRAY               , 0b1111
 
+.equ KEYBOARD_BASE      , 0x80500000
+.equ KEYBOARD_TIMEOUT   , 1000000
+.equ KEYBOARD_CONSECUTIVE_DELAY, 100000
+
+.equ LED_BASE           , 0x80100000
+
+####################################################################################################################################################
+####                                                                    macros                                                                  ####
+####################################################################################################################################################
+
 # brief: draw a pixel on the VGA memory buffer
 # x: x coordinate
 # y: y coordinate
@@ -125,7 +136,7 @@
     li t0, DISPLAY_WIDTH
     li t1, VGA_BASE
     li t6, bits_4
-    mul t2, \y, t0              # pixel index (row)
+    mul t2, \y, t0  # pixel index (row)
     add t2, t2, \x              # pixel index (row + col)
     andi t3, t2, 1              # t3: select which pixel inside byte (0: first pixel, 1: second pixel)
     slli t3, t3, 2              # (0: first pixel, 4: second pixel)
@@ -133,7 +144,7 @@
     sll t4, t4, t3              # shift color left by 4 bits if we want the second pixel
     srl t6, t6, t3              # shift bits_4 right by 4 bits if we want the second pixel
     srli t2, t2, 1              # byte index (1/2 byte per pixel)
-    add t2, t2, t1              # vga write address
+    add t2, t2, t1       # vga write address
     lbu t5, 0(t2)               # read original byte from memory
     and t5, t5, t6              # and the byte with bits_4
     or t5, t5, t4               # or the byte with color
@@ -145,88 +156,138 @@
 # y: y coordinate
 # colors: color value (all 32 bits are used to paint 8 pixels)
 # note: make sure the pixel position align with the word boundary (pixel index divisible by 8)
-.macro draw_pixel_8 x y colors
-    li t0, DISPLAY_WIDTH
-    li t1, VGA_BASE
-    mul t2, \y, t0
+.macro draw_pixel_8 diplay_width vga_base x y colors
+    mul t2, \y, \display_width
     add t2, t2, \x              # pixel index
     srli t2, t2, 1              # byte index
-    add t2, t2, t1              # vga write address
+    add t2, t2, \vga_base       # vga write address
     sw \colors, 0(t2)
 .endm
 
-.macro m_print_ascii x y color char_name
-    mv a0, \x
-    mv a1, \y
-    li a2, \char_name
-    li a3, \color
-    jal print_ascii
+# res = 1 if printable, 0 otherwise
+.macro is_printable char_name res
+    sltiu \res, \char_name, 95
 .endm
+
+# res = 0 if no character, non-zero otherwise
+.macro has_char char_name res
+    addi \res, \char_name, -0xFF
+.endm
+
+.macro get_key keyboard_base key
+    lw \key, 0(\keyboard_base)
+.endm
+
+####################################################################################################################################################
+####                                                                    main()                                                                  ####
+####################################################################################################################################################
 
 .section .text
 .global _start
 
 _start:
-    li s0, 10
-    li s1, 10
-    m_print_ascii s0, s1, BLACK, I
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, n
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, SPACE
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, SPACE
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, g
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, l
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, x
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, y
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, SPACE
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, f
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, r
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, COMMA
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, SPACE
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, f
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, r
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, SPACE
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, w
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, a
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, y
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, PERIOD
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, PERIOD
-    addi s0, s0, 8
-    m_print_ascii s0, s1, BLACK, PERIOD
+    li s1, KEYBOARD_BASE
+    li s2, 10               # s2: x
+    li s3, 10               # s3: y
+    li s6, 620              # s6: threshold of new line
+    li s0, 0                # s0: has_char
+    li s4, KEYBOARD_TIMEOUT
+    #li s7, 0                # s7: state
+                            # 0:    IDLE
+                            # 1:    FIRST
+                            # 2:    
 
-what:
-    j what
+loop:
+    addi s4, s4, -1
+    get_key s1, s5
+    has_char s5, t0
+    beq t0, zero, get_no_char
+
+    # if a char is received
+    mv t0, s0
+    li s0, 1                # set has_char = 1
+    beq t0, zero, ice_breaker
+
+    # if has_char already
+    blt s4, zero, timeout
+
+    # if no timeout yet, continue
+    j loop
+
+    # if timeout, reset timer, consider key as new input
+timeout:
+    li s4, KEYBOARD_CONSECUTIVE_DELAY
+    j check_printability
+
+ice_breaker:
+#    li s7, 1
+    li s4, KEYBOARD_TIMEOUT
+    
+check_printability:
+    is_printable s5, t0
+    bne t0, zero, print
+
+    # if not printable, check special command (e.g., bksp)
+    li t0, bksp
+    beq s5, t0, do_bksp
+    
+    # if not any special command
+    j loop
+
+do_bksp:
+    # check if x is at the start of line
+    addi t0, s2, -10
+    beq t0, zero, prev_line
+    addi s2, s2, -8
+    j erase
+
+prev_line:
+    addi t0, s3, -10
+    beq t0, zero, loop      # ignore backspace if we're at the first line
+
+    li s2, 618              # move x to the end of line
+    addi s3, s3, -10        # move y up a line
+
+erase:
+    mv a0, s2
+    mv a1, s3
+    li a2, 8
+    li a3, 8
+    li a4, RED
+    jal fill
+
+    li a0, 3
+    jal turn_on_led
+
+    j loop
+
+print:
+    mv a0, s2
+    mv a1, s3
+    mv a2, s5
+    li a3, BLACK
+    jal print_ascii
+    
+    addi s2, s2, 8
+    bge s2, s6, new_line
+
+    # if no new line
+    j loop
+
+new_line:
+    li s2, 10
+    addi s3, s3, 10
+    j loop
+
+get_no_char:
+    li s0, 0
+#    li s7, 0
+    li s4, KEYBOARD_TIMEOUT
+    j loop
+
+####################################################################################################################################################
+####                                                                 functions                                                                  ####
+####################################################################################################################################################
 
 # brief: print a 8 * 8 ascii character
 # a0: x coordinate
@@ -235,7 +296,7 @@ what:
 # a3: color (only lower 4 bits are used)
 # a4: background fill (when not zero, fill the remaining part in the 8 * 8 area with black)
 print_ascii:
-    addi sp, sp, -32
+    addi sp, sp, -40
     sw ra, 0(sp)
     sw s0, 4(sp)
     sw s1, 8(sp)
@@ -244,6 +305,9 @@ print_ascii:
     sw s4, 20(sp)
     sw s5, 24(sp)
     sw s6, 28(sp)
+    sw s7, 32(sp)
+    sw s8, 36(sp)
+
     li s0, ASCII_BASE
     slli a2, a2, 3
     add a2, a2, s0              # a2: address of the 2-word space holding the ascii char
@@ -296,7 +360,93 @@ print_ascii_end:
     lw s4, 20(sp)
     lw s5, 24(sp)
     lw s6, 28(sp)
-    addi sp, sp, 32
+    lw s7, 32(sp)
+    lw s8, 36(sp)
+    addi sp, sp, 40
+    ret
+
+# brief: fill a rectangular space in the display with color
+# a0: x_start
+# a1: y_start
+# a2: width
+# a3: height
+# a4: color
+fill:
+    addi sp, sp, -20
+    sw ra, 0(sp)
+    sw s0, 4(sp)
+    sw s1, 8(sp)
+    sw s2, 12(sp)
+    sw s3, 16(sp)
+
+    mv s0, a0
+    mv s1, a1
+    add s2, s0, a2
+    add s3, s1, a3
+fill_loop_y:
+
+fill_loop_x:
+    draw_pixel s0, s1, a4
+
+    addi s0, s0, 1
+    bne s0, s2, fill_loop_x
+
+    mv s0, a0
+    addi s1, s1, 1
+    bne s1, s3, fill_loop_y
+
+    lw ra, 0(sp)
+    lw s0, 4(sp)
+    lw s1, 8(sp)
+    lw s2, 12(sp)
+    lw s3, 16(sp)
+
+    addi sp, sp, 20
+    ret
+
+# a0: the index of led to be turned on
+turn_on_led:
+    addi sp, sp, -16
+    sw ra, 0(sp)
+    sw s0, 4(sp)
+    sw s1, 8(sp)
+    sw s2, 12(sp)
+
+    li s0, LED_BASE
+    lw s1, 0(s0)
+    li s2, 1
+    sll s2, s2, a0
+    or s1, s1, s2
+    sw s1, 0(s0)
+
+    lw ra, 0(sp)
+    lw s0, 4(sp)
+    lw s1, 8(sp)
+    lw s2, 12(sp)
+    addi sp, sp, 16
+    ret
+
+# a0: the index of led to be turned on
+turn_off_led:
+    addi sp, sp, -16
+    sw ra, 0(sp)
+    sw s0, 4(sp)
+    sw s1, 8(sp)
+    sw s2, 12(sp)
+
+    li s0, LED_BASE
+    lw s1, 0(s0)
+    li s2, 1
+    sll s2, s2, a0
+    not s2, s2
+    and s1, s1, s2
+    sw s1, 0(s0)
+
+    lw ra, 0(sp)
+    lw s0, 4(sp)
+    lw s1, 8(sp)
+    lw s2, 12(sp)
+    addi sp, sp, 16
     ret
 
 

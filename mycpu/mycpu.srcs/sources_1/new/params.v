@@ -6,6 +6,7 @@
 `define ADDR_MMIO_SW            32'h0020_0000
 `define ADDR_MMIO_VGA           32'h0030_0000
 `define ADDR_MMIO_ASCII         32'h0040_0000
+`define ADDR_MMIO_KEYBOARD      32'h0050_0000
 
 // Instruction parameters
 `define NOP 32'h00000013
@@ -195,6 +196,7 @@
 `define TILDE                   8'd94
 `define DELETE                  8'd95
 `define CAPS                    8'd96
+`define BACKSPACE               8'd97
 
 // keyboard scan codes
 `define NONE_SCAN               8'hFF
