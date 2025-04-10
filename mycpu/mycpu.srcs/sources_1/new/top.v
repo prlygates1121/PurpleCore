@@ -41,7 +41,10 @@ module top(
 
     output [7:0] tube_ena,
     output [7:0] left_tube_content,
-    output [7:0] right_tube_content
+    output [7:0] right_tube_content,
+
+    input ps2_clk,
+    input ps2_data
 
     );
     wire locked = locked_main & locked_pixel;
@@ -51,6 +54,8 @@ module top(
     wire [31:0] uart_addr, uart_inst;
 
     wire [31:0] vga_addr, vga_data;
+
+    wire [7:0] key_code;
 
     wire clk_main;                    // generates clk_main from clk_100
     clk_main_gen clk_main_gen_0(
@@ -114,8 +119,8 @@ module top(
         .sws_l(sws_l),
         .sws_r(sws_r),
 
-        .leds_l(leds_l),
-        .leds_r(leds_r),
+        // .leds_l(leds_l),
+        // .leds_r(leds_r),
 
         .clk_pixel(clk_pixel),
         .vga_addr(vga_addr),
@@ -145,21 +150,35 @@ module top(
         .mem_write(uart_mem_write)
     );
 
+    wire [31:0] debug_hex_digits;
     seg_display_handler seg_display_handler_0(
         .clk(clk_main),
         .reset(reset_sync_main_s2),
-        .hex_digits(I_read),
+        .hex_digits(debug_hex_digits),
         .tube_ena(tube_ena),
         .left_tube_content(left_tube_content),
         .right_tube_content(right_tube_content)
     );
 
+    wire debug_shift;
+    wire [7:0] debug_scan_code;
+    assign debug_hex_digits = {key_code, 16'hEEEE, debug_scan_code};
+    keyboard keyboard_0 (
+        .debug_shift        (debug_shift),
+        .debug_scan_code    (debug_scan_code),
 
+        .clk                (clk_main),
+        .reset              (reset_sync_main_s2),
+        .ps2_clk            (ps2_clk),
+        .ps2_data           (ps2_data),
+        .key_code           (key_code)
+);
 
     // assign leds_l = uart_addr[15:8];
     // assign leds_l[2] = uart_rx_in;
     // assign leds_l[1] = load_begin;
-    // assign leds_l[0] = uart_inst_loaded;
+    assign leds_l[0] = uart_inst_loaded;
+    assign leds_l[1] = debug_shift;
     // assign leds_r = uart_addr[7:0];
 
 endmodule
