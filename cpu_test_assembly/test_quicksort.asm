@@ -7,7 +7,7 @@ main:
     li s0, 15
 
     # s2 = address of array
-    li s2, 0x10000
+    li s2, 0xA000
     
     mv s1, s2
     li t0, 0

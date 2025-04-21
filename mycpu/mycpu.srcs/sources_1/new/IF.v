@@ -26,7 +26,11 @@ module IF(
     input stall,
     
     input EX_pc_sel,
+    input EX_mispredict,
+    input EX_branch_target_update,
     input [31:0] EX_alu_result,
+    input [31:0] EX_pc_plus_4,
+    input EX_branch_predict,
 
     // interface with memory
     output [31:0] I_addr,       // address to read from memory
@@ -35,12 +39,19 @@ module IF(
     output [31:0] IF_pc,
     output [31:0] IF_pc_plus_4,
     output [31:0] IF_inst,
-    output [31:0] IF_I_addr
+    output [31:0] IF_I_addr,
+
+    input branch_predict,
+    input [31:0] branch_target
+
     );
 
     reg [31:0] pc;
 
-    wire [31:0] pc_next = EX_pc_sel ? (EX_alu_result) : (pc + 4);
+    wire [31:0] pc_next = EX_branch_target_update ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
+                          EX_mispredict ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
+                          branch_predict ? branch_target :
+                          (pc + 4);
 
     always @(posedge clk) begin
         if (reset) begin

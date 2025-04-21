@@ -28,6 +28,7 @@ module ID(
     input [31:0] IF_pc_plus_4,
     input [31:0] IF_inst,
     input [31:0] IF_I_addr,
+    input IF_branch_predict,
     input [31:0] WB_reg_w_data,
     input WB_reg_w_en,
     input [4:0] WB_rd,
@@ -51,7 +52,8 @@ module ID(
     output [31:0] ID_pc_plus_4,
     output [31:0] ID_I_addr,
     output ID_jump,
-    output [2:0] ID_branch_type
+    output [2:0] ID_branch_type,
+    output ID_branch_predict
 
     );
 
@@ -142,5 +144,6 @@ module ID(
     assign ID_pc = IF_pc;
     assign ID_pc_plus_4 = IF_pc_plus_4;
     assign ID_I_addr = IF_I_addr;
+    assign ID_branch_predict = IF_branch_predict;
 
 endmodule

@@ -50,11 +50,7 @@ module hazard_unit(
     input EX_load,                              // whether the previous instruction is a load instruction
 
     output load_stall,                          // stall if there is a load hazard
-    output load_flush,                          // flush if there is a load hazard
-
-    // flush signals for branch hazard
-    input EX_pc_sel,                            // whether the current instruction initiates a branch
-    output branch_flush                         // flush if there is a branch hazard
+    output load_flush                           // flush if there is a load hazard
 
     );
 
@@ -67,8 +63,5 @@ module hazard_unit(
 
     assign load_stall = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
     assign load_flush = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
-
-    assign branch_flush = EX_pc_sel;
-
 
 endmodule

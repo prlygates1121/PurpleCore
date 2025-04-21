@@ -223,10 +223,29 @@ module cpu_quicksort_test(
         send_instruction(32'hFEDFF06F);
         send_instruction(32'h00008067);
 
-    #(CLK_100_PERIOD * 20000);
-    $finish;
     end
 
+    always @(posedge top0.clk_main) begin
+        if (top0.core_0.if_0.IF_pc == 32'h0000A000) begin
+            $finish;
+        end
+    end
+
+    integer ended = 0;
+    integer zero = 0;
+    integer cycle = 0;
+    always @(posedge top0.clk_main) begin
+        if (top0.core_0.core_reset == 0) begin
+            cycle = cycle + 1;
+            if (top0.core_0.if_0.IF_inst == 32'h00000000) begin
+                zero = zero + 1;
+            end
+            if (zero == 2 & ended == 0) begin
+                $display("Cycles taken: %d", cycle);
+                ended = 1;
+            end
+        end
+    end
 
     
 endmodule

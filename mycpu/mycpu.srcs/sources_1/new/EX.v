@@ -47,6 +47,8 @@ module EX(
     input ID_jump,
     input [2:0] ID_branch_type,
 
+    input ID_branch_predict,
+
     input [31:0] MEM_alu_result_forwarded,
     input [31:0] WB_alu_result_forwarded,
     input [1:0] forward_rs1_sel,
@@ -59,12 +61,16 @@ module EX(
     output [1:0] EX_store_width,                // -> MEM
     output [1:0] EX_load_width,                 // -> MEM
     output EX_load_un,                          // -> MEM
-    output [31:0] EX_pc_plus_4,          // -> MEM -> WB
+    output [31:0] EX_pc_plus_4,                 // -> MEM -> WB
     output [4:0] EX_rd,                         // -> MEM -> WB
     output [31:0] EX_rs2_data,                  // -> MEM
 
-    output [4:0] EX_rs1,     // TBD
-    output [4:0] EX_rs2      // TBD
+    output [4:0] EX_rs1,                        // -> hazard_unit
+    output [4:0] EX_rs2,                        // -> hazard_unit
+
+    output [31:0] EX_pc,                        // -> branch_prediction_unit
+    output EX_is_branch_inst,
+    output EX_branch_predict
 
     );
 
@@ -112,4 +118,7 @@ module EX(
     assign EX_rs2_data = rs2_data;
     assign EX_rs1 = ID_rs1;
     assign EX_rs2 = ID_rs2;
+    assign EX_pc = ID_pc;
+    assign EX_is_branch_inst = ID_jump | (ID_branch_type != `NO_BRANCH);
+    assign EX_branch_predict = ID_branch_predict;
 endmodule

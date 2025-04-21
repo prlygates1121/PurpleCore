@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 03/21/2025 12:09:46 AM
+// Create Date: 04/12/2025 10:09:05 PM
 // Design Name: 
-// Module Name: cpu_branch_test
+// Module Name: cpu_branch_prediction_test
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module cpu_branch_test(
+module cpu_branch_prediction_test(
 
     );
     parameter CLK_100_PERIOD = 10;
@@ -78,49 +78,13 @@ module cpu_branch_test(
         #(CLK_100_PERIOD * 2);
         reset_n = 1'b1;
         #(CLK_100_PERIOD * 5000);
-
-        send_instruction(32'h00500513);
-        send_instruction(32'h00500593);
-        send_instruction(32'h00A00613);
-        send_instruction(32'h00000F13);
-        send_instruction(32'h00000F93);
-        send_instruction(32'h00B50863);
-        send_instruction(32'h001F8F93);
-        send_instruction(32'h001F8F93);
-        send_instruction(32'h0080006F);
-        send_instruction(32'h002F0F13);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00C50863);
-        send_instruction(32'h004F0F13);
-        send_instruction(32'h008F0F13);
-        send_instruction(32'h0080006F);
-        send_instruction(32'h002F8F93);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00C51863);
-        send_instruction(32'h004F8F93);
-        send_instruction(32'h004F8F93);
-        send_instruction(32'h0080006F);
-        send_instruction(32'h010F0F13);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00B51863);
-        send_instruction(32'h020F0F13);
-        send_instruction(32'h040F0F13);
-        send_instruction(32'h0080006F);
-        send_instruction(32'h008F8F93);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00C000EF);
-        send_instruction(32'h010F8F93);
-        send_instruction(32'h010F8F93);
-        send_instruction(32'h080F0F13);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000097);
-        send_instruction(32'h01008093);
-        send_instruction(32'h000082E7);
-        send_instruction(32'h020F8F93);
-        send_instruction(32'h100F0F13);
-        send_instruction(32'h00000013);
+        
+        send_instruction(32'h00000293);
+        send_instruction(32'h00A00313);
+        send_instruction(32'h00628663);
+        send_instruction(32'h00128293);
+        send_instruction(32'hFF9FF06F);
+        send_instruction(32'h0000006F);
 
         #(CLK_100_PERIOD * 40000);
         $finish;
