@@ -148,6 +148,6 @@ module control_logic(
     assign alu_src2_sel = R;
 
     assign jump = J | I_jalr;
-    assign branch_type = B ? funct3 : 3'h2;
+    assign branch_type = B ? funct3 : `NO_BRANCH;
 
 endmodule

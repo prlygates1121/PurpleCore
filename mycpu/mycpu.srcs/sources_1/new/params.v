@@ -2,10 +2,10 @@
 `define ADDR_SP_START           32'h0000_BFFC
 `define ADDR_MMIO_BASE          32'h8000_0000
 `define ADDR_MMIO_SYS_INFO      32'h0000_0000
-`define ADDR_MMIO_LED           32'h0010_0000
-`define ADDR_MMIO_SW            32'h0020_0000
-`define ADDR_MMIO_VGA           32'h0030_0000
-`define ADDR_MMIO_ASCII         32'h0040_0000
+`define ADDR_MMIO_ASCII         32'h0010_0000
+`define ADDR_MMIO_LED           32'h0020_0000
+`define ADDR_MMIO_SW            32'h0030_0000
+`define ADDR_MMIO_VGA           32'h0040_0000
 `define ADDR_MMIO_KEYBOARD      32'h0050_0000
 
 // Instruction parameters

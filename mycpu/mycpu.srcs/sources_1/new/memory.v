@@ -59,7 +59,22 @@ module memory(
     wire [31:0] mem_store_data;
     wire [3:0] we, web, wevga;
 
-    blk_mem main_memory(
+    // blk_mem main_memory(
+    //     .clka(~clk),
+    //     .ena(I_en),
+    //     .wea(I_write_en),
+    //     .addra(I_addr[15:2]),
+    //     .dina(I_store_data),
+    //     .douta(I_load_data),
+    //     .clkb(~clk),
+    //     .enb(D_en),
+    //     .web(web),
+    //     .addrb(D_addr[15:2]),
+    //     .dinb(mem_store_data),
+    //     .doutb(mem_load_word)
+    // );
+
+    my_blk_mem main_memory(
         .clka(~clk),
         .ena(I_en),
         .wea(I_write_en),
@@ -75,10 +90,10 @@ module memory(
     );
 
     localparam [10:0] SYS_INFO = 11'd0;
-    localparam [10:0] LED      = 11'd1;
-    localparam [10:0] SW       = 11'd2;
-    localparam [10:0] VGA      = 11'd3;
-    localparam [10:0] ASCII    = 11'd4;
+    localparam [10:0] ASCII    = 11'd1;
+    localparam [10:0] LED      = 11'd2;
+    localparam [10:0] SW       = 11'd3;
+    localparam [10:0] VGA      = 11'd4;
     localparam [10:0] KEYBOARD = 11'd5;
 
     // io_en: the instruction is accessing memory mapped I/O
@@ -87,10 +102,10 @@ module memory(
     wire [10:0] io_sel = D_addr[30:20];
     // io_load_word: the data loaded from memory mapped I/O
     wire [31:0] io_load_word = io_sel == SYS_INFO    ? 32'h0 :
+                               io_sel == ASCII       ? (D_addr[2] ? ascii_data[D_addr[9:3]][63:32] : ascii_data[D_addr[9:3]][31:0]) :
                                io_sel == LED         ? {16'h0000, leds_l_reg, leds_r_reg} : 
                                io_sel == SW          ? {16'h0000, sws_l, sws_r} : 
                                io_sel == VGA         ? vga_load_word :
-                               io_sel == ASCII       ? (D_addr[2] ? ascii_data[D_addr[9:3]][63:32] : ascii_data[D_addr[9:3]][31:0]) :
                                io_sel == KEYBOARD    ? {24'h0, key_code} :
                                32'h0;
 

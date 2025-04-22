@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "../../sources_1/new/params.v"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -78,151 +79,9 @@ module cpu_quicksort_test(
         #(CLK_100_PERIOD * 2);
         reset_n = 1'b1;
         #(CLK_100_PERIOD * 5000);
-        
-        send_instruction(32'h00F00413);
-        send_instruction(32'h00010937);
-        send_instruction(32'h00090913);
-        send_instruction(32'h00090493);
-        send_instruction(32'h00000293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00300293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00500293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'hFFF00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00700293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00400293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00200293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00B00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'hFFC00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h02A00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00200293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h00100293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'hF9D00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h04B00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00448493);
-        send_instruction(32'h02C00293);
-        send_instruction(32'h0054A023);
-        send_instruction(32'h00090513);
-        send_instruction(32'h00000593);
-        send_instruction(32'hFFF40613);
-        send_instruction(32'h0DC000EF);
-        send_instruction(32'h00090513);
-        send_instruction(32'h00040593);
-        send_instruction(32'h140000EF);
-        send_instruction(32'h1600006F);
-        send_instruction(32'h00259293);
-        send_instruction(32'h00A282B3);
-        send_instruction(32'h0002A383);
-        send_instruction(32'h00261313);
-        send_instruction(32'h00A30333);
-        send_instruction(32'h00032E03);
-        send_instruction(32'h01C2A023);
-        send_instruction(32'h00732023);
-        send_instruction(32'h00008067);
-        send_instruction(32'hFE410113);
-        send_instruction(32'h00112023);
-        send_instruction(32'h00812223);
-        send_instruction(32'h00912423);
-        send_instruction(32'h01212623);
-        send_instruction(32'h01312823);
-        send_instruction(32'h01412A23);
-        send_instruction(32'h01512C23);
-        send_instruction(32'h00060A93);
-        send_instruction(32'h002A9413);
-        send_instruction(32'h00A40433);
-        send_instruction(32'h00042403);
-        send_instruction(32'hFFF58493);
-        send_instruction(32'h00058913);
-        send_instruction(32'h001A8993);
-        send_instruction(32'h03390A63);
-        send_instruction(32'h00291A13);
-        send_instruction(32'h00AA0A33);
-        send_instruction(32'h000A2A03);
-        send_instruction(32'h008A4663);
-        send_instruction(32'h00190913);
-        send_instruction(32'hFE9FF06F);
-        send_instruction(32'h00148493);
-        send_instruction(32'h00048593);
-        send_instruction(32'h00090613);
-        send_instruction(32'hF79FF0EF);
-        send_instruction(32'h00190913);
-        send_instruction(32'hFD1FF06F);
-        send_instruction(32'h00148593);
-        send_instruction(32'h000A8613);
-        send_instruction(32'hF65FF0EF);
-        send_instruction(32'h00058513);
-        send_instruction(32'h00012083);
-        send_instruction(32'h00412403);
-        send_instruction(32'h00812483);
-        send_instruction(32'h00C12903);
-        send_instruction(32'h01012983);
-        send_instruction(32'h01412A03);
-        send_instruction(32'h01812A83);
-        send_instruction(32'h01C10113);
-        send_instruction(32'h00008067);
-        send_instruction(32'h00C5C463);
-        send_instruction(32'h00008067);
-        send_instruction(32'hFEC10113);
-        send_instruction(32'h00112023);
-        send_instruction(32'h00812223);
-        send_instruction(32'h00912423);
-        send_instruction(32'h01212623);
-        send_instruction(32'h01312823);
-        send_instruction(32'h00050413);
-        send_instruction(32'h00058493);
-        send_instruction(32'h00060913);
-        send_instruction(32'hF31FF0EF);
-        send_instruction(32'h00050993);
-        send_instruction(32'h00040513);
-        send_instruction(32'h00048593);
-        send_instruction(32'hFFF98613);
-        send_instruction(32'hFC1FF0EF);
-        send_instruction(32'h00040513);
-        send_instruction(32'h00198593);
-        send_instruction(32'h00090613);
-        send_instruction(32'hFB1FF0EF);
-        send_instruction(32'h00012083);
-        send_instruction(32'h00412403);
-        send_instruction(32'h00812483);
-        send_instruction(32'h00C12903);
-        send_instruction(32'h01012983);
-        send_instruction(32'h01410113);
-        send_instruction(32'h00008067);
-        send_instruction(32'h00000293);
-        send_instruction(32'h00050393);
-        send_instruction(32'h00B28C63);
-        send_instruction(32'h00229313);
-        send_instruction(32'h00730333);
-        send_instruction(32'h00032503);
-        send_instruction(32'h00128293);
-        send_instruction(32'hFEDFF06F);
-        send_instruction(32'h00008067);
 
+        // Heap sort
+        send_instruction(32'hFC010113);
     end
 
     always @(posedge top0.clk_main) begin
@@ -231,18 +90,59 @@ module cpu_quicksort_test(
         end
     end
 
-    integer ended = 0;
     integer zero = 0;
     integer cycle = 0;
+    integer branch_count = 0;
+    integer jump_count = 0;
+    integer branch_taken = 0;
+    integer branch_untaken = 0;
+    integer misprediction = 0;
+    integer branch_target_outdated = 0;
+    integer branch_flushes = 0;
     always @(posedge top0.clk_main) begin
         if (top0.core_0.core_reset == 0) begin
             cycle = cycle + 1;
-            if (top0.core_0.if_0.IF_inst == 32'h00000000) begin
+
+            if (top0.core_0.if_0.IF_inst == 32'h00000000 | top0.core_0.if_0.IF_inst == 32'h00000013) begin
                 zero = zero + 1;
+            end else begin
+                zero = 0;
             end
-            if (zero == 2 & ended == 0) begin
-                $display("Cycles taken: %d", cycle);
-                ended = 1;
+            
+            if (top0.core_0.ex_0.ID_branch_type != `NO_BRANCH) begin
+                branch_count = branch_count + 1;
+                if (top0.core_0.ex_0.branch) begin
+                    branch_taken = branch_taken + 1;
+                end else begin
+                    branch_untaken = branch_untaken + 1;
+                end
+            end
+            if (top0.core_0.ex_0.ID_jump) begin
+                jump_count = jump_count + 1;
+            end
+            if (top0.core_0.EX_branch_target_update & top0.core_0.EX_out_branch_predict) begin
+                branch_target_outdated = branch_target_outdated + 1;
+                branch_flushes = branch_flushes + 1;
+            end else if (top0.core_0.EX_mispredict) begin
+                misprediction = misprediction + 1;
+                branch_flushes = branch_flushes + 1;
+            end
+
+            if (zero == 4) begin
+                $display("Total Cycles:                 %0d",    cycle);
+                $display("Address:                      0x%h",   top0.core_0.if_0.IF_pc);
+                $display("Total Jumps:                  %0d",    jump_count);
+                $display("Total Branches:               %0d",    branch_count);
+                $display("Total Jumps + Branches:       %0d",    jump_count + branch_count);
+                $display("Total Branches Taken:         %0d",    branch_taken);
+                $display("Total Branches Untaken:       %0d",    branch_untaken);
+                $display("Total Mispredictions:         %0d",    misprediction);
+                $display("Total Branch Target Outdated: %0d",    branch_target_outdated);
+                $display("Total Flushes:                %0d",    branch_flushes);
+                $display("Branch Flush Rate:            %0f%%",  branch_flushes * 100.0 / (branch_count + jump_count));
+                $display("Branch Mispredict Rate:       %0f%%",  misprediction * 100.0 / (branch_count + jump_count));
+                $display("Branch Target Outdated Rate:  %0f%%",  branch_target_outdated * 100.0 / (branch_count + jump_count));
+                $finish;
             end
         end
     end

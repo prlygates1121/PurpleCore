@@ -89,6 +89,7 @@ module core(
     wire [31:0] ID_out_pc;
     wire [31:0] ID_out_pc_plus_4;
     wire [31:0] ID_out_I_addr;
+    wire [31:0] ID_out_inst;
     wire ID_out_jump;
     wire [2:0] ID_out_branch_type;
     wire ID_out_branch_predict;
@@ -114,6 +115,7 @@ module core(
     wire EX_in_jump;
     wire [2:0] EX_in_branch_type;
     wire EX_in_branch_predict;
+    wire [31:0] EX_in_inst;
 
     wire [31:0] EX_out_alu_result;
     wire EX_out_pc_sel;
@@ -166,6 +168,7 @@ module core(
 
     // hazard_unit
     wire load_stall, load_flush;
+    // misprediction is when the branch prediction is not equal to the actual branch taken
     wire EX_mispredict = (EX_out_branch_predict != EX_out_pc_sel);
     // flush upon misprediction and when predicted an outdated branch target
     wire EX_branch_flush = EX_mispredict | (EX_branch_target_update & EX_out_branch_predict);         
@@ -246,7 +249,8 @@ module core(
         .ID_I_addr              (ID_out_I_addr),
         .ID_jump                (ID_out_jump),
         .ID_branch_type         (ID_out_branch_type),
-        .ID_branch_predict      (ID_out_branch_predict)
+        .ID_branch_predict      (ID_out_branch_predict),
+        .ID_inst                (ID_out_inst)
     );
 
     ID_EX id_ex_0 (
@@ -273,6 +277,7 @@ module core(
         .ID_jump                (ID_out_jump),
         .ID_branch_type         (ID_out_branch_type),
         .ID_branch_predict      (ID_out_branch_predict),
+        .ID_inst                (ID_out_inst),
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
         .EX_alu_src1_sel        (EX_in_alu_src1_sel),
@@ -294,7 +299,8 @@ module core(
         .EX_I_addr              (EX_in_I_addr),
         .EX_jump                (EX_in_jump),
         .EX_branch_type         (EX_in_branch_type),
-        .EX_branch_predict      (EX_in_branch_predict)
+        .EX_branch_predict      (EX_in_branch_predict),
+        .EX_inst                (EX_in_inst)
     );
 
     EX ex_0 (
@@ -437,7 +443,7 @@ module core(
         .ID_rs1                      (ID_out_rs1),
         .ID_rs2                      (ID_out_rs2),
         .EX_rd                       (EX_out_rd),
-        .EX_load                     (EX_out_reg_w_data_sel[0]),
+        .EX_load                     (EX_out_load_width != 2'h3),
         .load_stall                  (load_stall),
         .load_flush                  (load_flush)
     );

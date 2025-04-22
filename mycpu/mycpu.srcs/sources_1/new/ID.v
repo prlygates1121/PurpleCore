@@ -53,7 +53,8 @@ module ID(
     output [31:0] ID_I_addr,
     output ID_jump,
     output [2:0] ID_branch_type,
-    output ID_branch_predict
+    output ID_branch_predict,
+    output [31:0] ID_inst
 
     );
 
@@ -145,5 +146,6 @@ module ID(
     assign ID_pc_plus_4 = IF_pc_plus_4;
     assign ID_I_addr = IF_I_addr;
     assign ID_branch_predict = IF_branch_predict;
+    assign ID_inst = IF_inst;
 
 endmodule

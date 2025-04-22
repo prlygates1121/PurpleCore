@@ -2,6 +2,11 @@
 #     array: .space 50
 
 .text
+
+_start:
+    jal main
+    j exit
+
 main:   
     # s0 = # of elements
     li s0, 15
@@ -69,7 +74,7 @@ main:
     mv a1, s0
     jal print_arr
 
-    j exit
+    ret
 
 # void swap() swaps two elements in the array
 # a0:   address of the array
@@ -229,5 +234,4 @@ print_loop:
 
 print_end:
     jr ra
-    
 exit:
