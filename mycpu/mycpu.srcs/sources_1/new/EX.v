@@ -44,7 +44,8 @@ module EX(
 
     input [31:0] ID_pc,
     input [31:0] ID_pc_plus_4,
-    input ID_jump,
+    input ID_jal,
+    input ID_jalr,
     input [2:0] ID_branch_type,
 
     input ID_branch_predict,
@@ -69,8 +70,11 @@ module EX(
     output [4:0] EX_rs2,                        // -> hazard_unit
 
     output [31:0] EX_pc,                        // -> branch_prediction_unit
-    output EX_is_branch_inst,
-    output EX_branch_predict
+    output EX_branch_predict,
+
+    output EX_jal,
+    output EX_jalr,
+    output [2:0] EX_branch_type
 
     );
 
@@ -90,7 +94,7 @@ module EX(
                   ID_branch_type == `BGE  ?  ~EX_br_lt :
                   ID_branch_type == `BLTU ?   EX_br_lt :
                   ID_branch_type == `BGEU ?  ~EX_br_lt : 1'b0;
-    assign EX_pc_sel = ID_jump | branch;
+    assign EX_pc_sel = ID_jal | ID_jalr | branch;
 
     branch_comp branch_comp_0(
         .rs1_data(rs1_data),
@@ -119,6 +123,8 @@ module EX(
     assign EX_rs1 = ID_rs1;
     assign EX_rs2 = ID_rs2;
     assign EX_pc = ID_pc;
-    assign EX_is_branch_inst = ID_jump | (ID_branch_type != `NO_BRANCH);
     assign EX_branch_predict = ID_branch_predict;
+    assign EX_jal = ID_jal;
+    assign EX_jalr = ID_jalr;
+    assign EX_branch_type = ID_branch_type;
 endmodule

@@ -29,13 +29,15 @@ module regfile(
     input [4:0] dest,
     input  [31:0] write_data,
     output [31:0] rs1_data,
-    output [31:0] rs2_data
+    output [31:0] rs2_data,
+    output [31:0] ra_data
     );
 
     reg [31:0] registers [31:0];
 
     assign rs1_data = registers[rs1];
     assign rs2_data = registers[rs2];
+    assign ra_data  = registers[1];
 
     integer i;
 

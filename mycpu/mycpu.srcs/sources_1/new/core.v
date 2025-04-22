@@ -90,9 +90,11 @@ module core(
     wire [31:0] ID_out_pc_plus_4;
     wire [31:0] ID_out_I_addr;
     wire [31:0] ID_out_inst;
-    wire ID_out_jump;
+    wire ID_out_jal;
+    wire ID_out_jalr;
     wire [2:0] ID_out_branch_type;
     wire ID_out_branch_predict;
+    wire [31:0] ID_out_ra_data;
 
     wire [3:0] EX_in_alu_op_sel;
     wire EX_in_alu_src1_sel;
@@ -112,7 +114,8 @@ module core(
     wire [31:0] EX_in_pc;
     wire [31:0] EX_in_pc_plus_4;
     wire [31:0] EX_in_I_addr;
-    wire EX_in_jump;
+    wire EX_in_jal;
+    wire EX_in_jalr;
     wire [2:0] EX_in_branch_type;
     wire EX_in_branch_predict;
     wire [31:0] EX_in_inst;
@@ -129,8 +132,10 @@ module core(
     wire [31:0] EX_out_rs2_data;
     wire [4:0] EX_out_rs1, EX_out_rs2;
     wire [31:0] EX_out_pc;
-    wire EX_out_is_branch_inst;
     wire EX_out_branch_predict;
+    wire EX_out_jal;
+    wire EX_out_jalr;
+    wire [2:0] EX_out_branch_type;
 
     wire [31:0] MEM_alu_result_forwarded;
     wire [31:0] WB_alu_result_forwarded;
@@ -164,14 +169,18 @@ module core(
     // branch_prediction_unit
     wire branch_predict;
     wire [31:0] branch_target;
-    wire EX_branch_target_update;
+    wire EX_false_target;
+
+    wire EX_is_branch_inst = EX_out_jal | EX_out_jalr | (EX_out_branch_type != `NO_BRANCH);
+
+    // misprediction is when the branch prediction is not equal to the actual branch taken
+    wire EX_false_direction = EX_is_branch_inst ? (EX_out_branch_predict != EX_out_pc_sel) : EX_out_branch_predict;
+    // flush upon misprediction and when predicted an outdated branch target
+    wire EX_branch_flush = EX_false_direction | (EX_false_target & EX_out_branch_predict);  
 
     // hazard_unit
     wire load_stall, load_flush;
-    // misprediction is when the branch prediction is not equal to the actual branch taken
-    wire EX_mispredict = (EX_out_branch_predict != EX_out_pc_sel);
-    // flush upon misprediction and when predicted an outdated branch target
-    wire EX_branch_flush = EX_mispredict | (EX_branch_target_update & EX_out_branch_predict);         
+       
 
 
     IF if_0 (
@@ -180,8 +189,8 @@ module core(
         .stall                      (load_stall),
 
         .EX_pc_sel                  (EX_out_pc_sel),
-        .EX_mispredict              (EX_mispredict),
-        .EX_branch_target_update    (EX_branch_target_update),
+        .EX_false_direction         (EX_false_direction),
+        .EX_false_target            (EX_false_target),
         .EX_alu_result              (EX_out_alu_result),
         .EX_pc_plus_4               (EX_out_pc_plus_4),
         .EX_branch_predict          (EX_out_branch_predict),
@@ -247,10 +256,12 @@ module core(
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
         .ID_I_addr              (ID_out_I_addr),
-        .ID_jump                (ID_out_jump),
+        .ID_jal                 (ID_out_jal),
+        .ID_jalr                (ID_out_jalr),
         .ID_branch_type         (ID_out_branch_type),
         .ID_branch_predict      (ID_out_branch_predict),
-        .ID_inst                (ID_out_inst)
+        .ID_inst                (ID_out_inst),
+        .ID_ra_data             (ID_out_ra_data)
     );
 
     ID_EX id_ex_0 (
@@ -274,7 +285,8 @@ module core(
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
         .ID_I_addr              (ID_out_I_addr),
-        .ID_jump                (ID_out_jump),
+        .ID_jal                 (ID_out_jal),
+        .ID_jalr                (ID_out_jalr),
         .ID_branch_type         (ID_out_branch_type),
         .ID_branch_predict      (ID_out_branch_predict),
         .ID_inst                (ID_out_inst),
@@ -297,7 +309,8 @@ module core(
         .EX_pc                  (EX_in_pc),
         .EX_pc_plus_4           (EX_in_pc_plus_4),
         .EX_I_addr              (EX_in_I_addr),
-        .EX_jump                (EX_in_jump),
+        .EX_jal                 (EX_in_jal),
+        .EX_jalr                (EX_in_jalr),
         .EX_branch_type         (EX_in_branch_type),
         .EX_branch_predict      (EX_in_branch_predict),
         .EX_inst                (EX_in_inst)
@@ -322,7 +335,8 @@ module core(
         .ID_reg_w_data_sel          (EX_in_reg_w_data_sel),
         .ID_pc                      (EX_in_pc),
         .ID_pc_plus_4               (EX_in_pc_plus_4),
-        .ID_jump                    (EX_in_jump),
+        .ID_jal                     (EX_in_jal),
+        .ID_jalr                    (EX_in_jalr),
         .ID_branch_type             (EX_in_branch_type),
         .ID_branch_predict          (EX_in_branch_predict),
 
@@ -344,8 +358,10 @@ module core(
         .EX_rs1                     (EX_out_rs1),
         .EX_rs2                     (EX_out_rs2),
         .EX_pc                      (EX_out_pc),
-        .EX_is_branch_inst          (EX_out_is_branch_inst),
-        .EX_branch_predict          (EX_out_branch_predict)
+        .EX_branch_predict          (EX_out_branch_predict),
+        .EX_jal                     (EX_out_jal),
+        .EX_jalr                    (EX_out_jalr),
+        .EX_branch_type             (EX_out_branch_type)
     );
 
     EX_MEM ex_mem_0 (
@@ -413,8 +429,6 @@ module core(
         .WB_alu_result           (WB_in_alu_result)
     );
 
-
-
     WB wb_0 (
         .MEM_reg_w_en            (WB_in_reg_w_en),
         .MEM_reg_w_data_sel      (WB_in_reg_w_data_sel),
@@ -443,7 +457,7 @@ module core(
         .ID_rs1                      (ID_out_rs1),
         .ID_rs2                      (ID_out_rs2),
         .EX_rd                       (EX_out_rd),
-        .EX_load                     (EX_out_load_width != 2'h3),
+        .EX_load                     (EX_out_load_width != `NO_LOAD),
         .load_stall                  (load_stall),
         .load_flush                  (load_flush)
     );
@@ -452,13 +466,17 @@ module core(
         .clk                   (clk),
         .reset                 (core_reset),
         .IF_pc                 (IF_out_pc),
+        .IF_inst               (IF_out_inst),
+        .ID_ra_data            (ID_out_ra_data),
         .EX_pc                 (EX_out_pc),
         .EX_branch_target      (EX_out_alu_result),
-        .EX_is_branch_inst     (EX_out_is_branch_inst),
+        .EX_jal                (EX_out_jal),
+        .EX_jalr               (EX_out_jalr),
+        .EX_branch_type        (EX_out_branch_type),
         .EX_branch_taken       (EX_out_pc_sel),
         .branch_predict        (branch_predict),
         .branch_target         (branch_target),
-        .branch_target_update  (EX_branch_target_update)
+        .EX_false_target       (EX_false_target)
     );
 
     memory memory_0(

@@ -26,8 +26,8 @@ module IF(
     input stall,
     
     input EX_pc_sel,
-    input EX_mispredict,
-    input EX_branch_target_update,
+    input EX_false_direction,
+    input EX_false_target,
     input [31:0] EX_alu_result,
     input [31:0] EX_pc_plus_4,
     input EX_branch_predict,
@@ -48,8 +48,17 @@ module IF(
 
     reg [31:0] pc;
 
-    wire [31:0] pc_next = EX_branch_target_update ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
-                          EX_mispredict ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
+    // logic to determine the next PC value:
+    // - if EX determines that "there was a branch instruction" & "the branch target was outdated"
+    //   - if the branch should have been taken, use the updated branch target (EX_alu_result)
+    //   - if the branch should not have been taken, use the PC+4 value at the time of the branch instruction (EX_pc_plus_4)
+    // - else if EX determines that ("there was a branch instruction" & "the predicted direction was incorrect") | ("there was no branch instruction" & "the predicted direction was to take the branch")
+    //   - if the branch was predicted to be taken, which was incorrect, use the PC+4 value at the time of the branch instruction (EX_pc_plus_4)
+    //   - if the branch was predicted to be not taken, which was incorrect, use the updated branch target (EX_alu_result)
+    // - else if the branch is currently predicted to be taken, use the branch target
+    // - else use the current PC+4 value
+    wire [31:0] pc_next = EX_false_target ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
+                          EX_false_direction ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
                           branch_predict ? branch_target :
                           (pc + 4);
 

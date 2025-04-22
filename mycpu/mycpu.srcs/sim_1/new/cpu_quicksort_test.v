@@ -94,9 +94,14 @@ module cpu_quicksort_test(
     integer cycle = 0;
     integer branch_count = 0;
     integer jump_count = 0;
+    integer return_count = 0;
+    integer total_branch_jump_return = 0;
     integer branch_taken = 0;
     integer branch_untaken = 0;
-    integer misprediction = 0;
+    integer misprediction_branch = 0;
+    integer misprediction_jump = 0;
+    integer misprediction_return = 0;
+    integer total_mispredictions = 0;
     integer branch_target_outdated = 0;
     integer branch_flushes = 0;
     always @(posedge top0.clk_main) begin
@@ -117,31 +122,51 @@ module cpu_quicksort_test(
                     branch_untaken = branch_untaken + 1;
                 end
             end
-            if (top0.core_0.ex_0.ID_jump) begin
+            
+            if (top0.core_0.ex_0.ID_jal) begin
                 jump_count = jump_count + 1;
             end
-            if (top0.core_0.EX_branch_target_update & top0.core_0.EX_out_branch_predict) begin
-                branch_target_outdated = branch_target_outdated + 1;
+
+            if (top0.core_0.ex_0.ID_jalr) begin
+                return_count = return_count + 1;
+            end
+
+            if (top0.core_0.EX_branch_flush) begin
                 branch_flushes = branch_flushes + 1;
-            end else if (top0.core_0.EX_mispredict) begin
-                misprediction = misprediction + 1;
-                branch_flushes = branch_flushes + 1;
+                if (top0.core_0.EX_false_target) begin
+                    branch_target_outdated = branch_target_outdated + 1;
+                end
+                if (top0.core_0.EX_false_direction) begin
+                    if (top0.core_0.ex_0.ID_jal) begin
+                        misprediction_jump = misprediction_jump + 1;
+                    end else if (top0.core_0.ex_0.ID_jalr) begin
+                        misprediction_return = misprediction_return + 1;
+                    end else begin
+                        misprediction_branch = misprediction_branch + 1;
+                    end
+                end
             end
 
             if (zero == 4) begin
-                $display("Total Cycles:                 %0d",    cycle);
-                $display("Address:                      0x%h",   top0.core_0.if_0.IF_pc);
-                $display("Total Jumps:                  %0d",    jump_count);
-                $display("Total Branches:               %0d",    branch_count);
-                $display("Total Jumps + Branches:       %0d",    jump_count + branch_count);
-                $display("Total Branches Taken:         %0d",    branch_taken);
-                $display("Total Branches Untaken:       %0d",    branch_untaken);
-                $display("Total Mispredictions:         %0d",    misprediction);
-                $display("Total Branch Target Outdated: %0d",    branch_target_outdated);
-                $display("Total Flushes:                %0d",    branch_flushes);
-                $display("Branch Flush Rate:            %0f%%",  branch_flushes * 100.0 / (branch_count + jump_count));
-                $display("Branch Mispredict Rate:       %0f%%",  misprediction * 100.0 / (branch_count + jump_count));
-                $display("Branch Target Outdated Rate:  %0f%%",  branch_target_outdated * 100.0 / (branch_count + jump_count));
+                total_branch_jump_return = branch_count + jump_count + return_count;
+                total_mispredictions = misprediction_branch + misprediction_jump + misprediction_return;
+                $display("Cycles:                       %0d",    cycle);
+                $display("End Address:                  0x%h",   top0.core_0.if_0.IF_pc);
+                $display("Jumps:                        %0d",    jump_count);
+                $display("Branches:                     %0d",    branch_count);
+                $display("Returns:                      %0d",    return_count);
+                $display("Jumps + Branches + Returns:   %0d",    total_branch_jump_return);
+                $display("Branches Taken:               %0d",    branch_taken);
+                $display("Branches Untaken:             %0d",    branch_untaken);
+                $display("Mispredictions (Branch):      %0d",    misprediction_branch);
+                $display("Mispredictions (Jump):        %0d",    misprediction_jump);
+                $display("Mispredictions (Return):      %0d",    misprediction_return);
+                $display("Mispredictions (Total):       %0d",    total_mispredictions);
+                $display("Target Outdated:              %0d",    branch_target_outdated);
+                $display("Flushes:                      %0d",    branch_flushes);
+                $display("Flush Rate:                   %0f%%",  branch_flushes * 100.0 / (total_branch_jump_return));
+                $display("Mispredict Rate:              %0f%%",  total_mispredictions * 100.0 / (total_branch_jump_return));
+                $display("Target Outdated Rate:         %0f%%",  branch_target_outdated * 100.0 / (total_branch_jump_return));
                 $finish;
             end
         end

@@ -34,7 +34,8 @@ module control_logic(
     output load_un,
     output [2:0] imm_sel,
     output br_un,
-    output jump,
+    output jal,
+    output jalr,
     output [2:0] branch_type
     );
 
@@ -74,8 +75,8 @@ module control_logic(
     
     assign reg_w_en = R | U | J | I_load | I_jalr | I_arith;
 
-    assign reg_w_data_sel = (J | I_jalr)  ?     `REG_W_DATA_PC :        // PC + 4
-                            (I_load)      ?     `REG_W_DATA_MEM :       // Memory
+    assign reg_w_data_sel = (J | I_jalr)      ? `REG_W_DATA_PC :        // PC + 4
+                            (I_load)          ? `REG_W_DATA_MEM :       // Memory
                             (R | U | I_arith) ? `REG_W_DATA_ALU :       // ALU
                             `NO_REG_W_DATA;
 
@@ -109,7 +110,8 @@ module control_logic(
     assign alu_src1_sel = R | I | S;
     assign alu_src2_sel = R;
 
-    assign jump = J | I_jalr;
+    assign jal = J;
+    assign jalr = I_jalr;
     assign branch_type = B ? funct3 : `NO_BRANCH;
 
 endmodule

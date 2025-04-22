@@ -42,7 +42,8 @@ module ID_EX(
     input [31:0] ID_pc,
     input [31:0] ID_pc_plus_4,
     input [31:0] ID_I_addr,
-    input ID_jump,
+    input ID_jal,
+    input ID_jalr,
     input [2:0] ID_branch_type,
     input ID_branch_predict,
     input [31:0] ID_inst,
@@ -65,7 +66,8 @@ module ID_EX(
     output reg [31:0] EX_pc,
     output reg [31:0] EX_pc_plus_4,
     output reg [31:0] EX_I_addr,
-    output reg EX_jump,
+    output reg EX_jal,
+    output reg EX_jalr,
     output reg [2:0] EX_branch_type,
     output reg EX_branch_predict,
     output reg [31:0] EX_inst
@@ -90,7 +92,8 @@ module ID_EX(
             EX_rd <= 5'h0;
             EX_pc <= 32'h0;
             EX_pc_plus_4 <= 32'h0;
-            EX_jump <= 1'b0;
+            EX_jal <= 1'b0;
+            EX_jalr <= 1'b0;
             EX_branch_type <= `NO_BRANCH;
             EX_I_addr <= 32'h0;
             EX_branch_predict <= 1'b0;
@@ -114,7 +117,8 @@ module ID_EX(
             EX_pc <= ID_pc;
             EX_pc_plus_4 <= ID_pc_plus_4;
             EX_I_addr <= ID_I_addr;
-            EX_jump <= ID_jump;
+            EX_jal <= ID_jal;
+            EX_jalr <= ID_jalr;
             EX_branch_type <= ID_branch_type;
             EX_branch_predict <= ID_branch_predict;
             EX_inst <= ID_inst;

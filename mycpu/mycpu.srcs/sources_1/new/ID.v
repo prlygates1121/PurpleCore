@@ -51,10 +51,12 @@ module ID(
     output [31:0] ID_pc,
     output [31:0] ID_pc_plus_4,
     output [31:0] ID_I_addr,
-    output ID_jump,
+    output ID_jal,
+    output ID_jalr,
     output [2:0] ID_branch_type,
     output ID_branch_predict,
-    output [31:0] ID_inst
+    output [31:0] ID_inst,
+    output [31:0] ID_ra_data
 
     );
 
@@ -92,20 +94,21 @@ module ID(
     );
 
     control_logic ctrl_logic_0(
-        .inst(IF_inst),
+        .inst               (IF_inst),
 
-        .alu_op_sel(alu_op_sel),
-        .alu_src1_sel(alu_src1_sel),
-        .alu_src2_sel(alu_src2_sel),
-        .reg_w_en(reg_w_en),
-        .reg_w_data_sel(reg_w_data_sel),
-        .store_width(D_store_width),
-        .load_width(D_load_width),
-        .load_un(D_load_un),
-        .imm_sel(imm_sel),
-        .br_un(br_un),
-        .jump(ID_jump),
-        .branch_type(ID_branch_type)
+        .alu_op_sel         (alu_op_sel),
+        .alu_src1_sel       (alu_src1_sel),
+        .alu_src2_sel       (alu_src2_sel),
+        .reg_w_en           (reg_w_en),
+        .reg_w_data_sel     (reg_w_data_sel),
+        .store_width        (D_store_width),
+        .load_width         (D_load_width),
+        .load_un            (D_load_un),
+        .imm_sel            (imm_sel),
+        .br_un              (br_un),
+        .jal                (ID_jal),
+        .jalr               (ID_jalr),
+        .branch_type        (ID_branch_type)
     );
 
     imm_gen imm_gen_0(
@@ -126,7 +129,8 @@ module ID(
         .write_data(WB_reg_w_data),
 
         .rs1_data(ID_rs1_data),
-        .rs2_data(ID_rs2_data)
+        .rs2_data(ID_rs2_data),
+        .ra_data(ID_ra_data)
     );
 
     assign ID_alu_op_sel = alu_op_sel;
