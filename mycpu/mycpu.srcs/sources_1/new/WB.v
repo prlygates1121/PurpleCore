@@ -33,9 +33,9 @@ module WB(
     output [4:0] WB_rd
     );
 
-    assign WB_reg_w_data = MEM_reg_w_data_sel == 2'h0 ? MEM_alu_result :
-                           MEM_reg_w_data_sel == 2'h1 ? MEM_dmem_data :
-                           MEM_reg_w_data_sel == 2'h2 ? MEM_pc_plus_4 : 32'h0;
+    assign WB_reg_w_data = MEM_reg_w_data_sel == `REG_W_DATA_ALU ? MEM_alu_result :
+                           MEM_reg_w_data_sel == `REG_W_DATA_MEM ? MEM_dmem_data :
+                           MEM_reg_w_data_sel == `REG_W_DATA_PC  ? MEM_pc_plus_4 : 32'h0;
     assign WB_reg_w_en = MEM_reg_w_en;
     assign WB_rd = MEM_rd;
 endmodule

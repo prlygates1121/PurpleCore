@@ -74,22 +74,22 @@ module EX(
 
     );
 
-    wire [31:0] rs1_data = (forward_rs1_sel == 2'b01) ? MEM_alu_result_forwarded :
-                           (forward_rs1_sel == 2'b10) ? WB_alu_result_forwarded : ID_rs1_data;
-    wire [31:0] rs2_data = (forward_rs2_sel == 2'b01) ? MEM_alu_result_forwarded :
-                           (forward_rs2_sel == 2'b10) ? WB_alu_result_forwarded : ID_rs2_data;
+    wire [31:0] rs1_data = (forward_rs1_sel == `FORWARD_RS1_PREV) ?         MEM_alu_result_forwarded :
+                           (forward_rs1_sel == `FORWARD_RS1_PREV_PREV) ?    WB_alu_result_forwarded : ID_rs1_data;
+    wire [31:0] rs2_data = (forward_rs2_sel == `FORWARD_RS2_PREV) ?         MEM_alu_result_forwarded :
+                           (forward_rs2_sel == `FORWARD_RS2_PREV_PREV) ?    WB_alu_result_forwarded : ID_rs2_data;
 
     // ALU
-    wire [31:0] alu_src1 = ID_alu_src1_sel ? rs1_data : ID_I_addr;
-    wire [31:0] alu_src2 = ID_alu_src2_sel ? rs2_data : ID_imm;
+    wire [31:0] alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? rs1_data : ID_I_addr;
+    wire [31:0] alu_src2 = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? rs2_data : ID_imm;
 
     wire EX_br_eq, EX_br_lt;
-    wire branch = ID_branch_type == `BEQ ? EX_br_eq :
-                  ID_branch_type == `BNE ? ~EX_br_eq :
-                  ID_branch_type == `BLT ? EX_br_lt :
-                  ID_branch_type == `BGE ? ~EX_br_lt :
-                  ID_branch_type == `BLTU ? EX_br_lt :
-                  ID_branch_type == `BGEU ? ~EX_br_lt : 1'b0;
+    wire branch = ID_branch_type == `BEQ  ?   EX_br_eq :
+                  ID_branch_type == `BNE  ?  ~EX_br_eq :
+                  ID_branch_type == `BLT  ?   EX_br_lt :
+                  ID_branch_type == `BGE  ?  ~EX_br_lt :
+                  ID_branch_type == `BLTU ?   EX_br_lt :
+                  ID_branch_type == `BGEU ?  ~EX_br_lt : 1'b0;
     assign EX_pc_sel = ID_jump | branch;
 
     branch_comp branch_comp_0(

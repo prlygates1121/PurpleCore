@@ -113,19 +113,20 @@ module memory(
     wire [31:0] load_word = io_en ? io_load_word : mem_load_word;
 
     // D_load_data: the part-selected data of load_word
-    assign D_load_data = D_load_width == 2'h0 ? (byte_offset == 2'h0 ? {(D_load_un ? {24{1'b0}} : {24{load_word[7]}}), load_word[7:0]} :
-                                                 byte_offset == 2'h1 ? {(D_load_un ? {24{1'b0}} : {24{load_word[15]}}), load_word[15:8]} :
-                                                 byte_offset == 2'h2 ? {(D_load_un ? {24{1'b0}} : {24{load_word[24]}}), load_word[23:16]} :
-                                                 byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : {32{1'b0}}) :
-                         D_load_width == 2'h1 ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
-                                                 byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : {32{1'b0}}) :
-                         D_load_width == 2'h2 ? (byte_offset == 2'h0 ? load_word : {32{1'b0}}) : load_word;
+    assign D_load_data = (D_load_width == `LOAD_BYTE | D_load_width == `LOAD_BYTE_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {24{1'b0}} : {24{load_word[7]}}), load_word[7:0]} :
+                                                                                         byte_offset == 2'h1 ? {(D_load_un ? {24{1'b0}} : {24{load_word[15]}}), load_word[15:8]} :
+                                                                                         byte_offset == 2'h2 ? {(D_load_un ? {24{1'b0}} : {24{load_word[24]}}), load_word[23:16]} :
+                                                                                         byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : {32{1'b0}}) :
+                         (D_load_width == `LOAD_HALF | D_load_width == `LOAD_HALF_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
+                                                                                         byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : {32{1'b0}}) :
+                          D_load_width == `LOAD_WORD ? (byte_offset == 2'h0 ? load_word : {32{1'b0}}) : 
+                                                                                         load_word;
 
     // we: global write enable signal, determined directly by the store width and the byte offset
-    assign we = D_store_width == 2'h0 ? (4'b1 << byte_offset) :                                     // sb
-                D_store_width == 2'h1 ? (byte_offset == 2'h0 ? 4'b0011 :                            // sh
-                                         byte_offset == 2'h2 ? 4'b1100 : 4'b0000) :
-                D_store_width == 2'h2 ? (byte_offset == 2'h0 ? 4'b1111 : 4'b0000) :                 // sw
+    assign we = D_store_width == `STORE_BYTE ? (4'b1 << byte_offset) :                                     // sb
+                D_store_width == `STORE_HALF ? (byte_offset == 2'h0 ? 4'b0011 :                            // sh
+                                                byte_offset == 2'h2 ? 4'b1100 : 4'b0000) :
+                D_store_width == `STORE_WORD ? (byte_offset == 2'h0 ? 4'b1111 : 4'b0000) :                 // sw
                 4'b0000;
     // web: write enable signal for the data memory, cleared when accessing I/O
     assign web = io_en ? 4'b0000 : we;
@@ -133,13 +134,14 @@ module memory(
     assign wevga = (io_en & (io_sel == VGA)) ? we : 4'b0000;
 
     // mem_store_data: the data to be stored in the memory, determined by the store width and the byte offset
-    assign mem_store_data = D_store_width == 2'h0 ? (byte_offset == 2'h0 ? {24'b0, D_store_data[7:0]} :
-                                                     byte_offset == 2'h1 ? {16'b0, D_store_data[7:0], 8'b0} :
-                                                     byte_offset == 2'h2 ? {8'b0, D_store_data[7:0], 16'b0} :
-                                                     byte_offset == 2'h3 ? {D_store_data[7:0], 24'b0} : 32'h0) :
-                            D_store_width == 2'h1 ? (byte_offset == 2'h0 ? {16'b0, D_store_data[15:0]} :
-                                                     byte_offset == 2'h2 ? {D_store_data[15:0], 16'b0} : 32'h0) :
-                            D_store_width == 2'h2 ? (byte_offset == 2'h0 ? D_store_data : 32'h0) : 32'h0;
+    assign mem_store_data = D_store_width == `STORE_BYTE ? (byte_offset == 2'h0 ? {24'b0, D_store_data[7:0]} :
+                                                            byte_offset == 2'h1 ? {16'b0, D_store_data[7:0], 8'b0} :
+                                                            byte_offset == 2'h2 ? {8'b0, D_store_data[7:0], 16'b0} :
+                                                            byte_offset == 2'h3 ? {D_store_data[7:0], 24'b0} : 32'h0) :
+                            D_store_width == `STORE_HALF ? (byte_offset == 2'h0 ? {16'b0, D_store_data[15:0]} :
+                                                            byte_offset == 2'h2 ? {D_store_data[15:0], 16'b0} : 32'h0) :
+                            D_store_width == `STORE_WORD ? (byte_offset == 2'h0 ? D_store_data : 32'h0) : 
+                                                            32'h0;
 
     reg [7:0] leds_l_reg, leds_r_reg;
 

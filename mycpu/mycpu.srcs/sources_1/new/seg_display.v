@@ -29,7 +29,6 @@ module seg_display(
     output reg [7:0] right_tube_content
     );
 
-
     reg [63:0] tube_content;
     integer i;
     always @(*) begin

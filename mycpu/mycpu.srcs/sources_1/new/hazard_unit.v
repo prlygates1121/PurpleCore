@@ -56,10 +56,12 @@ module hazard_unit(
 
     assign MEM_alu_result_forwarded = MEM_alu_result;
     assign WB_alu_result_forwarded = WB_alu_result;
-    assign forward_rs1_sel = (MEM_reg_w_en & (EX_rs1 != 5'b0) & (MEM_rd == EX_rs1)) ? 2'b01 :
-                             (WB_reg_w_en & (EX_rs1 != 5'b0) & (WB_rd == EX_rs1)) ? 2'b10 : 2'b00;
-    assign forward_rs2_sel = (MEM_reg_w_en & (EX_rs2 != 5'b0) & (MEM_rd == EX_rs2)) ? 2'b01 :
-                             (WB_reg_w_en & (EX_rs2 != 5'b0) & (WB_rd == EX_rs2)) ? 2'b10 : 2'b00;
+    assign forward_rs1_sel = (MEM_reg_w_en & (EX_rs1 != 5'b0) & (MEM_rd == EX_rs1)) ? `FORWARD_RS1_PREV :
+                             (WB_reg_w_en  & (EX_rs1 != 5'b0) & (WB_rd  == EX_rs1)) ? `FORWARD_RS1_PREV_PREV : 
+                                                                                      `FORWARD_RS1_NONE;
+    assign forward_rs2_sel = (MEM_reg_w_en & (EX_rs2 != 5'b0) & (MEM_rd == EX_rs2)) ? `FORWARD_RS2_PREV :
+                             (WB_reg_w_en  & (EX_rs2 != 5'b0) & (WB_rd  == EX_rs2)) ? `FORWARD_RS2_PREV_PREV : 
+                                                                                      `FORWARD_RS2_NONE;
 
     assign load_stall = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
     assign load_flush = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
