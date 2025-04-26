@@ -1,9 +1,9 @@
-.equ VGA_BASE,              0x80300000
+.equ VGA_BASE,              0x80400000
 .equ DISPLAY_WIDTH,         640
 .equ DISPLAY_HEIGHT,        480
 .equ bits_4,                0b11110000
 
-.equ ASCII_BASE,            0x80400000
+.equ ASCII_BASE,            0x80100000
 .equ SPACE    , 0 
 .equ EX_MARK  , 1 
 #   .equ "              , 2 
@@ -122,7 +122,7 @@
 .equ KEYBOARD_TIMEOUT   , 1000000
 .equ KEYBOARD_CONSECUTIVE_DELAY, 100000
 
-.equ LED_BASE           , 0x80100000
+.equ LED_BASE           , 0x80200000
 
 ####################################################################################################################################################
 ####                                                                    macros                                                                  ####

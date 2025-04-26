@@ -47,8 +47,9 @@ module top(
     input ps2_data
 
     );
-    wire locked = locked_main & locked_pixel;
+    
     wire locked_main, locked_pixel;
+    wire locked = locked_main & locked_pixel;
 
     wire uart_mem_write, uart_inst_loaded;
     wire [31:0] uart_addr, uart_inst;

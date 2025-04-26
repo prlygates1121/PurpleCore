@@ -81,7 +81,10 @@ module cpu_quicksort_test(
         #(CLK_100_PERIOD * 5000);
 
         // Heap sort
-        send_instruction(32'hFC010113);
+        // send_instruction(32'hFC010113);
+
+        // Quick sort
+        send_instruction(32'h00F00413);
     end
 
     always @(posedge top0.clk_main) begin

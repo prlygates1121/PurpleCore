@@ -31,6 +31,8 @@ module branch_prediction_unit(
     input [31:0] EX_branch_target,
     input EX_jal,
     input EX_jalr,
+    input [4:0] EX_rs1,
+    input [4:0] EX_rd,
     input [2:0] EX_branch_type,
     input EX_branch_taken,
 

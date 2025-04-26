@@ -30,7 +30,7 @@ module control_logic(
     output reg_w_en,
     output [1:0] reg_w_data_sel,
     output [1:0] store_width,
-    output [1:0] load_width,
+    output [2:0] load_width,
     output load_un,
     output [2:0] imm_sel,
     output br_un,
@@ -104,7 +104,7 @@ module control_logic(
                         `ADD;
 
     assign store_width = S ? funct3[1:0] : `NO_STORE;
-    assign load_width = I_load ? funct3[1:0] : `NO_LOAD;
+    assign load_width = I_load ? funct3 : `NO_LOAD;
     assign load_un = (load_width == `LOAD_BYTE_UN | load_width == `LOAD_HALF_UN);
 
     assign alu_src1_sel = R | I | S;

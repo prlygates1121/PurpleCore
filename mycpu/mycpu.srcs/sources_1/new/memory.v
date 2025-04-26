@@ -37,7 +37,7 @@ module memory(
     output [31:0] D_load_data,
 
     input [1:0] D_store_width,
-    input [1:0] D_load_width,
+    input [2:0] D_load_width,
     input D_load_un,
 
     input [7:0] sws_l,
@@ -81,6 +81,7 @@ module memory(
         .addra(I_addr[15:2]),
         .dina(I_store_data),
         .douta(I_load_data),
+
         .clkb(~clk),
         .enb(D_en),
         .web(web),
@@ -95,6 +96,9 @@ module memory(
     localparam [10:0] SW       = 11'd3;
     localparam [10:0] VGA      = 11'd4;
     localparam [10:0] KEYBOARD = 11'd5;
+
+    reg [63:0] ascii_data [95:0];
+    reg [7:0] leds_l_reg, leds_r_reg;
 
     // io_en: the instruction is accessing memory mapped I/O
     wire io_en = D_addr[31];
@@ -143,8 +147,6 @@ module memory(
                             D_store_width == `STORE_WORD ? (byte_offset == 2'h0 ? D_store_data : 32'h0) : 
                                                             32'h0;
 
-    reg [7:0] leds_l_reg, leds_r_reg;
-
     always @(posedge clk) begin
         if (reset) begin
             leds_l_reg <= 8'b0;
@@ -185,7 +187,6 @@ module memory(
         .doutb(vga_load_word)
     );
 
-    reg [63:0] ascii_data [95:0];
     always @(posedge clk) begin
         if (reset) begin
             ascii_data[`SPACE        ] <= 64'h0000000000000000;   // U+0020 (space)

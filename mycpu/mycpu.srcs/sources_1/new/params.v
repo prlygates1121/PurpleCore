@@ -51,13 +51,13 @@
 `define STORE_WORD              2'h2
 `define NO_STORE                2'h3
 
-// load_width [1:0]
-`define LOAD_BYTE               2'h0
-`define LOAD_HALF               2'h1
-`define LOAD_WORD               2'h2
-`define LOAD_BYTE_UN            2'h4
-`define LOAD_HALF_UN            2'h5
-`define NO_LOAD                 2'h3
+// load_width [2:0]
+`define LOAD_BYTE               3'h0
+`define LOAD_HALF               3'h1
+`define LOAD_WORD               3'h2
+`define LOAD_BYTE_UN            3'h4
+`define LOAD_HALF_UN            3'h5
+`define NO_LOAD                 3'h3
 
 // reg_w_data_sel [1:0]
 `define REG_W_DATA_ALU          2'h0
@@ -82,6 +82,12 @@
 `define FORWARD_RS2_PREV        2'b01
 `define FORWARD_RS2_PREV_PREV   2'b10
 `define FORWARD_RS2_NONE        2'b00
+
+// ring buffer operation [1:0]
+`define RING_PUSH               2'h0
+`define RING_POP                2'h1
+`define RING_POP_AND_PUSH       2'h2
+`define RING_NOOP               2'h3
 
 // VGA parameters
 

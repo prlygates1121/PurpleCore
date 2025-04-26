@@ -39,7 +39,7 @@ module ID(
     output ID_reg_w_en,
     output [1:0] ID_reg_w_data_sel,
     output [1:0] ID_store_width,
-    output [1:0] ID_load_width,
+    output [2:0] ID_load_width,
     output ID_load_un,
     output [31:0] ID_imm,
     output ID_br_un,
@@ -76,7 +76,7 @@ module ID(
     wire [1:0] reg_w_data_sel;
     wire reg_w_en;
     wire [1:0] D_store_width;
-    wire [1:0] D_load_width;
+    wire [2:0] D_load_width;
     wire D_load_un;
     wire [2:0] imm_sel;
     wire br_un;

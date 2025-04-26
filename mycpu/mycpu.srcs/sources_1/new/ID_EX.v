@@ -30,7 +30,7 @@ module ID_EX(
     input ID_reg_w_en,
     input [1:0] ID_reg_w_data_sel,
     input [1:0] ID_store_width,
-    input [1:0] ID_load_width,
+    input [2:0] ID_load_width,
     input ID_load_un,
     input [31:0] ID_imm,
     input ID_br_un,
@@ -54,7 +54,7 @@ module ID_EX(
     output reg EX_reg_w_en,
     output reg [1:0] EX_reg_w_data_sel,
     output reg [1:0] EX_store_width,
-    output reg [1:0] EX_load_width,
+    output reg [2:0] EX_load_width,
     output reg EX_load_un,
     output reg [31:0] EX_imm,
     output reg EX_br_un,
@@ -81,7 +81,7 @@ module ID_EX(
             EX_reg_w_en <= 1'b0;
             EX_reg_w_data_sel <= 2'h0;
             EX_store_width <= 2'h3;
-            EX_load_width <= 2'h3;
+            EX_load_width <= 3'h3;
             EX_load_un <= 1'b0;
             EX_imm <= 32'h0;
             EX_br_un <= 1'b0;

@@ -25,7 +25,7 @@ module MEM(
     input EX_reg_w_en,
     input [1:0] EX_reg_w_data_sel,
     input [1:0] EX_store_width,
-    input [1:0] EX_load_width,
+    input [2:0] EX_load_width,
     input EX_load_un,
     input [31:0] EX_pc_plus_4,
     input [4:0] EX_rd,
@@ -35,7 +35,7 @@ module MEM(
     output [31:0] D_addr,
     output [31:0] D_store_data,
     output [1:0] D_store_width,
-    output [1:0] D_load_width,
+    output [2:0] D_load_width,
     output D_load_un,
     input [31:0] D_load_data,
 

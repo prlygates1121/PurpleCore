@@ -50,28 +50,12 @@ module core(
     wire core_mode      = uart_inst_loaded ? RUNNING : LOADING;
     wire core_reset     = reset | core_mode == LOADING;
 
-    // Memory
-    wire [3:0] wea = {4{core_mode == LOADING & uart_write}};
-    wire [31:0] I_addr = core_mode == LOADING ? uart_addr : IF_I_addr;
-    wire [31:0] I_store_data = uart_inst;
-    wire [31:0] D_addr, D_store_data, D_load_data;
-    wire [1:0] D_store_width, D_load_width;
-    wire D_load_un;
-
-    // IO
-    assign leds_r = {leds_r_mem[7:1], core_mode};
-    wire [7:0] leds_r_mem;
-
-    // WB signals
-    wire WB_out_reg_w_en;
-    wire [31:0] WB_out_reg_w_data;
-    wire [4:0] WB_out_rd;
-
     wire [31:0] IF_I_addr, I_load_data;
     wire [31:0] IF_out_pc, IF_out_pc_plus_4, IF_out_inst, IF_out_I_addr;
     wire [31:0] ID_in_pc, ID_in_pc_plus_4, ID_in_inst, ID_in_I_addr;
     wire ID_in_branch_predict;
-    wire [1:0] ID_out_store_width, ID_out_load_width;
+    wire [1:0] ID_out_store_width;
+    wire [2:0] ID_out_load_width;
 
     wire [3:0] ID_out_alu_op_sel;
     wire ID_out_alu_src1_sel;
@@ -102,7 +86,7 @@ module core(
     wire EX_in_reg_w_en;
     wire [1:0] EX_in_reg_w_data_sel;
     wire [1:0] EX_in_store_width;
-    wire [1:0] EX_in_load_width;
+    wire [2:0] EX_in_load_width;
     wire EX_in_load_un;
     wire [31:0] EX_in_imm;
     wire EX_in_br_un;
@@ -125,7 +109,7 @@ module core(
     wire EX_out_reg_w_en;
     wire [1:0] EX_out_reg_w_data_sel;
     wire [1:0] EX_out_store_width;
-    wire [1:0] EX_out_load_width;
+    wire [2:0] EX_out_load_width;
     wire EX_out_load_un;
     wire [31:0] EX_out_pc_plus_4;
     wire [4:0] EX_out_rd;
@@ -146,7 +130,7 @@ module core(
     wire MEM_in_reg_w_en;
     wire [1:0] MEM_in_reg_w_data_sel;
     wire [1:0] MEM_in_store_width;
-    wire [1:0] MEM_in_load_width;
+    wire [2:0] MEM_in_load_width;
     wire MEM_in_load_un;
     wire [31:0] MEM_in_pc_plus_4;
     wire [4:0] MEM_in_rd;
@@ -180,6 +164,24 @@ module core(
 
     // hazard_unit
     wire load_stall, load_flush;
+
+    // Memory
+    wire [3:0] wea = {4{core_mode == LOADING & uart_write}};
+    wire [31:0] I_addr = core_mode == LOADING ? uart_addr : IF_I_addr;
+    wire [31:0] I_store_data = uart_inst;
+    wire [31:0] D_addr, D_store_data, D_load_data;
+    wire [1:0] D_store_width;
+    wire [2:0] D_load_width;
+    wire D_load_un;
+
+    // IO
+    wire [7:0] leds_r_mem;
+    assign leds_r = {leds_r_mem[7:1], core_mode};
+
+    // WB signals
+    wire WB_out_reg_w_en;
+    wire [31:0] WB_out_reg_w_data;
+    wire [4:0] WB_out_rd;
        
 
 
@@ -472,6 +474,8 @@ module core(
         .EX_branch_target      (EX_out_alu_result),
         .EX_jal                (EX_out_jal),
         .EX_jalr               (EX_out_jalr),
+        .EX_rs1                (EX_out_rs1),
+        .EX_rd                 (EX_out_rd),
         .EX_branch_type        (EX_out_branch_type),
         .EX_branch_taken       (EX_out_pc_sel),
         .branch_predict        (branch_predict),

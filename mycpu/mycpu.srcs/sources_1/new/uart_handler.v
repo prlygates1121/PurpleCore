@@ -34,6 +34,9 @@ module uart_handler(
     output mem_write
     );
 
+    wire rx_done, tx_done;
+    wire [7:0] rx_out;
+
     // send received bytes back to computer via tx
     reg tx_en;
     reg [7:0] tx_in;
@@ -51,8 +54,6 @@ module uart_handler(
     end
 
     // done signals are active for 1 cycle whenever 8 bits of data are received/transmitted
-    wire rx_done, tx_done;
-    wire [7:0] rx_out;
     uart uart_0(
         .clk(clk),
         .reset(reset),

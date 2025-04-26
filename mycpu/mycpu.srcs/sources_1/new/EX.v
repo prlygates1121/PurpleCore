@@ -36,7 +36,7 @@ module EX(
     input [4:0] ID_rd,
 
     input [1:0] ID_store_width,
-    input [1:0] ID_load_width,
+    input [2:0] ID_load_width,
     input ID_load_un,
 
     input ID_reg_w_en,
@@ -60,7 +60,7 @@ module EX(
     output EX_reg_w_en,                         // -> MEM -> WB
     output [1:0] EX_reg_w_data_sel,             // -> MEM -> WB
     output [1:0] EX_store_width,                // -> MEM
-    output [1:0] EX_load_width,                 // -> MEM
+    output [2:0] EX_load_width,                 // -> MEM
     output EX_load_un,                          // -> MEM
     output [31:0] EX_pc_plus_4,                 // -> MEM -> WB
     output [4:0] EX_rd,                         // -> MEM -> WB
