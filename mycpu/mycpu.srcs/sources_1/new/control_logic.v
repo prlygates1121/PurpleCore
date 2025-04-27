@@ -36,7 +36,11 @@ module control_logic(
     output br_un,
     output jal,
     output jalr,
-    output [2:0] branch_type
+    output [2:0] branch_type,
+    output [4:0] rs1,
+    output [4:0] rs2,
+    output [4:0] rd,
+    output [24:0] imm
     );
 
 
@@ -113,5 +117,10 @@ module control_logic(
     assign jal = J;
     assign jalr = I_jalr;
     assign branch_type = B ? funct3 : `NO_BRANCH;
+
+    assign rs1 = (J | U) ? 5'h0 : inst[19:15];
+    assign rs2 = (R | S | B) ? inst[24:20] : 5'h0;
+    assign rd = (S | B) ? 5'h0 : inst[11:7];
+    assign imm = inst[31:7];
 
 endmodule

@@ -85,6 +85,9 @@ module cpu_quicksort_test(
 
         // Quick sort
         send_instruction(32'h00F00413);
+
+        // Test RAS
+        // send_instruction(32'h00100513);
     end
 
     always @(posedge top0.clk_main) begin

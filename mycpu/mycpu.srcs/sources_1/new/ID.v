@@ -81,18 +81,6 @@ module ID(
     wire [2:0] imm_sel;
     wire br_un;
 
-    inst_decoder inst_decoder_0(
-        .inst(IF_inst),
-
-        .opcode(opcode),
-        .funct7(funct7),
-        .funct3(funct3),
-        .rs1(rs1),
-        .rs2(rs2),
-        .rd(rd),
-        .imm(imm_raw)
-    );
-
     control_logic ctrl_logic_0(
         .inst               (IF_inst),
 
@@ -108,7 +96,11 @@ module ID(
         .br_un              (br_un),
         .jal                (ID_jal),
         .jalr               (ID_jalr),
-        .branch_type        (ID_branch_type)
+        .branch_type        (ID_branch_type),
+        .rs1                (rs1),
+        .rs2                (rs2),
+        .rd                 (rd),
+        .imm                (imm_raw)
     );
 
     imm_gen imm_gen_0(

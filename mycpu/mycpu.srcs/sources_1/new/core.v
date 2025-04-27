@@ -153,14 +153,10 @@ module core(
     // branch_prediction_unit
     wire branch_predict;
     wire [31:0] branch_target;
+    wire EX_is_branch_inst;
     wire EX_false_target;
-
-    wire EX_is_branch_inst = EX_out_jal | EX_out_jalr | (EX_out_branch_type != `NO_BRANCH);
-
-    // misprediction is when the branch prediction is not equal to the actual branch taken
-    wire EX_false_direction = EX_is_branch_inst ? (EX_out_branch_predict != EX_out_pc_sel) : EX_out_branch_predict;
-    // flush upon misprediction and when predicted an outdated branch target
-    wire EX_branch_flush = EX_false_direction | (EX_false_target & EX_out_branch_predict);  
+    wire EX_false_direction;
+    wire EX_branch_flush;  
 
     // hazard_unit
     wire load_stall, load_flush;
@@ -477,10 +473,14 @@ module core(
         .EX_rs1                (EX_out_rs1),
         .EX_rd                 (EX_out_rd),
         .EX_branch_type        (EX_out_branch_type),
-        .EX_branch_taken       (EX_out_pc_sel),
+        .EX_pc_sel             (EX_out_pc_sel),
+        .EX_branch_predict     (EX_out_branch_predict),
+        .EX_is_branch_inst     (EX_is_branch_inst),
         .branch_predict        (branch_predict),
         .branch_target         (branch_target),
-        .EX_false_target       (EX_false_target)
+        .EX_false_target       (EX_false_target),
+        .EX_false_direction    (EX_false_direction),
+        .EX_branch_flush       (EX_branch_flush)
     );
 
     memory memory_0(
