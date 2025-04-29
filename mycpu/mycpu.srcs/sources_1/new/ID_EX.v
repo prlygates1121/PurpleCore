@@ -47,6 +47,7 @@ module ID_EX(
     input [2:0] ID_branch_type,
     input ID_branch_predict,
     input [31:0] ID_inst,
+    input ID_ecall,
 
     output reg [3:0] EX_alu_op_sel,
     output reg EX_alu_src1_sel,
@@ -70,7 +71,8 @@ module ID_EX(
     output reg EX_jalr,
     output reg [2:0] EX_branch_type,
     output reg EX_branch_predict,
-    output reg [31:0] EX_inst
+    output reg [31:0] EX_inst,
+    output reg EX_ecall
     );
 
     always @(posedge clk) begin
@@ -98,6 +100,7 @@ module ID_EX(
             EX_I_addr <= 32'h0;
             EX_branch_predict <= 1'b0;
             EX_inst <= `NOP;
+            EX_ecall <= 1'b0;
         end else begin
             EX_alu_op_sel <= ID_alu_op_sel;
             EX_alu_src1_sel <= ID_alu_src1_sel;
@@ -122,6 +125,7 @@ module ID_EX(
             EX_branch_type <= ID_branch_type;
             EX_branch_predict <= ID_branch_predict;
             EX_inst <= ID_inst;
+            EX_ecall <= ID_ecall;
         end
     end
 endmodule

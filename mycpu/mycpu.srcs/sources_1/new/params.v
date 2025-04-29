@@ -86,7 +86,8 @@
 // ring buffer operation [1:0]
 `define RING_PUSH               2'h0
 `define RING_POP                2'h1
-`define RING_POP_AND_PUSH       2'h2
+// `define RING_POP_AND_PUSH       2'h2
+`define RING_CANCEL_POP         2'h2
 `define RING_NOOP               2'h3
 
 // VGA parameters

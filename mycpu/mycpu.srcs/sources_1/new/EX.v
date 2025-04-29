@@ -47,8 +47,8 @@ module EX(
     input ID_jal,
     input ID_jalr,
     input [2:0] ID_branch_type,
-
     input ID_branch_predict,
+    input ID_ecall,
 
     input [31:0] MEM_alu_result_forwarded,
     input [31:0] WB_alu_result_forwarded,

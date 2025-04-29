@@ -142,16 +142,16 @@ module top(
         .vga_data                       (vga_data)
     );
 
-    uart_handler uart_handler_0(
-        .clk                            (clk_main),
-        .reset                          (reset_sync_main_s2),
-        .rx_in                          (uart_rx_in),
-        .tx_out                         (uart_tx_out),
-        .inst_loaded                    (uart_inst_loaded),
-        .addr                           (uart_addr),
-        .inst                           (uart_inst),
-        .mem_write                      (uart_mem_write)
-    );
+    // uart_handler uart_handler_0(
+    //     .clk                            (clk_main),
+    //     .reset                          (reset_sync_main_s2),
+    //     .rx_in                          (uart_rx_in),
+    //     .tx_out                         (uart_tx_out),
+    //     .inst_loaded                    (uart_inst_loaded),
+    //     .addr                           (uart_addr),
+    //     .inst                           (uart_inst),
+    //     .mem_write                      (uart_mem_write)
+    // );
 
     wire [31:0] debug_hex_digits;
     seg_display_handler seg_display_handler_0(
@@ -183,5 +183,7 @@ module top(
     assign leds_l[0] = uart_inst_loaded;
     assign leds_l[1] = debug_shift;
     // assign leds_r = uart_addr[7:0];
+
+    assign uart_inst_loaded = 1'b1;
 
 endmodule

@@ -79,15 +79,7 @@ module cpu_quicksort_test(
         #(CLK_100_PERIOD * 2);
         reset_n = 1'b1;
         #(CLK_100_PERIOD * 5000);
-
-        // Heap sort
-        // send_instruction(32'hFC010113);
-
-        // Quick sort
-        send_instruction(32'h00F00413);
-
-        // Test RAS
-        // send_instruction(32'h00100513);
+        
     end
 
     always @(posedge top0.clk_main) begin
@@ -96,7 +88,6 @@ module cpu_quicksort_test(
         end
     end
 
-    integer zero = 0;
     integer cycle = 0;
     integer branch_count = 0;
     integer jump_count = 0;
@@ -113,12 +104,6 @@ module cpu_quicksort_test(
     always @(posedge top0.clk_main) begin
         if (top0.core_0.core_reset == 0) begin
             cycle = cycle + 1;
-
-            if (top0.core_0.if_0.IF_inst == 32'h00000000 | top0.core_0.if_0.IF_inst == 32'h00000013) begin
-                zero = zero + 1;
-            end else begin
-                zero = 0;
-            end
             
             if (top0.core_0.ex_0.ID_branch_type != `NO_BRANCH) begin
                 branch_count = branch_count + 1;
@@ -153,7 +138,7 @@ module cpu_quicksort_test(
                 end
             end
 
-            if (zero == 4) begin
+            if (top0.core_0.ex_0.ID_ecall) begin
                 total_branch_jump_return = branch_count + jump_count + return_count;
                 total_mispredictions = misprediction_branch + misprediction_jump + misprediction_return;
                 $display("Cycles:                       %0d",    cycle);
@@ -173,7 +158,7 @@ module cpu_quicksort_test(
                 $display("Flush Rate:                   %0f%%",  branch_flushes * 100.0 / (total_branch_jump_return));
                 $display("Mispredict Rate:              %0f%%",  total_mispredictions * 100.0 / (total_branch_jump_return));
                 $display("Target Outdated Rate:         %0f%%",  branch_target_outdated * 100.0 / (total_branch_jump_return));
-                $finish;
+               $finish;
             end
         end
     end

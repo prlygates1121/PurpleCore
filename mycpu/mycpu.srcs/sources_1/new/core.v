@@ -44,8 +44,9 @@ module core(
 
     input [7:0] key_code
     );
+    parameter BRANCH_PREDICTOR_ENA = 1;
 
-    parameter LOADING = 0, RUNNING = 1;
+    localparam LOADING = 0, RUNNING = 1;
 
     wire core_mode      = uart_inst_loaded ? RUNNING : LOADING;
     wire core_reset     = reset | core_mode == LOADING;
@@ -79,6 +80,7 @@ module core(
     wire [2:0] ID_out_branch_type;
     wire ID_out_branch_predict;
     wire [31:0] ID_out_ra_data;
+    wire ID_out_ecall;
 
     wire [3:0] EX_in_alu_op_sel;
     wire EX_in_alu_src1_sel;
@@ -103,6 +105,7 @@ module core(
     wire [2:0] EX_in_branch_type;
     wire EX_in_branch_predict;
     wire [31:0] EX_in_inst;
+    wire EX_in_ecall;
 
     wire [31:0] EX_out_alu_result;
     wire EX_out_pc_sel;
@@ -156,7 +159,11 @@ module core(
     wire EX_is_branch_inst;
     wire EX_false_target;
     wire EX_false_direction;
-    wire EX_branch_flush;  
+    wire EX_branch_flush;
+    
+    wire EX_branch_flush_w_predictor;
+
+    assign EX_branch_flush = BRANCH_PREDICTOR_ENA ? EX_branch_flush_w_predictor : EX_out_pc_sel;
 
     // hazard_unit
     wire load_stall, load_flush;
@@ -179,9 +186,9 @@ module core(
     wire [31:0] WB_out_reg_w_data;
     wire [4:0] WB_out_rd;
        
-
-
-    IF if_0 (
+    IF #(
+        .BRANCH_PREDICTOR_ENA(BRANCH_PREDICTOR_ENA)
+    ) if_0 (
         .clk                        (clk),
         .reset                      (core_reset),
         .stall                      (load_stall),
@@ -223,8 +230,6 @@ module core(
         .ID_branch_predict      (ID_in_branch_predict)
     );
 
-
-
     ID id_0 (
         .clk                    (clk),
         .reset                  (core_reset),
@@ -259,7 +264,8 @@ module core(
         .ID_branch_type         (ID_out_branch_type),
         .ID_branch_predict      (ID_out_branch_predict),
         .ID_inst                (ID_out_inst),
-        .ID_ra_data             (ID_out_ra_data)
+        .ID_ra_data             (ID_out_ra_data),
+        .ID_ecall               (ID_out_ecall)
     );
 
     ID_EX id_ex_0 (
@@ -288,6 +294,7 @@ module core(
         .ID_branch_type         (ID_out_branch_type),
         .ID_branch_predict      (ID_out_branch_predict),
         .ID_inst                (ID_out_inst),
+        .ID_ecall               (ID_out_ecall),
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
         .EX_alu_src1_sel        (EX_in_alu_src1_sel),
@@ -311,7 +318,8 @@ module core(
         .EX_jalr                (EX_in_jalr),
         .EX_branch_type         (EX_in_branch_type),
         .EX_branch_predict      (EX_in_branch_predict),
-        .EX_inst                (EX_in_inst)
+        .EX_inst                (EX_in_inst),
+        .EX_ecall               (EX_in_ecall)
     );
 
     EX ex_0 (
@@ -337,6 +345,7 @@ module core(
         .ID_jalr                    (EX_in_jalr),
         .ID_branch_type             (EX_in_branch_type),
         .ID_branch_predict          (EX_in_branch_predict),
+        .ID_ecall                   (EX_in_ecall),
 
         .MEM_alu_result_forwarded   (MEM_alu_result_forwarded),
         .WB_alu_result_forwarded    (WB_alu_result_forwarded),
@@ -463,11 +472,12 @@ module core(
     branch_prediction_unit branch_prediction_unit_0 (
         .clk                   (clk),
         .reset                 (core_reset),
+        .stall                 (load_stall),
         .IF_pc                 (IF_out_pc),
         .IF_inst               (IF_out_inst),
         .ID_ra_data            (ID_out_ra_data),
         .EX_pc                 (EX_out_pc),
-        .EX_branch_target      (EX_out_alu_result),
+        .EX_alu_result         (EX_out_alu_result),
         .EX_jal                (EX_out_jal),
         .EX_jalr               (EX_out_jalr),
         .EX_rs1                (EX_out_rs1),
@@ -480,7 +490,7 @@ module core(
         .branch_target         (branch_target),
         .EX_false_target       (EX_false_target),
         .EX_false_direction    (EX_false_direction),
-        .EX_branch_flush       (EX_branch_flush)
+        .EX_branch_flush       (EX_branch_flush_w_predictor)
     );
 
     memory memory_0(

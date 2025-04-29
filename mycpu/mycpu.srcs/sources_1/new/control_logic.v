@@ -40,7 +40,8 @@ module control_logic(
     output [4:0] rs1,
     output [4:0] rs2,
     output [4:0] rd,
-    output [24:0] imm
+    output [24:0] imm,
+    output ecall
     );
 
 
@@ -122,5 +123,7 @@ module control_logic(
     assign rs2 = (R | S | B) ? inst[24:20] : 5'h0;
     assign rd = (S | B) ? 5'h0 : inst[11:7];
     assign imm = inst[31:7];
+
+    assign ecall = I_ecall;
 
 endmodule

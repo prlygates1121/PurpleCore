@@ -63,9 +63,9 @@ module ring_test(
         #10;
 
         // Test RING_POP_AND_PUSH
-        op = `RING_POP_AND_PUSH;
-        data_in = 32'h5A5A5A5A;
-        #10;
+        // op = `RING_POP_AND_PUSH;
+        // data_in = 32'h5A5A5A5A;
+        // #10;
 
         $finish;
     end

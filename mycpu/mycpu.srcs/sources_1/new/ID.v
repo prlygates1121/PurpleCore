@@ -56,7 +56,8 @@ module ID(
     output [2:0] ID_branch_type,
     output ID_branch_predict,
     output [31:0] ID_inst,
-    output [31:0] ID_ra_data
+    output [31:0] ID_ra_data,
+    output ID_ecall
 
     );
 
@@ -100,7 +101,8 @@ module ID(
         .rs1                (rs1),
         .rs2                (rs2),
         .rd                 (rd),
-        .imm                (imm_raw)
+        .imm                (imm_raw),
+        .ecall              (ID_ecall)
     );
 
     imm_gen imm_gen_0(

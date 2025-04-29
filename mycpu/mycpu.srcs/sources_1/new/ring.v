@@ -60,9 +60,16 @@ module ring #(
                         ring_pointer <= ring_pointer - 1;
                     end
                 end
-                `RING_POP_AND_PUSH: begin
-                    ring_buffer[ring_pointer_top] <= data_in;
+                `RING_CANCEL_POP: begin
+                    if (ring_pointer == DEPTH - 1) begin
+                        ring_pointer <= 32'h0;
+                    end else begin
+                        ring_pointer <= ring_pointer + 1;
+                    end
                 end
+                // `RING_POP_AND_PUSH: begin
+                //     ring_buffer[ring_pointer_top] <= data_in;
+                // end
                 default: begin
                     // No operation
                 end
