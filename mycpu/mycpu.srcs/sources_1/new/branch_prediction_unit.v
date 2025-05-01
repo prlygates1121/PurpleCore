@@ -33,12 +33,9 @@ module branch_prediction_unit(
     input [31:0] EX_alu_result,
     input EX_jal,
     input EX_jalr,
-    input [4:0] EX_rs1,
-    input [4:0] EX_rd,
     input [2:0] EX_branch_type,
     input EX_pc_sel,
     input EX_branch_predict,
-    input EX_is_branch_inst,
 
     output branch_predict,
     output [31:0] branch_target,
@@ -48,7 +45,7 @@ module branch_prediction_unit(
     );
     integer i;
 
-    localparam PREDICTOR_DEPTH_LOG = 8;
+    localparam PREDICTOR_DEPTH_LOG = 7;
     localparam BRANCH_HISTORY_SELECTED_BITS = 4;
 
     localparam [1:0] STRONG_TAKEN       = 2'b11, 
@@ -67,7 +64,7 @@ module branch_prediction_unit(
         end
     end
 
-    assign EX_is_branch_inst = EX_jal | EX_jalr | (EX_branch_type != `NO_BRANCH);
+    wire EX_is_branch_inst = EX_jal | EX_jalr | (EX_branch_type != `NO_BRANCH);
 
     wire [31:0] RAS_out;
     reg [31:0] RAS_in;

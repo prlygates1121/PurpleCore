@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "params.v"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -32,9 +33,7 @@ module uart(
     output rx_done
     );
 
-    localparam [31:0] CLK_FREQ = 32'd25_000_000;
-    localparam [31:0] UART_FREQ = 32'd2_000_000;
-    localparam [31:0] COUNTER_MAX = CLK_FREQ / UART_FREQ;
+    localparam [31:0] COUNTER_MAX = `CLK_MAIN_FREQ / `UART_FREQ;
 
     // rx_negedge is enabled for one cycle when rx_in has a negative edge
     reg rx_in_prev;

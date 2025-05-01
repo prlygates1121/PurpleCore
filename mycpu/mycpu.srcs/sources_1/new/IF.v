@@ -21,9 +21,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module IF #(
-    parameter BRANCH_PREDICTOR_ENA = 0
-) (
+module IF (
     input clk,
     input reset,
     input stall,
@@ -51,6 +49,7 @@ module IF #(
 
     reg [31:0] pc;
 
+`ifdef BRANCH_PREDICT_ENA
     // logic to determine the next PC value:
     // - if EX determines that "there was a branch instruction" & "the branch target was outdated"
     //   - if the branch should have been taken, use the updated branch target (EX_alu_result)
@@ -60,11 +59,13 @@ module IF #(
     //   - if the branch was predicted to be not taken, which was incorrect, use the updated branch target (EX_alu_result)
     // - else if the branch is currently predicted to be taken, use the branch target
     // - else use the current PC+4 value
-    wire [31:0] pc_next = BRANCH_PREDICTOR_ENA ? (EX_false_target ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
-                                               EX_false_direction ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
-                                               branch_predict ? branch_target :
-                                               (pc + 4)) :
-                                               (EX_pc_sel ? EX_alu_result : (pc + 4));
+    wire [31:0] pc_next = EX_false_target ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
+                          EX_false_direction ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
+                          branch_predict ? branch_target :
+                          (pc + 4);
+`else 
+    wire [31:0] pc_next = EX_pc_sel ? EX_alu_result : (pc + 4);
+`endif
 
     always @(posedge clk) begin
         if (reset) begin

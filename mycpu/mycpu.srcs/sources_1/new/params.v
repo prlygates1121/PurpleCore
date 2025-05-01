@@ -1,3 +1,5 @@
+// `define SIMULATION
+`define BRANCH_PREDICT_ENA
 
 `define ADDR_SP_START           32'h0000_BFFC
 `define ADDR_MMIO_BASE          32'h8000_0000
@@ -7,6 +9,11 @@
 `define ADDR_MMIO_SW            32'h0030_0000
 `define ADDR_MMIO_VGA           32'h0040_0000
 `define ADDR_MMIO_KEYBOARD      32'h0050_0000
+
+// Frequencies
+`define CLK_100_FREQ            32'd100_000_000
+`define CLK_MAIN_FREQ           32'd25_000_000
+`define UART_FREQ               32'd115200
 
 // Instruction parameters
 `define NOP                     32'h00000013
@@ -89,6 +96,13 @@
 // `define RING_POP_AND_PUSH       2'h2
 `define RING_CANCEL_POP         2'h2
 `define RING_NOOP               2'h3
+
+// buttons
+`define BT_UP                   3'h0
+`define BT_DOWN                 3'h1
+`define BT_LEFT                 3'h2
+`define BT_RIGHT                3'h3
+`define BT_CENTER               3'h4
 
 // VGA parameters
 

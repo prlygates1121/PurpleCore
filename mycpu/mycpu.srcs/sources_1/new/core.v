@@ -35,6 +35,10 @@ module core(
     input [7:0] sws_l,
     input [7:0] sws_r,
 
+    input [4:0] bts_state,
+
+    output [31:0] seg_display_hex,
+
     output [7:0] leds_l,
     output [7:0] leds_r,
 
@@ -44,7 +48,6 @@ module core(
 
     input [7:0] key_code
     );
-    parameter BRANCH_PREDICTOR_ENA = 1;
 
     localparam LOADING = 0, RUNNING = 1;
 
@@ -156,14 +159,9 @@ module core(
     // branch_prediction_unit
     wire branch_predict;
     wire [31:0] branch_target;
-    wire EX_is_branch_inst;
     wire EX_false_target;
     wire EX_false_direction;
     wire EX_branch_flush;
-    
-    wire EX_branch_flush_w_predictor;
-
-    assign EX_branch_flush = BRANCH_PREDICTOR_ENA ? EX_branch_flush_w_predictor : EX_out_pc_sel;
 
     // hazard_unit
     wire load_stall, load_flush;
@@ -186,9 +184,7 @@ module core(
     wire [31:0] WB_out_reg_w_data;
     wire [4:0] WB_out_rd;
        
-    IF #(
-        .BRANCH_PREDICTOR_ENA(BRANCH_PREDICTOR_ENA)
-    ) if_0 (
+    IF if_0 (
         .clk                        (clk),
         .reset                      (core_reset),
         .stall                      (load_stall),
@@ -469,6 +465,7 @@ module core(
         .load_flush                  (load_flush)
     );
 
+`ifdef BRANCH_PREDICT_ENA
     branch_prediction_unit branch_prediction_unit_0 (
         .clk                   (clk),
         .reset                 (core_reset),
@@ -480,18 +477,18 @@ module core(
         .EX_alu_result         (EX_out_alu_result),
         .EX_jal                (EX_out_jal),
         .EX_jalr               (EX_out_jalr),
-        .EX_rs1                (EX_out_rs1),
-        .EX_rd                 (EX_out_rd),
         .EX_branch_type        (EX_out_branch_type),
         .EX_pc_sel             (EX_out_pc_sel),
         .EX_branch_predict     (EX_out_branch_predict),
-        .EX_is_branch_inst     (EX_is_branch_inst),
         .branch_predict        (branch_predict),
         .branch_target         (branch_target),
         .EX_false_target       (EX_false_target),
         .EX_false_direction    (EX_false_direction),
-        .EX_branch_flush       (EX_branch_flush_w_predictor)
+        .EX_branch_flush       (EX_branch_flush)
     );
+`else
+    assign EX_branch_flush = EX_out_pc_sel;
+`endif
 
     memory memory_0(
         .clk                        (clk),
@@ -511,9 +508,12 @@ module core(
         .D_load_width               (D_load_width),
         .D_load_un                  (D_load_un),
 
-
         .sws_l                      (sws_l),
         .sws_r                      (sws_r),
+
+        .bts_state                  (bts_state),
+
+        .seg_display_hex            (seg_display_hex),
 
         .leds_l                     (leds_l),
         .leds_r                     (leds_r_mem),

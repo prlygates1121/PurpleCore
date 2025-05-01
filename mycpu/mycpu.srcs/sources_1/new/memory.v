@@ -43,8 +43,12 @@ module memory(
     input [7:0] sws_l,
     input [7:0] sws_r,
 
-    output [7:0] leds_l,
-    output [7:0] leds_r,
+    input [4:0] bts_state,
+
+    output reg [31:0] seg_display_hex,
+
+    output reg [7:0] leds_l,
+    output reg [7:0] leds_r,
 
     input clk_pixel,
     input [31:0] vga_addr,
@@ -59,21 +63,7 @@ module memory(
     wire [31:0] mem_store_data;
     wire [3:0] we, web, wevga;
 
-    // blk_mem main_memory(
-    //     .clka(~clk),
-    //     .ena(I_en),
-    //     .wea(I_write_en),
-    //     .addra(I_addr[15:2]),
-    //     .dina(I_store_data),
-    //     .douta(I_load_data),
-    //     .clkb(~clk),
-    //     .enb(D_en),
-    //     .web(web),
-    //     .addrb(D_addr[15:2]),
-    //     .dinb(mem_store_data),
-    //     .doutb(mem_load_word)
-    // );
-
+`ifdef SIMULATION
     my_blk_mem main_memory(
         .clka(~clk),
         .ena(I_en),
@@ -89,16 +79,33 @@ module memory(
         .dinb(mem_store_data),
         .doutb(mem_load_word)
     );
+`else
+    blk_mem main_memory(
+        .clka(~clk),
+        .ena(I_en),
+        .wea(I_write_en),
+        .addra(I_addr[15:2]),
+        .dina(I_store_data),
+        .douta(I_load_data),
+        .clkb(~clk),
+        .enb(D_en),
+        .web(web),
+        .addrb(D_addr[15:2]),
+        .dinb(mem_store_data),
+        .doutb(mem_load_word)
+    );
+`endif
 
-    localparam [10:0] SYS_INFO = 11'd0;
-    localparam [10:0] ASCII    = 11'd1;
-    localparam [10:0] LED      = 11'd2;
-    localparam [10:0] SW       = 11'd3;
-    localparam [10:0] VGA      = 11'd4;
-    localparam [10:0] KEYBOARD = 11'd5;
+    localparam [10:0] SYS_INFO      = 11'd0;    // r_
+    localparam [10:0] ASCII         = 11'd1;    // r_
+    localparam [10:0] LED           = 11'd2;    // _w
+    localparam [10:0] SW            = 11'd3;    // r_
+    localparam [10:0] VGA           = 11'd4;    // rw
+    localparam [10:0] KEYBOARD      = 11'd5;    // r_
+    localparam [10:0] BUTTON        = 11'd6;    // r_
+    localparam [10:0] SEG_DISPLAY   = 11'd7;    // _w
 
     reg [63:0] ascii_data [95:0];
-    reg [7:0] leds_l_reg, leds_r_reg;
 
     // io_en: the instruction is accessing memory mapped I/O
     wire io_en = D_addr[31];
@@ -107,10 +114,10 @@ module memory(
     // io_load_word: the data loaded from memory mapped I/O
     wire [31:0] io_load_word = io_sel == SYS_INFO    ? 32'h0 :
                                io_sel == ASCII       ? (D_addr[2] ? ascii_data[D_addr[9:3]][63:32] : ascii_data[D_addr[9:3]][31:0]) :
-                               io_sel == LED         ? {16'h0000, leds_l_reg, leds_r_reg} : 
-                               io_sel == SW          ? {16'h0000, sws_l, sws_r} : 
+                               io_sel == SW          ? {16'h0, sws_l, sws_r} : 
                                io_sel == VGA         ? vga_load_word :
                                io_sel == KEYBOARD    ? {24'h0, key_code} :
+                               io_sel == BUTTON      ? {27'h0, bts_state} :
                                32'h0;
 
     // load_word: the 32-bit data loaded from either the main memory or the I/O
@@ -149,8 +156,8 @@ module memory(
 
     always @(posedge clk) begin
         if (reset) begin
-            leds_l_reg <= 8'b0;
-            leds_r_reg <= 8'b0;
+            leds_l <= 8'b0;
+            leds_r <= 8'b0;
         end else begin
             if (io_en) begin
                 // memory mapped I/O can be accessed in words only
@@ -158,16 +165,16 @@ module memory(
                 if (D_store_width == 2'h2) begin
                     case (io_sel)
                         LED: begin
-                            {leds_l_reg, leds_r_reg} <= mem_store_data[15:0];
+                            {leds_l, leds_r} <= mem_store_data[15:0];
+                        end
+                        SEG_DISPLAY: begin
+                            seg_display_hex <= mem_store_data;
                         end
                     endcase
                 end
             end
         end
     end
-
-    assign leds_l = leds_l_reg;
-    assign leds_r = leds_r_reg;
 
     blk_mem_vga vga_memory(
         // ports by which VGA controller reads data from memory
