@@ -1,4 +1,4 @@
-`define SIMULATION
+// `define SIMULATION
 `define BRANCH_PREDICT_ENA
 
 `define ADDR_SP_START           32'h0000_BFFC
@@ -12,7 +12,7 @@
 
 // Frequencies
 `define CLK_100_FREQ            32'd100_000_000
-`define CLK_MAIN_FREQ           32'd25_000_000
+`define CLK_MAIN_FREQ           32'd40_000_000
 `define UART_FREQ               32'd115200
 
 // Instruction parameters

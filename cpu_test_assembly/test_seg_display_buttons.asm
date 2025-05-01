@@ -46,3 +46,4 @@ end:
     
     sw s0, 0(s1)
     j display_seg
+

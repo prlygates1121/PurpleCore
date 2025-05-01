@@ -211,7 +211,7 @@ module branch_prediction_unit(
         end
     end
 
-    wire [PREDICTOR_DEPTH_LOG-1:0] prediction_index_update = stall_prev_2 ? prediction_index_prev_2 : prediction_index_prev_1;
+    wire [PREDICTOR_DEPTH_LOG-1:0] prediction_index_update = prediction_index_prev_2;
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < (1 << PREDICTOR_DEPTH_LOG); i = i + 1) begin
@@ -266,8 +266,8 @@ module branch_prediction_unit(
     );
 
     assign branch_predict_trigger = (IF_jal | IF_jalr) ? 1'b1 : 
-                                          IF_B ? (prediction_table[IF_prediction_index] >= WEAK_TAKEN) : 
-                                                 1'b0;
+                                                  IF_B ? (prediction_table[IF_prediction_index] >= WEAK_TAKEN) : 
+                                                  1'b0;
     always @(posedge clk) begin
         if (reset) begin
             branch_predict_reg <= 1'b0;
@@ -292,8 +292,8 @@ module branch_prediction_unit(
     
     assign branch_predict = branch_predict_trigger;
     assign branch_target = IF_return ? RAS_out : branch_target_buffer[IF_pc[2+:PREDICTOR_DEPTH_LOG]];
-    assign EX_false_direction = EX_is_branch_inst ? (branch_predict_reg_prev != EX_pc_sel) : branch_predict_reg_prev;
-    assign EX_false_target = EX_is_branch_inst ? ID_return ? (EX_RAS_out != EX_alu_result) : 
+    assign EX_false_direction = EX_is_branch_inst ? (branch_predict_reg_prev != EX_pc_sel) : 1'b0;
+    assign EX_false_target = (EX_is_branch_inst & branch_predict_reg_prev) ? ID_return ? (EX_RAS_out != EX_alu_result) : 
                                                              (branch_target_prev_2 != EX_alu_result) : 
                                                  1'b0;
     assign EX_branch_flush = EX_false_direction | (EX_false_target & branch_predict_reg_prev);  
