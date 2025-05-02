@@ -86,21 +86,21 @@ module control_logic(
                             `NO_REG_W_DATA;
 
     assign alu_op_sel = (R & funct3 == 3'h0 & funct7 == 7'h20)          ? `SUB :     // sub
-                        (R & funct3 == 3'h4 & funct7 == 7'h00 |                     // xor
+                        (R & funct3 == 3'h4 & funct7 == 7'h00 |                      // xor
                          I_arith & funct3 == 3'h4)                      ? `XOR :     // xori
-                        (R & funct3 == 3'h6 & funct7 == 7'h00 |                     // or
+                        (R & funct3 == 3'h6 & funct7 == 7'h00 |                      // or
                          I_arith & funct3 == 3'h6)                      ? `OR :      // ori
-                        (R & funct3 == 3'h7 & funct7 == 7'h00 |                     // and
+                        (R & funct3 == 3'h7 & funct7 == 7'h00 |                      // and
                          I_arith & funct3 == 3'h7)                      ? `AND :     // andi
-                        (R & funct3 == 3'h1 & funct7 == 7'h00 |                     // sll
+                        (R & funct3 == 3'h1 & funct7 == 7'h00 |                      // sll
                          I_arith & funct3 == 3'h1 & funct7 == 7'h00)    ? `SLL :     // slli
-                        (R & funct3 == 3'h5 & funct7 == 7'h00 |                     // srl
+                        (R & funct3 == 3'h5 & funct7 == 7'h00 |                      // srl
                          I_arith & funct3 == 3'h5 & funct7 == 7'h00)    ? `SRL :     // srli
-                        (R & funct3 == 3'h5 & funct7 == 7'h20 |                     // sra
+                        (R & funct3 == 3'h5 & funct7 == 7'h20 |                      // sra
                          I_arith & funct3 == 3'h5 & funct7 == 7'h20)    ? `SRA :     // srai
-                        (R & funct3 == 3'h2 & funct7 == 7'h00 |                     // slt
+                        (R & funct3 == 3'h2 & funct7 == 7'h00 |                      // slt
                          I_arith & funct3 == 3'h2)                      ? `SLT :     // slti
-                        (R & funct3 == 3'h3 & funct7 == 7'h00 |                     // sltu
+                        (R & funct3 == 3'h3 & funct7 == 7'h00 |                      // sltu
                          I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
                         (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
                         (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh

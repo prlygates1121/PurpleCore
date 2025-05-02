@@ -24,20 +24,30 @@
 module uart(
     input clk,
     input reset,
-    input rx_en,
-    input tx_en,
+
+    input read,
     input rx_in,
-    input [7:0] tx_in,
     output [7:0] rx_out,
+    output reg rx_ready,
+
+    input write,
+    input [7:0] tx_in,
     output tx_out,
-    output rx_done
+    output reg tx_ready
     );
 
     localparam [31:0] COUNTER_MAX = `CLK_MAIN_FREQ / `UART_FREQ;
 
-    // rx_negedge is enabled for one cycle when rx_in has a negative edge
+    reg uart_en;
+    reg [9:0] counter;
+
     reg rx_in_prev;
+    reg rx_active;
+    reg tx_new;
+    wire tx_done, rx_done;
+    wire [1:0] rx_state;
     wire rx_negedge = rx_in == 1'b0 & rx_in_prev == 1'b1;
+
     always @(posedge clk) begin
         if (reset) begin
             rx_in_prev <= 1'b0;
@@ -47,7 +57,6 @@ module uart(
     end
 
     // rx_active indicates if data reception has started, it remains active since the first negative edge of rx_in
-    reg rx_active;
     always @(posedge clk) begin
         if (reset) begin
             rx_active <= 1'b0;
@@ -57,9 +66,6 @@ module uart(
     end
 
     // uart_en is triggered for 1 clock cycle every 1/115200Hz, and is synchronized with transmitter clock on encountering a start bit
-    wire [1:0] rx_state;
-    reg uart_en;
-    reg [9:0] counter;
     always @(posedge clk) begin
         if (reset) begin
             counter <= 10'b0;
@@ -69,7 +75,7 @@ module uart(
             counter <= COUNTER_MAX/2;
             uart_en <= 1'b0;
         end else if (rx_active) begin
-            // update counter incrementally if data reception has started
+            // increment counter if data reception has started
             if (counter != COUNTER_MAX) begin
                 counter <= counter + 1;
                 uart_en <= 1'b0;
@@ -80,35 +86,57 @@ module uart(
         end
     end
 
-    uart_rx rx(
-        .clk(clk),
-        .reset(reset | ~rx_en),
-        .uart_en(uart_en),
-        .rx_in(rx_in),
-        .rx_out(rx_out),
-        .done(rx_done),
-        .rx_state(rx_state)
-    );
-
-    reg new_byte_tx;
     always @(posedge clk) begin
         if (reset) begin
-            new_byte_tx <= 1'b0;
+            rx_ready <= 1'b0;
+        end else if (read) begin
+            rx_ready <= 1'b0;
         end else if (rx_done) begin
-            new_byte_tx <= 1'b1;
+            rx_ready <= 1'b1;
+        end
+    end
+
+    uart_rx rx(
+        .clk                (clk),
+        .reset              (reset),
+        .uart_en            (uart_en),
+
+        .rx_in              (rx_in),
+        .rx_out             (rx_out),
+        .done               (rx_done),
+        .rx_state           (rx_state)
+    );
+
+    always @(posedge clk) begin
+        if (reset) begin
+            tx_new <= 1'b0;
+        end else if (write) begin
+            tx_new <= 1'b1;
         end else if (uart_en) begin
-            new_byte_tx <= 1'b0;
+            tx_new <= 1'b0;
         end
     end
 
     uart_tx tx(
-        .clk(clk),
-        .reset(reset),
-        .uart_en(uart_en),
-        .tx_in(tx_in),
-        .new_byte_tx(new_byte_tx),
-        .tx_out(tx_out)
+        .clk                (clk),
+        .reset              (reset),
+        .uart_en            (uart_en),
+
+        .tx_new             (tx_new),
+        .tx_in              (tx_in),
+        .tx_out             (tx_out),
+        .done               (tx_done)
     );
+
+    always @(posedge clk) begin
+        if (reset) begin
+            tx_ready <= 1'b0;
+        end else if (write) begin
+            tx_ready <= 1'b0;
+        end else if (tx_done) begin
+            tx_ready <= 1'b1;
+        end
+    end
     
 
 endmodule

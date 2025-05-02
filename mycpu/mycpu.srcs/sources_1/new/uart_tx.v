@@ -25,12 +25,12 @@ module uart_tx(
     input reset,
     input uart_en,
     input [7:0] tx_in,
-    input new_byte_tx,
+    input tx_new,
     output tx_out,
     output done
     );
 
-    localparam [1:0] IDLE = 2'b0, START = 2'b1, DATA = 2'b10, STOP = 2'b11;
+    localparam [1:0] IDLE = 2'b00, START = 2'b01, DATA = 2'b10, STOP = 2'b11;
 
     reg [1:0] state, next_state;
 
@@ -53,10 +53,10 @@ module uart_tx(
 
     always @(*) begin
         case (state)
-            IDLE:       next_state = new_byte_tx ? START : IDLE;
+            IDLE:       next_state = tx_new ? START : IDLE;
             START:      next_state = DATA;
             DATA:       next_state = counter == 4'h8 ? STOP : DATA;
-            STOP:       next_state = new_byte_tx ? START : IDLE;
+            STOP:       next_state = tx_new ? START : IDLE;
             default:    next_state = IDLE;
         endcase
     end

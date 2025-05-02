@@ -53,16 +53,14 @@ module top(
     wire locked_main, locked_pixel;
     wire locked = locked_main & locked_pixel;
 
-    wire uart_mem_write, uart_inst_loaded;
-    wire [31:0] uart_addr, uart_inst;
-
     wire [4:0] bts_state;
-
     wire [31:0] seg_display_hex;
-
     wire [31:0] vga_addr, vga_data;
-
     wire [7:0] key_code;
+    wire [7:0] uart_rx_data;
+    wire [7:0] uart_tx_data;
+    wire uart_read, uart_write;
+    wire uart_rx_ready, uart_tx_ready;
 
     wire clk_main;                    // generates clk_main from clk_100
     clk_main_gen clk_main_gen_0(
@@ -117,11 +115,6 @@ module top(
     core core_0(
         .clk                            (clk_main),
         .reset                          (reset_sync_main_s2),
-        
-        .uart_addr                      (uart_addr),
-        .uart_inst                      (uart_inst),
-        .uart_write                     (uart_mem_write),
-        .uart_inst_loaded               (uart_inst_loaded),
 
         .sws_l                          (sws_l),
         .sws_r                          (sws_r),
@@ -130,14 +123,21 @@ module top(
 
         .seg_display_hex                (seg_display_hex),
 
-        // .leds_l(leds_l),
-        .leds_r(leds_r),
+        .leds_l                         (leds_l),
+        .leds_r                         (leds_r),
 
         .clk_pixel                      (clk_pixel),
         .vga_addr                       (vga_addr),
         .vga_data                       (vga_data),
 
-        .key_code                       (key_code)
+        .key_code                       (key_code),
+
+        .uart_rx_data                   (uart_rx_data),
+        .uart_tx_data                   (uart_tx_data),
+        .uart_read                      (uart_read),
+        .uart_write                     (uart_write),
+        .uart_rx_ready                  (uart_rx_ready),
+        .uart_tx_ready                  (uart_tx_ready)
     );
 
     vga_top vga(
@@ -152,22 +152,19 @@ module top(
         .vga_data                       (vga_data)
     );
 
-`ifdef SIMULATION
-    assign uart_inst_loaded = 1'b1;
-`else
-    uart_handler uart_handler_0(
-        .clk                            (clk_main),
-        .reset                          (reset_sync_main_s2),
-        .rx_in                          (uart_rx_in),
-        .tx_out                         (uart_tx_out),
-        .inst_loaded                    (uart_inst_loaded),
-        .addr                           (uart_addr),
-        .inst                           (uart_inst),
-        .mem_write                      (uart_mem_write)
+    uart uart_0(
+    	.clk    	                    (clk_main),
+    	.reset  	                    (reset_sync_main_s2),
+    	.read   	                    (uart_read),
+    	.rx_in  	                    (uart_rx_in),
+    	.rx_out 	                    (uart_rx_data),
+        .rx_ready                       (uart_rx_ready),
+    	.write  	                    (uart_write),
+    	.tx_in  	                    (uart_tx_data),
+    	.tx_out 	                    (uart_tx_out),
+        .tx_ready                       (uart_tx_ready)
     );
-`endif
 
-    // wire [31:0] debug_hex_digits;
     seg_display_handler seg_display_handler_0(
         .clk                            (clk_main),
         .reset                          (reset_sync_main_s2),
@@ -179,7 +176,6 @@ module top(
 
     wire debug_shift;
     wire [7:0] debug_scan_code;
-    // assign debug_hex_digits = {key_code, 16'hEEEE, debug_scan_code};
     keyboard keyboard_0 (
         .debug_shift                    (debug_shift),
         .debug_scan_code                (debug_scan_code),
@@ -195,10 +191,10 @@ module top(
     generate
         for (i = 0; i < 5; i = i + 1) begin
             button_handler button_handler_0(
-                .clk         	(clk_100      ),
-                .reset       	(~reset_n     ),
-                .bt_raw      	(bts[i]       ),
-                .bt_state    	(bts_state[i] )
+                .clk         	        (clk_main),
+                .reset       	        (reset_sync_main_s2),
+                .bt_raw      	        (bts[i]),
+                .bt_state    	        (bts_state[i])
             );
         end
     endgenerate
@@ -206,8 +202,8 @@ module top(
     // assign leds_l = uart_addr[15:8];
     // assign leds_l[2] = uart_rx_in;
     // assign leds_l[1] = load_begin;
-    assign leds_l[0] = uart_inst_loaded;
-    assign leds_l[1] = debug_shift;
+    // assign leds_l[0] = uart_inst_loaded;
+    // assign leds_l[1] = debug_shift;
     // assign leds_r = uart_addr[7:0];
 
 

@@ -25,11 +25,6 @@ module core(
     input clk,
     input reset,
 
-    input [31:0] uart_addr,
-    input [31:0] uart_inst,
-    input uart_write,
-    input uart_inst_loaded,
-
     output [31:0] I_read,
 
     input [7:0] sws_l,
@@ -46,13 +41,17 @@ module core(
     input [31:0] vga_addr,
     output [31:0] vga_data,
 
-    input [7:0] key_code
+    input [7:0] key_code,
+
+    input [7:0] uart_rx_data,
+    output [7:0] uart_tx_data,
+    output uart_read,
+    output uart_write,
+    input uart_rx_ready,
+    input uart_tx_ready
     );
 
     localparam LOADING = 0, RUNNING = 1;
-
-    wire core_mode      = uart_inst_loaded ? RUNNING : LOADING;
-    wire core_reset     = reset | core_mode == LOADING;
 
     wire [31:0] IF_I_addr, I_load_data;
     wire [31:0] IF_out_pc, IF_out_pc_plus_4, IF_out_inst, IF_out_I_addr;
@@ -167,9 +166,9 @@ module core(
     wire load_stall, load_flush;
 
     // Memory
-    wire [3:0] wea = {4{core_mode == LOADING & uart_write}};
-    wire [31:0] I_addr = core_mode == LOADING ? uart_addr : IF_I_addr;
-    wire [31:0] I_store_data = uart_inst;
+    wire [3:0] wea = 4'b0;
+    wire [31:0] I_addr = IF_I_addr;
+    wire [31:0] I_store_data = 32'b0;
     wire [31:0] D_addr, D_store_data, D_load_data;
     wire [1:0] D_store_width;
     wire [2:0] D_load_width;
@@ -177,7 +176,6 @@ module core(
 
     // IO
     wire [7:0] leds_r_mem;
-    assign leds_r = {leds_r_mem[7:1], core_mode};
 
     // WB signals
     wire WB_out_reg_w_en;
@@ -186,7 +184,7 @@ module core(
        
     IF if_0 (
         .clk                        (clk),
-        .reset                      (core_reset),
+        .reset                      (reset),
         .stall                      (load_stall),
 
         .EX_pc_sel                  (EX_out_pc_sel),
@@ -210,7 +208,7 @@ module core(
 
     IF_ID if_id_0(
         .clk                    (clk),
-        .reset                  (core_reset | EX_branch_flush),
+        .reset                  (reset | EX_branch_flush),
         .stall                  (load_stall),
 
         .IF_pc                  (IF_out_pc),
@@ -228,7 +226,7 @@ module core(
 
     ID id_0 (
         .clk                    (clk),
-        .reset                  (core_reset),
+        .reset                  (reset),
         .IF_pc                  (ID_in_pc),
         .IF_pc_plus_4           (ID_in_pc_plus_4),
         .IF_inst                (ID_in_inst),
@@ -266,7 +264,7 @@ module core(
 
     ID_EX id_ex_0 (
         .clk                    (clk),
-        .reset                  (core_reset | load_flush | EX_branch_flush),
+        .reset                  (reset | load_flush | EX_branch_flush),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
@@ -369,7 +367,7 @@ module core(
 
     EX_MEM ex_mem_0 (
         .clk                     (clk),
-        .reset                   (core_reset),
+        .reset                   (reset),
         .EX_alu_result           (EX_out_alu_result),
         .EX_reg_w_en             (EX_out_reg_w_en),
         .EX_reg_w_data_sel       (EX_out_reg_w_data_sel),
@@ -400,7 +398,6 @@ module core(
         .EX_pc_plus_4            (MEM_in_pc_plus_4),
         .EX_rd                   (MEM_in_rd),
         .EX_rs2_data             (MEM_in_rs2_data),
-        // interface with data memory
         .D_addr                  (D_addr),
         .D_store_data            (D_store_data),
         .D_store_width           (D_store_width),
@@ -417,7 +414,7 @@ module core(
 
     MEM_WB mem_wb_0 (
         .clk                     (clk),
-        .reset                   (core_reset),
+        .reset                   (reset),
         .MEM_reg_w_en            (MEM_out_reg_w_en),
         .MEM_reg_w_data_sel      (MEM_out_reg_w_data_sel),
         .MEM_pc_plus_4           (MEM_out_pc_plus_4),
@@ -468,7 +465,7 @@ module core(
 `ifdef BRANCH_PREDICT_ENA
     branch_prediction_unit branch_prediction_unit_0 (
         .clk                   (clk),
-        .reset                 (core_reset),
+        .reset                 (reset),
         .stall                 (load_stall),
         .IF_pc                 (IF_out_pc),
         .IF_inst               (IF_out_inst),
@@ -492,7 +489,7 @@ module core(
 
     memory memory_0(
         .clk                        (clk),
-        .reset                      (core_reset),
+        .reset                      (reset),
 
         .I_en                       (1'b1),
         .I_write_en                 (wea),
@@ -522,7 +519,15 @@ module core(
         .vga_addr                   (vga_addr),
         .vga_data                   (vga_data),
 
-        .key_code                   (key_code)
+        .key_code                   (key_code),
+
+        .uart_rx_data               (uart_rx_data),
+        .uart_tx_data               (uart_tx_data),
+        .uart_read                  (uart_read),
+        .uart_write                 (uart_write),
+
+        .uart_rx_ready              (uart_rx_ready),
+        .uart_tx_ready              (uart_tx_ready)
     );
 
     /* -------------------------------------- Debug -------------------------------------- */
@@ -531,7 +536,7 @@ module core(
     // reg [31:0] pc_debug, addra_debug, inst_debug;
     // reg pc_sel_debug;
     // always @(posedge clk) begin
-    //     if (core_reset) begin
+    //     if (reset) begin
     //         stop <= 1'b0;
     //     end else if (inst != 32'h0) begin
     //         if (stop == 1'b0) begin

@@ -1,4 +1,4 @@
-// `define SIMULATION
+`define SIMULATION
 `define BRANCH_PREDICT_ENA
 
 `define ADDR_SP_START           32'h0000_BFFC
@@ -9,11 +9,18 @@
 `define ADDR_MMIO_SW            32'h0030_0000
 `define ADDR_MMIO_VGA           32'h0040_0000
 `define ADDR_MMIO_KEYBOARD      32'h0050_0000
+`define ADDR_MMIO_BUTTON        32'h0060_0000
+`define ADDR_MMIO_SEG_DISPLAY   32'h0070_0000
+`define ADDR_MMIO_UART          32'h0080_0000
 
 // Frequencies
 `define CLK_100_FREQ            32'd100_000_000
 `define CLK_MAIN_FREQ           32'd40_000_000
-`define UART_FREQ               32'd115200
+`ifdef SIMULATION
+    `define UART_FREQ               32'd2_000_000
+`else
+    `define UART_FREQ               32'd115200
+`endif
 
 // Instruction parameters
 `define NOP                     32'h00000013

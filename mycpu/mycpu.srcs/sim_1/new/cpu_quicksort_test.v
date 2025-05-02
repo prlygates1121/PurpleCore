@@ -26,6 +26,7 @@ module cpu_quicksort_test(
     );
     parameter CLK_100_PERIOD = 10;
     parameter CLK_100_FREQ = 100_000_000;
+    parameter UART_PERIOD = CLK_100_PERIOD * (CLK_100_FREQ / `UART_FREQ + 1);
 
     reg clk_100, reset_n, uart_rx_in;
     wire uart_tx_out;
@@ -36,6 +37,33 @@ module cpu_quicksort_test(
         .uart_rx_in(uart_rx_in),
         .uart_tx_out(uart_tx_out)
     );
+
+    task send_byte(input reg [7:0] data_byte);
+        begin
+            // start bit
+            uart_rx_in = 1'b0;
+            #(UART_PERIOD);
+    
+            // data bits
+            for (i = 0; i < 8; i = i + 1) begin
+                uart_rx_in = data_byte[i];
+                #(UART_PERIOD);
+            end
+    
+            // stop bit
+            uart_rx_in = 1'b1;
+            #(UART_PERIOD);
+        end
+    endtask
+    
+    task send_instruction(input reg [31:0] inst);
+        begin
+            send_byte(inst[31:24]);
+            send_byte(inst[23:16]);
+            send_byte(inst[15:8]);
+            send_byte(inst[7:0]);
+        end
+    endtask
 
     integer i;
 
@@ -49,8 +77,16 @@ module cpu_quicksort_test(
         reset_n = 1'b0;
         #(CLK_100_PERIOD * 2);
         reset_n = 1'b1;
-        #(CLK_100_PERIOD * 5000);
+        #(CLK_100_PERIOD * 2000);
         
+        send_instruction(32'h00000413);
+        send_instruction(32'h808004B7);
+        send_instruction(32'h00048493);
+        send_instruction(32'h123452B7);
+        send_instruction(32'h67828293);
+        send_instruction(32'h0054A023);
+
+
     end
 
     always @(posedge top0.clk_main) begin
@@ -73,7 +109,7 @@ module cpu_quicksort_test(
     integer branch_target_outdated = 0;
     integer branch_flushes = 0;
     always @(posedge top0.clk_main) begin
-        if (top0.core_0.core_reset == 0) begin
+        if (top0.core_0.reset == 0) begin
             cycle = cycle + 1;
             
             if (top0.core_0.ex_0.ID_branch_type != `NO_BRANCH) begin

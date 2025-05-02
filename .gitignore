@@ -36,3 +36,4 @@ mycpu.gen/
 *.DS_Store
 mycpu/vivado_pid25048.str
 /mycpu/mycpu.srcs/netlist
+/mycpu/mycpu.srcs/.vscode
