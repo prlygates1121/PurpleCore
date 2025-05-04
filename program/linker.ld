@@ -2,10 +2,8 @@ ENTRY(_start)
 
 MEMORY
 {
-    MEM_TEXT (rx)   : ORIGIN = 0x00000200, LENGTH = 0x00009E00
-    MEM_DATA (rw)   : ORIGIN = 0x0000A000, LENGTH = 0x00002000
-    MEM_IO_RO (r)   : ORIGIN = 0x80000000, LENGTH = 0x00200000
-    MEM_TO_RW (rw)  : ORIGIN = 0x80200000, LENGTH = 0x00400000
+    MEM_TEXT (rx)   : ORIGIN = 0x00000200, LENGTH = 0x00008E00
+    MEM_DATA (rw)   : ORIGIN = 0x00009000, LENGTH = 0x00003000
 }
 
 PROVIDE(_stack_top = ORIGIN(MEM_DATA) + LENGTH(MEM_DATA));          /* Top of the stack */
@@ -14,16 +12,28 @@ SECTIONS
 {
     . = ORIGIN(MEM_TEXT);
     .text : {
-        KEEP(*(.text.entry))
-        *(.text)            /* All .text sections (code) */
-        . = ALIGN(4);       /* Align to 4-byte boundary */
+        /* Place section .text.entry (entry.s) at the start, before .text */
+        *(.text.entry)
+        *(.text .text.*)
+        *(.rodata .srodata)
+        . = ALIGN(4);
+        _etext = .;
     } > MEM_TEXT
 
-    . = ORIGIN(MEM_TEXT) + LENGTH(MEM_TEXT);
-    .data : AT ( ADDR(.text) + SIZEOF(.text) ) {
+    .data : AT ( _etext ) {
         . = ALIGN(4);
-        *(.data)           /* All .data sections */
+        _sdata = .;
+        *(.data .data*)
         . = ALIGN(4);
+        _edata = .;
+    } > MEM_DATA
+
+    .bss (NOLOAD) : {
+        . = ALIGN(4);
+        _sbss = .;
+        *(.bss .bss*)
+        . = ALIGN(4);
+        _ebss = .;
     } > MEM_DATA
 
 }

@@ -3,12 +3,10 @@
 # Script to compile C to object, extract .text section, and convert to ASCII hex
 
 # --- Configuration ---
-COMPILER="riscv32-unknown-linux-gnu-gcc"
 OBJCOPY="riscv32-unknown-linux-gnu-objcopy"
 OBJDUMP="riscv32-unknown-linux-gnu-objdump"
 PYTHON_INTERPRETER="python3" # Or just "python" if python3 is not the default
 HEX_CONVERTER_SCRIPT="hex2ascii.py"
-GCC_FLAGS="-march=rv32im -mabi=ilp32 -nostdlib -nostartfiles -T linker.ld" # Add necessary flags
 
 # --- Script Logic ---
 
@@ -51,7 +49,7 @@ echo "1. Input is ELF file: $ELF_FILE_PATH"
 
 # Step 2: Extract .text section to hex dump
 echo "2. Extracting .text section from $ELF_FILE_PATH to $OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME..."
-$OBJCOPY -O binary -j .text -j .text.startup "$ELF_FILE_PATH" "$OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME"
+$OBJCOPY -O binary -j .text -j .text.startup -j .data -j .rodata -j .bss "$ELF_FILE_PATH" "$OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME"
 if [ $? -ne 0 ]; then
     echo "Error: objcopy failed."
     exit 1
@@ -81,7 +79,7 @@ echo "Final ASCII output: $OUTPUT_FOLDER/$OUTPUT_ASCII_FILE"
 
 # Also, display the disassembly of the object file in the terminal using objdump
 echo "4. Disassembling $ELF_FILE_PATH for verification..."
-$OBJDUMP -d "$ELF_FILE_PATH"
+$OBJDUMP -D "$ELF_FILE_PATH"
 if [ $? -ne 0 ]; then
     echo "Error: objdump failed."
     exit 1
@@ -89,6 +87,6 @@ fi
 
 # Optional: Clean up intermediate files
 # echo "Cleaning up intermediate files..."
-rm -f "$OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME"
+# rm -f "$OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME"
 
 exit 0
