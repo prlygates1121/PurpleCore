@@ -38,8 +38,8 @@ module uart(
 
     localparam [31:0] COUNTER_MAX = `CLK_MAIN_FREQ / `UART_FREQ;
 
-    reg uart_en;
-    reg [9:0] counter;
+    reg rx_en, tx_en;
+    reg [9:0] rx_counter, tx_counter;
 
     reg rx_in_prev;
     reg rx_active;
@@ -65,23 +65,23 @@ module uart(
         end 
     end
 
-    // uart_en is triggered for 1 clock cycle every 1/115200Hz, and is synchronized with transmitter clock on encountering a start bit
+    // rx_en is triggered for 1 clock cycle every 1/115200Hz, and is synchronized with transmitter clock on encountering a start bit
     always @(posedge clk) begin
         if (reset) begin
-            counter <= 10'b0;
-            uart_en <= 1'b0;
+            rx_counter <= 10'b0;
+            rx_en <= 1'b0;
         end else if (rx_negedge & (rx_state == 2'b00 | rx_state == 2'b11)) begin
             // when encountering rx_negedge while in IDLE or STOP state, set next sample at 1/2 uart period later, exactly at the center of the start bit signal
-            counter <= COUNTER_MAX/2;
-            uart_en <= 1'b0;
+            rx_counter <= COUNTER_MAX/2;
+            rx_en <= 1'b0;
         end else if (rx_active) begin
-            // increment counter if data reception has started
-            if (counter != COUNTER_MAX) begin
-                counter <= counter + 1;
-                uart_en <= 1'b0;
+            // increment rx_counter if data reception has started
+            if (rx_counter != COUNTER_MAX) begin
+                rx_counter <= rx_counter + 1;
+                rx_en <= 1'b0;
             end else begin
-                counter <= 10'b0;
-                uart_en <= 1'b1;
+                rx_counter <= 10'b0;
+                rx_en <= 1'b1;
             end
         end
     end
@@ -99,7 +99,7 @@ module uart(
     uart_rx rx(
         .clk                (clk),
         .reset              (reset),
-        .uart_en            (uart_en),
+        .uart_en            (rx_en),
 
         .rx_in              (rx_in),
         .rx_out             (rx_out),
@@ -109,10 +109,25 @@ module uart(
 
     always @(posedge clk) begin
         if (reset) begin
+            tx_counter <= 10'b0;
+            tx_en <= 1'b0;
+        end else begin
+            if (tx_counter != COUNTER_MAX) begin
+                tx_counter <= tx_counter + 1;
+                tx_en <= 1'b0;
+            end else begin
+                tx_counter <= 10'b0;
+                tx_en <= 1'b1;
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (reset) begin
             tx_new <= 1'b0;
         end else if (write) begin
             tx_new <= 1'b1;
-        end else if (uart_en) begin
+        end else if (tx_en) begin
             tx_new <= 1'b0;
         end
     end
@@ -120,7 +135,7 @@ module uart(
     uart_tx tx(
         .clk                (clk),
         .reset              (reset),
-        .uart_en            (uart_en),
+        .uart_en            (tx_en),
 
         .tx_new             (tx_new),
         .tx_in              (tx_in),
@@ -130,7 +145,7 @@ module uart(
 
     always @(posedge clk) begin
         if (reset) begin
-            tx_ready <= 1'b0;
+            tx_ready <= 1'b1;
         end else if (write) begin
             tx_ready <= 1'b0;
         end else if (tx_done) begin

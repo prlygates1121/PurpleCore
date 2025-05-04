@@ -70,17 +70,17 @@ module uart_rx(
     end
 
     // done is 1 for one cycle every time 8 bits of data are received
-    reg enter_stop;
+    reg first_stop;
     always @(posedge clk) begin
         if (reset) begin
             done <= 1'b0;
-            enter_stop <= 1'b0;
+            first_stop <= 1'b0;
         end else if (state == STOP) begin
-            done <= enter_stop ? 1'b0 : 1'b1;
-            enter_stop <= 1'b1;
+            done <= first_stop ? 1'b0 : 1'b1;
+            first_stop <= 1'b1;
         end else begin
             done <= 1'b0;
-            enter_stop <= 1'b0;
+            first_stop <= 1'b0;
         end
     end
 

@@ -195,25 +195,27 @@ module memory(
             leds_l <= 8'b0;
             leds_r <= 8'b0;
             seg_display_hex <= 32'h0;
+            uart_tx_data <= 8'h0;
         end else begin
-            if (io_en) begin
-                // memory mapped I/O can be stored in words only
-                // here lists all the writable I/O registers
-                if (D_store_width == `STORE_WORD) begin
-                    case (io_sel)
-                        LED: begin
-                            {leds_l, leds_r} <= mem_store_data[15:0];
+            if (io_en & store) begin
+                // here lists all the writable I/O
+                case (io_sel)
+                    LED: begin
+                        if (we[0]) leds_r <= mem_store_data[7:0];
+                        if (we[1]) leds_l <= mem_store_data[15:8];
+                    end
+                    SEG_DISPLAY: begin
+                        if (we[0]) seg_display_hex[7:0]   <= mem_store_data[7:0];
+                        if (we[1]) seg_display_hex[15:8]  <= mem_store_data[15:8];
+                        if (we[2]) seg_display_hex[23:16] <= mem_store_data[23:16];
+                        if (we[3]) seg_display_hex[31:24] <= mem_store_data[31:24];
+                    end
+                    UART: begin
+                        if (uart_sel == UART_DATA_REG) begin
+                            if (we[0]) uart_tx_data <= mem_store_data[7:0];
                         end
-                        SEG_DISPLAY: begin
-                            seg_display_hex <= mem_store_data;
-                        end
-                        UART: begin
-                            if (uart_sel == UART_DATA_REG) begin
-                                uart_tx_data <= mem_store_data[7:0];
-                            end
-                        end
-                    endcase
-                end
+                    end
+                endcase
             end
         end
     end

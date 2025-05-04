@@ -79,12 +79,12 @@ module cpu_quicksort_test(
         reset_n = 1'b1;
         #(CLK_100_PERIOD * 2000);
         
-        send_instruction(32'h00000413);
-        send_instruction(32'h808004B7);
-        send_instruction(32'h00048493);
-        send_instruction(32'h123452B7);
-        send_instruction(32'h67828293);
-        send_instruction(32'h0054A023);
+        // send_instruction(32'h00000413);
+        // send_instruction(32'h808004B7);
+        // send_instruction(32'h00048493);
+        // send_instruction(32'h123452B7);
+        // send_instruction(32'h67828293);
+        // send_instruction(32'h0054A023);
 
 
     end

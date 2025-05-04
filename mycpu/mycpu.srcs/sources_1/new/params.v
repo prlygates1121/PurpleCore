@@ -1,4 +1,4 @@
-`define SIMULATION
+// `define SIMULATION
 `define BRANCH_PREDICT_ENA
 
 `define ADDR_SP_START           32'h0000_BFFC
@@ -19,7 +19,7 @@
 `ifdef SIMULATION
     `define UART_FREQ               32'd2_000_000
 `else
-    `define UART_FREQ               32'd115200
+    `define UART_FREQ               32'd460800
 `endif
 
 // Instruction parameters

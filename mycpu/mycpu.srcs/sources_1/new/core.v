@@ -174,9 +174,6 @@ module core(
     wire [2:0] D_load_width;
     wire D_load_un;
 
-    // IO
-    wire [7:0] leds_r_mem;
-
     // WB signals
     wire WB_out_reg_w_en;
     wire [31:0] WB_out_reg_w_data;
@@ -513,7 +510,7 @@ module core(
         .seg_display_hex            (seg_display_hex),
 
         .leds_l                     (leds_l),
-        .leds_r                     (leds_r_mem),
+        .leds_r                     (leds_r),
 
         .clk_pixel                  (clk_pixel),
         .vga_addr                   (vga_addr),

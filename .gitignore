@@ -37,3 +37,5 @@ mycpu.gen/
 mycpu/vivado_pid25048.str
 /mycpu/mycpu.srcs/netlist
 /mycpu/mycpu.srcs/.vscode
+*.o
+/program/output

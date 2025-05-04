@@ -27,7 +27,7 @@ module uart_tx(
     input [7:0] tx_in,
     input tx_new,
     output tx_out,
-    output done
+    output reg done
     );
 
     localparam [1:0] IDLE = 2'b00, START = 2'b01, DATA = 2'b10, STOP = 2'b11;
@@ -61,11 +61,24 @@ module uart_tx(
         endcase
     end
 
+    // done is 1 for one cycle every time 8 bits of data are received
+    reg first_stop;
+    always @(posedge clk) begin
+        if (reset) begin
+            done <= 1'b0;
+            first_stop <= 1'b0;
+        end else if (state == STOP) begin
+            done <= first_stop ? 1'b0 : 1'b1;
+            first_stop <= 1'b1;
+        end else begin
+            done <= 1'b0;
+            first_stop <= 1'b0;
+        end
+    end
+
     assign tx_out = state == IDLE ? 1'b1 :
                     state == START ? 1'b0 :
                     state == DATA ? tx_in[counter - 1] :
                     1'b1;
-
-    assign done = state == STOP;
 
 endmodule
