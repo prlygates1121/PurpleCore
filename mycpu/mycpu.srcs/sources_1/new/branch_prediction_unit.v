@@ -181,12 +181,12 @@ module branch_prediction_unit(
 
     always @(*) begin
         if (EX_branch_flush) begin
-            RAS_in <= EX_pc + 4;
+            RAS_in = EX_pc + 4;
         end else begin
             if (IF_call) begin
-                RAS_in <= IF_pc + 4;
+                RAS_in = IF_pc + 4;
             end else begin
-                RAS_in <= 32'h0;
+                RAS_in = 32'h0;
             end
         end
     end
@@ -194,19 +194,19 @@ module branch_prediction_unit(
     always @(*) begin
         if (EX_branch_flush) begin
             if (ID_call) begin
-                RAS_op <= `RING_POP;
+                RAS_op = `RING_POP;
             end else if (ID_return) begin
-                RAS_op <= `RING_CANCEL_POP;
+                RAS_op = `RING_CANCEL_POP;
             end else begin
-                RAS_op <= `RING_NOOP;
+                RAS_op = `RING_NOOP;
             end
         end else begin
             if (IF_call) begin
-                RAS_op <= `RING_PUSH;
+                RAS_op = `RING_PUSH;
             end else if (IF_return) begin
-                RAS_op <= `RING_POP;
+                RAS_op = `RING_POP;
             end else begin
-                RAS_op <= `RING_NOOP;
+                RAS_op = `RING_NOOP;
             end
         end
     end
