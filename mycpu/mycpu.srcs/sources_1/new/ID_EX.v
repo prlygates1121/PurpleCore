@@ -28,7 +28,7 @@ module ID_EX(
     input ID_alu_src1_sel,
     input ID_alu_src2_sel,
     input ID_reg_w_en,
-    input [1:0] ID_reg_w_data_sel,
+    input [2:0] ID_reg_w_data_sel,
     input [1:0] ID_store_width,
     input [2:0] ID_load_width,
     input ID_load_un,
@@ -48,12 +48,15 @@ module ID_EX(
     input ID_branch_predict,
     input [31:0] ID_inst,
     input ID_ecall,
+    input [11:0] ID_csr_addr,
+    input [2:0] ID_csr_op,
+    input [31:0] ID_csr_r_data,
 
     output reg [3:0] EX_alu_op_sel,
     output reg EX_alu_src1_sel,
     output reg EX_alu_src2_sel,
     output reg EX_reg_w_en,
-    output reg [1:0] EX_reg_w_data_sel,
+    output reg [2:0] EX_reg_w_data_sel,
     output reg [1:0] EX_store_width,
     output reg [2:0] EX_load_width,
     output reg EX_load_un,
@@ -72,7 +75,11 @@ module ID_EX(
     output reg [2:0] EX_branch_type,
     output reg EX_branch_predict,
     output reg [31:0] EX_inst,
-    output reg EX_ecall
+    output reg EX_ecall,
+    output reg [11:0] EX_csr_addr,
+    output reg [2:0]  EX_csr_op,
+    output reg [31:0] EX_csr_r_data
+
     );
 
     always @(posedge clk) begin
@@ -81,7 +88,7 @@ module ID_EX(
             EX_alu_src1_sel <= 1'b0;
             EX_alu_src2_sel <= 1'b0;
             EX_reg_w_en <= 1'b0;
-            EX_reg_w_data_sel <= 2'h0;
+            EX_reg_w_data_sel <= 3'h0;
             EX_store_width <= 2'h3;
             EX_load_width <= 3'h3;
             EX_load_un <= 1'b0;
@@ -101,6 +108,9 @@ module ID_EX(
             EX_branch_predict <= 1'b0;
             EX_inst <= `NOP;
             EX_ecall <= 1'b0;
+            EX_csr_addr <= 12'h0;
+            EX_csr_op <= 3'h0;
+            EX_csr_r_data <= 32'h0;
         end else begin
             EX_alu_op_sel <= ID_alu_op_sel;
             EX_alu_src1_sel <= ID_alu_src1_sel;
@@ -126,6 +136,9 @@ module ID_EX(
             EX_branch_predict <= ID_branch_predict;
             EX_inst <= ID_inst;
             EX_ecall <= ID_ecall;
+            EX_csr_addr <= ID_csr_addr;
+            EX_csr_op <= ID_csr_op;
+            EX_csr_r_data <= ID_csr_r_data;
         end
     end
 endmodule

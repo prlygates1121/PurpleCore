@@ -28,14 +28,12 @@ module branch_prediction_unit(
     
     input [31:0] IF_pc,
     input [31:0] IF_inst,
-    input [31:0] ID_ra_data,
     input [31:0] EX_pc,
     input [31:0] EX_alu_result,
     input EX_jal,
     input EX_jalr,
     input [2:0] EX_branch_type,
     input EX_pc_sel,
-    input EX_branch_predict,
 
     output branch_predict,
     output [31:0] branch_target,

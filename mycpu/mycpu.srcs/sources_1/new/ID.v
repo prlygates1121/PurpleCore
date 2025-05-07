@@ -32,12 +32,15 @@ module ID(
     input [31:0] WB_reg_w_data,
     input WB_reg_w_en,
     input [4:0] WB_rd,
+    input [11:0] WB_csr_addr,
+    input WB_csr_w_en,
+    input [31:0] WB_csr_w_data,
 
     output [3:0] ID_alu_op_sel,
     output ID_alu_src1_sel,
     output ID_alu_src2_sel,
     output ID_reg_w_en,
-    output [1:0] ID_reg_w_data_sel,
+    output [2:0] ID_reg_w_data_sel,
     output [1:0] ID_store_width,
     output [2:0] ID_load_width,
     output ID_load_un,
@@ -56,8 +59,11 @@ module ID(
     output [2:0] ID_branch_type,
     output ID_branch_predict,
     output [31:0] ID_inst,
-    output [31:0] ID_ra_data,
-    output ID_ecall
+    output ID_ecall,
+
+    output [11:0] ID_csr_addr,
+    output [2:0] ID_csr_op,
+    output [31:0] ID_csr_r_data
 
     );
 
@@ -74,13 +80,16 @@ module ID(
     // Control Logic
     wire [3:0] alu_op_sel;
     wire alu_src1_sel, alu_src2_sel;
-    wire [1:0] reg_w_data_sel;
+    wire [2:0] reg_w_data_sel;
     wire reg_w_en;
     wire [1:0] D_store_width;
     wire [2:0] D_load_width;
     wire D_load_un;
     wire [2:0] imm_sel;
     wire br_un;
+    wire [11:0] csr_addr;
+    wire [2:0] csr_op;
+    wire [31:0] csr_r_data;
 
     control_logic ctrl_logic_0(
         .inst               (IF_inst),
@@ -102,7 +111,9 @@ module ID(
         .rs2                (rs2),
         .rd                 (rd),
         .imm                (imm_raw),
-        .ecall              (ID_ecall)
+        .ecall              (ID_ecall),
+        .csr_addr           (csr_addr),
+        .csr_op             (csr_op)
     );
 
     imm_gen imm_gen_0(
@@ -114,17 +125,26 @@ module ID(
 
     // NOTE: Writeback-related signals come from the WB stage
     regfile regfile_0(
-        .clk(clk),
-        .reset(reset),
-        .write_en(WB_reg_w_en),
-        .rs1(rs1),
-        .rs2(rs2),
-        .dest(WB_rd),
-        .write_data(WB_reg_w_data),
+        .clk            (clk),
+        .reset          (reset),
+        .write_en       (WB_reg_w_en),
+        .rs1            (rs1),
+        .rs2            (rs2),
+        .dest           (WB_rd),
+        .write_data     (WB_reg_w_data),
 
-        .rs1_data(ID_rs1_data),
-        .rs2_data(ID_rs2_data),
-        .ra_data(ID_ra_data)
+        .rs1_data       (ID_rs1_data),
+        .rs2_data       (ID_rs2_data)
+    );
+
+    csr csr_0(
+        .clk            (clk),
+        .reset          (reset),
+        .csr_w_en       (WB_csr_w_en),
+        .csr_w_data     (WB_csr_w_data),
+        .csr_w_addr     (WB_csr_addr),
+        .csr_r_addr     (csr_addr),
+        .csr_r_data     (csr_r_data)
     );
 
     assign ID_alu_op_sel = alu_op_sel;
@@ -145,5 +165,8 @@ module ID(
     assign ID_I_addr = IF_I_addr;
     assign ID_branch_predict = IF_branch_predict;
     assign ID_inst = IF_inst;
+    assign ID_csr_addr = csr_addr;
+    assign ID_csr_op = csr_op;
+    assign ID_csr_r_data = csr_r_data;
 
 endmodule

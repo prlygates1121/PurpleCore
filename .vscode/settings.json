@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "seg_display.h": "c"
+        "seg_display.h": "c",
+        "led.h": "c",
+        "uart.h": "c"
     }
 }

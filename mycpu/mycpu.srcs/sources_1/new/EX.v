@@ -31,8 +31,8 @@ module EX(
     input ID_br_un,
     input [31:0] ID_I_addr,
 
-    input [4:0] ID_rs1,     // TBD
-    input [4:0] ID_rs2,     // TBD
+    input [4:0] ID_rs1,
+    input [4:0] ID_rs2,
     input [4:0] ID_rd,
 
     input [1:0] ID_store_width,
@@ -40,7 +40,7 @@ module EX(
     input ID_load_un,
 
     input ID_reg_w_en,
-    input [1:0] ID_reg_w_data_sel,
+    input [2:0] ID_reg_w_data_sel,
 
     input [31:0] ID_pc,
     input [31:0] ID_pc_plus_4,
@@ -55,10 +55,18 @@ module EX(
     input [1:0] forward_rs1_sel,
     input [1:0] forward_rs2_sel,
 
+    input [31:0] MEM_csr_w_data_forwarded,
+    input [31:0] WB_csr_w_data_forwarded,
+    input [1:0] forward_csr_sel,
+
+    input [11:0] ID_csr_addr,
+    input [2:0] ID_csr_op,
+    input [31:0] ID_csr_r_data,
+
     output [31:0] EX_alu_result,                // -> MEM -> WB
     output EX_pc_sel,                           // -> IF
     output EX_reg_w_en,                         // -> MEM -> WB
-    output [1:0] EX_reg_w_data_sel,             // -> MEM -> WB
+    output [2:0] EX_reg_w_data_sel,             // -> MEM -> WB
     output [1:0] EX_store_width,                // -> MEM
     output [2:0] EX_load_width,                 // -> MEM
     output EX_load_un,                          // -> MEM
@@ -74,18 +82,25 @@ module EX(
 
     output EX_jal,
     output EX_jalr,
-    output [2:0] EX_branch_type
+    output [2:0] EX_branch_type,
+
+    output [11:0] EX_csr_addr,
+    output reg [31:0] EX_csr_w_data,
+    output [31:0] EX_csr_r_data,
+    output EX_csr_w_en,
+    output [2:0] EX_csr_op
 
     );
 
-    wire [31:0] rs1_data = (forward_rs1_sel == `FORWARD_RS1_PREV) ?         MEM_alu_result_forwarded :
-                           (forward_rs1_sel == `FORWARD_RS1_PREV_PREV) ?    WB_alu_result_forwarded : ID_rs1_data;
-    wire [31:0] rs2_data = (forward_rs2_sel == `FORWARD_RS2_PREV) ?         MEM_alu_result_forwarded :
-                           (forward_rs2_sel == `FORWARD_RS2_PREV_PREV) ?    WB_alu_result_forwarded : ID_rs2_data;
+    wire [31:0] fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)       ? MEM_alu_result_forwarded :
+                               (forward_rs1_sel == `FORWARD_PREV_PREV)  ? WB_alu_result_forwarded  : ID_rs1_data;
+    wire [31:0] fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)       ? MEM_alu_result_forwarded :
+                               (forward_rs2_sel == `FORWARD_PREV_PREV)  ? WB_alu_result_forwarded  : ID_rs2_data;
+    wire [31:0] fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
+                               (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  : ID_csr_r_data;
 
-    // ALU
-    wire [31:0] alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? rs1_data : ID_I_addr;
-    wire [31:0] alu_src2 = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? rs2_data : ID_imm;
+    wire [31:0] alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? fwd_rs1_data : ID_I_addr;
+    wire [31:0] alu_src2 = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? fwd_rs2_data : ID_imm;
 
     wire EX_br_eq, EX_br_lt;
     wire branch = ID_branch_type == `BEQ  ?   EX_br_eq :
@@ -97,8 +112,8 @@ module EX(
     assign EX_pc_sel = ID_jal | ID_jalr | branch;
 
     branch_comp branch_comp_0(
-        .rs1_data(rs1_data),
-        .rs2_data(rs2_data),
+        .rs1_data(fwd_rs1_data),
+        .rs2_data(fwd_rs2_data),
         .br_un(ID_br_un),
 
         .br_eq(EX_br_eq),
@@ -112,6 +127,19 @@ module EX(
         .result(EX_alu_result)
     );
 
+    always @(*) begin
+        case (ID_csr_op) 
+            `CSRRW:     EX_csr_w_data = fwd_rs1_data;
+            `CSRRS:     EX_csr_w_data = fwd_csr_data | fwd_rs1_data;
+            `CSRRC:     EX_csr_w_data = fwd_csr_data & ~fwd_rs1_data;
+            // ID_rs1 is treated as 5-bit immediate and zero-extended in below instructions
+            `CSRRWI:    EX_csr_w_data = {27'b0, ID_rs1};
+            `CSRRSI:    EX_csr_w_data = fwd_csr_data | {27'b0, ID_rs1};
+            `CSRRCI:    EX_csr_w_data = fwd_csr_data & ~{27'b0, ID_rs1};
+            default:    EX_csr_w_data = 32'h0;
+        endcase
+    end
+
     assign EX_reg_w_en = ID_reg_w_en;
     assign EX_reg_w_data_sel = ID_reg_w_data_sel;
     assign EX_store_width = ID_store_width;
@@ -119,7 +147,7 @@ module EX(
     assign EX_load_un = ID_load_un;
     assign EX_pc_plus_4 = ID_pc_plus_4;
     assign EX_rd = ID_rd;
-    assign EX_rs2_data = rs2_data;
+    assign EX_rs2_data = fwd_rs2_data;
     assign EX_rs1 = ID_rs1;
     assign EX_rs2 = ID_rs2;
     assign EX_pc = ID_pc;
@@ -127,4 +155,11 @@ module EX(
     assign EX_jal = ID_jal;
     assign EX_jalr = ID_jalr;
     assign EX_branch_type = ID_branch_type;
+    assign EX_csr_addr = ID_csr_addr;
+    assign EX_csr_r_data = fwd_csr_data;
+    assign EX_csr_op = ID_csr_op;
+    // if the CSR operation is setting/clearing bits and the rs1/imm is x0/0, do not write to CSR at all
+    // see unprivileged RISC-V manual page 46
+    assign EX_csr_w_en = (ID_csr_op == `CSRRW | ID_csr_op == `CSRRWI) | 
+                         (ID_csr_op == `CSRRC | ID_csr_op == `CSRRCI | ID_csr_op == `CSRRS | ID_csr_op == `CSRRSI) & (ID_rs1 != 5'h0);
 endmodule

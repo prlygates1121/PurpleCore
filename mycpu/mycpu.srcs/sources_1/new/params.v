@@ -1,4 +1,4 @@
-// `define SIMULATION
+`define SIMULATION
 `define BRANCH_PREDICT_ENA
 
 `define ADDR_SP_START           32'h0000_BFFC
@@ -73,11 +73,12 @@
 `define LOAD_HALF_UN            3'h5
 `define NO_LOAD                 3'h3
 
-// reg_w_data_sel [1:0]
-`define REG_W_DATA_ALU          2'h0
-`define REG_W_DATA_MEM          2'h1
-`define REG_W_DATA_PC           2'h2
-`define NO_REG_W_DATA           2'h3
+// reg_w_data_sel [2:0]
+`define REG_W_DATA_ALU          3'h0
+`define REG_W_DATA_MEM          3'h1
+`define REG_W_DATA_PC           3'h2
+`define REG_W_DATA_CSR          3'h3
+`define NO_REG_W_DATA           3'h7
 
 // alu_src1_sel
 `define ALU_SRC1_PC             1'b0
@@ -87,15 +88,10 @@
 `define ALU_SRC2_IMM            1'b0
 `define ALU_SRC2_RS2            1'b1
 
-// forward_rs1_sel [1:0]
-`define FORWARD_RS1_PREV        2'b01
-`define FORWARD_RS1_PREV_PREV   2'b10
-`define FORWARD_RS1_NONE        2'b00
-
-// forward_rs2_sel [1:0]
-`define FORWARD_RS2_PREV        2'b01
-`define FORWARD_RS2_PREV_PREV   2'b10
-`define FORWARD_RS2_NONE        2'b00
+// forward_sel [1:0]
+`define FORWARD_PREV            2'b01
+`define FORWARD_PREV_PREV       2'b10
+`define FORWARD_NONE            2'b00
 
 // ring buffer operation [1:0]
 `define RING_PUSH               2'h0
@@ -110,6 +106,24 @@
 `define BT_LEFT                 3'h2
 `define BT_RIGHT                3'h3
 `define BT_CENTER               3'h4
+
+// csr instructions
+`define CSRRW                   3'h1
+`define CSRRS                   3'h2
+`define CSRRC                   3'h3
+`define CSRRWI                  3'h5
+`define CSRRSI                  3'h6
+`define CSRRCI                  3'h7
+`define NO_CSR                  3'h0
+
+// csr register addresses
+`define MSTATUS                 12'h300
+`define MIE                     12'h304
+`define MTVEC                   12'h305
+`define MEPC                    12'h341
+`define MCAUSE                  12'h342
+`define MTVAL                   12'h343
+`define MIP                     12'h344
 
 // VGA parameters
 

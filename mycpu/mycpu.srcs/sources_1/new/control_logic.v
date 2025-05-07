@@ -28,7 +28,7 @@ module control_logic(
     output alu_src1_sel,
     output alu_src2_sel,
     output reg_w_en,
-    output [1:0] reg_w_data_sel,
+    output [2:0] reg_w_data_sel,
     output [1:0] store_width,
     output [2:0] load_width,
     output load_un,
@@ -41,16 +41,19 @@ module control_logic(
     output [4:0] rs2,
     output [4:0] rd,
     output [24:0] imm,
-    output ecall
+    output ecall,
+    output [11:0] csr_addr,
+    output [2:0] csr_op
     );
-
 
     wire [6:0] opcode = inst[6:0];
     wire [2:0] funct3 = inst[14:12];
     wire [6:0] funct7 = inst[31:25];
 
+    wire csr        = opcode == 7'b1110011 & funct3 != `NO_CSR;
     wire I_ecall    = opcode == 7'b1110011 & inst[31:20] == 12'h0;
     wire I_ebreak   = opcode == 7'b1110011 & inst[31:20] == 12'h1;
+
     wire I_load     = opcode == 7'b0000011;
     wire I_jalr     = opcode == 7'b1100111 & funct3 == 3'h0;
     wire I_arith    = opcode == 7'b0010011;
@@ -78,11 +81,12 @@ module control_logic(
 
     assign br_un = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
     
-    assign reg_w_en = R | U | J | I_load | I_jalr | I_arith;
+    assign reg_w_en = R | U | J | I_load | I_jalr | I_arith | csr;
 
     assign reg_w_data_sel = (J | I_jalr)      ? `REG_W_DATA_PC :        // PC + 4
                             (I_load)          ? `REG_W_DATA_MEM :       // Memory
                             (R | U | I_arith) ? `REG_W_DATA_ALU :       // ALU
+                            csr               ? `REG_W_DATA_CSR :       // CSR
                             `NO_REG_W_DATA;
 
     assign alu_op_sel = (R & funct3 == 3'h0 & funct7 == 7'h20)          ? `SUB :     // sub
@@ -125,5 +129,8 @@ module control_logic(
     assign imm = inst[31:7];
 
     assign ecall = I_ecall;
+
+    assign csr_op = csr ? funct3 : 3'h0;
+    assign csr_addr = csr ? inst[31:20] : 12'h0;
 
 endmodule
