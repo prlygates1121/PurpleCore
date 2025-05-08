@@ -48,9 +48,12 @@ module ID_EX(
     input ID_branch_predict,
     input [31:0] ID_inst,
     input ID_ecall,
+    input ID_mret,
     input [11:0] ID_csr_addr,
     input [2:0] ID_csr_op,
     input [31:0] ID_csr_r_data,
+    input [31:0] ID_mtvec,
+    input [31:0] ID_mepc,
 
     output reg [3:0] EX_alu_op_sel,
     output reg EX_alu_src1_sel,
@@ -76,9 +79,12 @@ module ID_EX(
     output reg EX_branch_predict,
     output reg [31:0] EX_inst,
     output reg EX_ecall,
+    output reg EX_mret,
     output reg [11:0] EX_csr_addr,
     output reg [2:0]  EX_csr_op,
-    output reg [31:0] EX_csr_r_data
+    output reg [31:0] EX_csr_r_data,
+    output reg [31:0] EX_mtvec,
+    output reg [31:0] EX_mepc
 
     );
 
@@ -108,9 +114,12 @@ module ID_EX(
             EX_branch_predict <= 1'b0;
             EX_inst <= `NOP;
             EX_ecall <= 1'b0;
+            EX_mret <= 1'b0;
             EX_csr_addr <= 12'h0;
             EX_csr_op <= 3'h0;
             EX_csr_r_data <= 32'h0;
+            EX_mtvec <= 32'h0;
+            EX_mepc <= 32'h0;
         end else begin
             EX_alu_op_sel <= ID_alu_op_sel;
             EX_alu_src1_sel <= ID_alu_src1_sel;
@@ -136,9 +145,12 @@ module ID_EX(
             EX_branch_predict <= ID_branch_predict;
             EX_inst <= ID_inst;
             EX_ecall <= ID_ecall;
+            EX_mret <= ID_mret;
             EX_csr_addr <= ID_csr_addr;
             EX_csr_op <= ID_csr_op;
             EX_csr_r_data <= ID_csr_r_data;
+            EX_mtvec <= ID_mtvec;
+            EX_mepc <= ID_mepc;
         end
     end
 endmodule

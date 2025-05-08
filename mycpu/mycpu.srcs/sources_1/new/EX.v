@@ -49,9 +49,10 @@ module EX(
     input [2:0] ID_branch_type,
     input ID_branch_predict,
     input ID_ecall,
+    input ID_mret,
 
-    input [31:0] MEM_alu_result_forwarded,
-    input [31:0] WB_alu_result_forwarded,
+    input [31:0] MEM_reg_w_data_forwarded,
+    input [31:0] WB_reg_w_data_forwarded,
     input [1:0] forward_rs1_sel,
     input [1:0] forward_rs2_sel,
 
@@ -62,6 +63,8 @@ module EX(
     input [11:0] ID_csr_addr,
     input [2:0] ID_csr_op,
     input [31:0] ID_csr_r_data,
+    input [31:0] ID_mtvec,
+    input [31:0] ID_mepc,
 
     output [31:0] EX_alu_result,                // -> MEM -> WB
     output EX_pc_sel,                           // -> IF
@@ -83,6 +86,9 @@ module EX(
     output EX_jal,
     output EX_jalr,
     output [2:0] EX_branch_type,
+    output EX_ecall,
+    output EX_mret,
+    output [31:0] EX_trap_dest,
 
     output [11:0] EX_csr_addr,
     output reg [31:0] EX_csr_w_data,
@@ -92,10 +98,10 @@ module EX(
 
     );
 
-    wire [31:0] fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)       ? MEM_alu_result_forwarded :
-                               (forward_rs1_sel == `FORWARD_PREV_PREV)  ? WB_alu_result_forwarded  : ID_rs1_data;
-    wire [31:0] fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)       ? MEM_alu_result_forwarded :
-                               (forward_rs2_sel == `FORWARD_PREV_PREV)  ? WB_alu_result_forwarded  : ID_rs2_data;
+    wire [31:0] fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
+                               (forward_rs1_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  : ID_rs1_data;
+    wire [31:0] fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
+                               (forward_rs2_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  : ID_rs2_data;
     wire [31:0] fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
                                (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  : ID_csr_r_data;
 
@@ -128,16 +134,22 @@ module EX(
     );
 
     always @(*) begin
-        case (ID_csr_op) 
-            `CSRRW:     EX_csr_w_data = fwd_rs1_data;
-            `CSRRS:     EX_csr_w_data = fwd_csr_data | fwd_rs1_data;
-            `CSRRC:     EX_csr_w_data = fwd_csr_data & ~fwd_rs1_data;
-            // ID_rs1 is treated as 5-bit immediate and zero-extended in below instructions
-            `CSRRWI:    EX_csr_w_data = {27'b0, ID_rs1};
-            `CSRRSI:    EX_csr_w_data = fwd_csr_data | {27'b0, ID_rs1};
-            `CSRRCI:    EX_csr_w_data = fwd_csr_data & ~{27'b0, ID_rs1};
-            default:    EX_csr_w_data = 32'h0;
-        endcase
+        if (ID_ecall) begin
+            // ecall sets mepc to pc
+            EX_csr_w_data = ID_pc;
+        end else begin
+            case (ID_csr_op) 
+                `CSRRW:     EX_csr_w_data = fwd_rs1_data;
+                `CSRRS:     EX_csr_w_data = fwd_csr_data | fwd_rs1_data;
+                `CSRRC:     EX_csr_w_data = fwd_csr_data & ~fwd_rs1_data;
+                // ID_rs1 is treated as 5-bit immediate and zero-extended in below instructions
+                `CSRRWI:    EX_csr_w_data = {27'b0, ID_rs1};
+                `CSRRSI:    EX_csr_w_data = fwd_csr_data | {27'b0, ID_rs1};
+                `CSRRCI:    EX_csr_w_data = fwd_csr_data & ~{27'b0, ID_rs1};
+                default:    EX_csr_w_data = 32'h0;
+            endcase
+        end
+
     end
 
     assign EX_reg_w_en = ID_reg_w_en;
@@ -155,6 +167,15 @@ module EX(
     assign EX_jal = ID_jal;
     assign EX_jalr = ID_jalr;
     assign EX_branch_type = ID_branch_type;
+    assign EX_ecall = ID_ecall;
+    assign EX_mret = ID_mret;
+    assign EX_trap_dest = ID_ecall ? ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
+                                      (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  :
+                                       ID_mtvec) :
+                          ID_mret  ? ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded :
+                                      (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  :
+                                       ID_mepc) : 
+                                     32'h0;
     assign EX_csr_addr = ID_csr_addr;
     assign EX_csr_r_data = fwd_csr_data;
     assign EX_csr_op = ID_csr_op;

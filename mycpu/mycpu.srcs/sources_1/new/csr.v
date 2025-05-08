@@ -27,16 +27,16 @@ module csr(
     input [31:0] csr_w_data,
     input [11:0] csr_w_addr,
     input [11:0] csr_r_addr,
-    output reg [31:0] csr_r_data
-    );
+    output reg [31:0] csr_r_data,
 
-    reg [31:0] mstatus;
-    reg [31:0] mie;
-    reg [31:0] mtvec;
-    reg [31:0] mepc;
-    reg [31:0] mcause;
-    reg [31:0] mtval;
-    reg [31:0] mip;
+    output reg [31:0] mstatus,
+    output reg [31:0] mie,
+    output reg [31:0] mtvec,
+    output reg [31:0] mepc,
+    output reg [31:0] mcause,
+    output reg [31:0] mtval,
+    output reg [31:0] mip
+    );
 
     always @(negedge clk) begin
         if (reset) begin

@@ -64,7 +64,6 @@ module branch_prediction_unit(
 
     wire EX_is_branch_inst = EX_jal | EX_jalr | (EX_branch_type != `NO_BRANCH);
 
-    wire branch_predict_trigger;
     reg branch_predict_reg, branch_predict_reg_prev;
     reg [31:0] branch_target_prev_1, branch_target_prev_2;
 
@@ -96,12 +95,12 @@ module branch_prediction_unit(
     reg EX_call, EX_return;
     reg [31:0] EX_RAS_out;
 
-    // Branch Prediction Table and Branch Target Buffer
+    // Branch Prediction Table (BPT) and Branch Target Buffer (BTB)
     reg [1:0]                       prediction_table     [(1 << PREDICTOR_DEPTH_LOG)-1:0];
     reg [31:0]                      branch_target_buffer [(1 << PREDICTOR_DEPTH_LOG)-1:0];
     reg [PREDICTOR_DEPTH_LOG-1:0]   branch_history_local [(1 << PREDICTOR_DEPTH_LOG)-1:0];
     reg [PREDICTOR_DEPTH_LOG-1:0]   branch_history;
-    wire [PREDICTOR_DEPTH_LOG-1:0]   IF_prediction_index;
+    wire [PREDICTOR_DEPTH_LOG-1:0]  IF_prediction_index;
     reg [PREDICTOR_DEPTH_LOG-1:0]   prediction_index_prev_1, prediction_index_prev_2;
 
     reg branch_predict_prev_1, branch_predict_prev_2;
@@ -178,32 +177,36 @@ module branch_prediction_unit(
     end
 
     always @(*) begin
-        if (EX_branch_flush) begin
-            RAS_in = EX_pc + 4;
+        if (IF_call & ~EX_branch_flush) begin
+            RAS_in = IF_pc + 4;
         end else begin
-            if (IF_call) begin
-                RAS_in = IF_pc + 4;
-            end else begin
-                RAS_in = 32'h0;
-            end
+            RAS_in = 32'h0;
         end
     end
 
     always @(*) begin
         if (EX_branch_flush) begin
+            // if a branch flush is needed, restore RAS to previous state
             if (ID_call) begin
+                // if a call was speculatively fetched, pop the mistakenly pushed address
                 RAS_op = `RING_POP;
             end else if (ID_return) begin
+                // if a return was speculatively fetched, restore the mistakenly popped address by incrementing the RAS pointer
                 RAS_op = `RING_CANCEL_POP;
             end else begin
+                // if the RAS was never changed, do nothing
                 RAS_op = `RING_NOOP;
             end
         end else begin
+            // otherwise, update the RAS according to recently fetched inst, as normal
             if (IF_call) begin
+                // if a call is fetched, push the return address to RAS
                 RAS_op = `RING_PUSH;
             end else if (IF_return) begin
+                // if a call is fetched, pop a return address out of RAS
                 RAS_op = `RING_POP;
             end else begin
+                // otherwise, do nothing
                 RAS_op = `RING_NOOP;
             end
         end
@@ -218,6 +221,9 @@ module branch_prediction_unit(
         end else begin
             if (EX_is_branch_inst) begin
                 if (~EX_call & ~EX_return) begin
+                    // we do not update BPT for:
+                    //      1. instructions that are neither jumps nor branches
+                    //      2. calls and returns (as they are always predicted to be taken), thus saving up BPT entries for other instructions
                     if (EX_pc_sel) begin
                         if (prediction_table[prediction_index_update] != STRONG_TAKEN) begin
                             prediction_table[prediction_index_update] <= prediction_table[prediction_index_update] + 1;
@@ -232,16 +238,24 @@ module branch_prediction_unit(
         end
     end
 
+    // unlike BPT, BTB is only indexed by lower bits of PC, regardless of the branch history,
+    //      because branch target is solely determined by the address of a branch (the instruction itself), not the branch history
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < (1 << PREDICTOR_DEPTH_LOG); i = i + 1) begin
                 branch_target_buffer[i] <= 32'b00;
             end
         end else if (EX_is_branch_inst & ~EX_return) begin
+            // we do not update BTB for:
+            //      1. instructions that are neither jumps nor branches
+            //      2. returns (as the branch target for them are determined solely by RAS), thus saving up BTB entries for other instructions
             branch_target_buffer[EX_pc[2+:PREDICTOR_DEPTH_LOG]] <= EX_alu_result;
         end
     end
 
+    // Latch the branch target previously used in prediction, to be compared in EX stage with the actual target.
+    // Compared with using latched prediction index to reproduce the branch target from the BTH,
+    //      latching the branch target directly eliminates the need to index into BTB, thus easing timing pressure.
     always @(posedge clk) begin
         if (reset) begin
             branch_target_prev_1 <= 32'h0;
@@ -263,9 +277,6 @@ module branch_prediction_unit(
         .data_out       (RAS_out)
     );
 
-    assign branch_predict_trigger = (IF_jal | IF_jalr) ? 1'b1 : 
-                                                  IF_B ? (prediction_table[IF_prediction_index] >= WEAK_TAKEN) : 
-                                                  1'b0;
     always @(posedge clk) begin
         if (reset) begin
             branch_predict_reg <= 1'b0;
@@ -288,12 +299,20 @@ module branch_prediction_unit(
         end
     end
     
-    assign branch_predict = branch_predict_trigger;
-    assign branch_target = IF_return ? RAS_out : branch_target_buffer[IF_pc[2+:PREDICTOR_DEPTH_LOG]];
-    assign EX_false_direction = EX_is_branch_inst ? (branch_predict_reg_prev != EX_pc_sel) : 1'b0;
-    assign EX_false_target = (EX_is_branch_inst & branch_predict_reg_prev) ? ID_return ? (EX_RAS_out != EX_alu_result) : 
-                                                             (branch_target_prev_2 != EX_alu_result) : 
+    assign branch_predict = (IF_jal | IF_jalr) ? 1'b1 : 
+                                          IF_B ? (prediction_table[IF_prediction_index] >= WEAK_TAKEN) : 
                                                  1'b0;
+
+    assign branch_target = IF_return ? RAS_out : 
+                                       branch_target_buffer[IF_pc[2+:PREDICTOR_DEPTH_LOG]];
+
+    assign EX_false_direction = EX_is_branch_inst ? (branch_predict_reg_prev != EX_pc_sel) : 
+                                                     1'b0;
+
+    assign EX_false_target = (EX_is_branch_inst & branch_predict_reg_prev) ? (ID_return ? (EX_RAS_out != EX_alu_result) : 
+                                                                                          (branch_target_prev_2 != EX_alu_result)) : 
+                                                                             1'b0;
+                                                                             
     assign EX_branch_flush = EX_false_direction | (EX_false_target & branch_predict_reg_prev);  
 
 endmodule

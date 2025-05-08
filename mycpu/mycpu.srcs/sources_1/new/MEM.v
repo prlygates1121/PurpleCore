@@ -45,6 +45,7 @@ module MEM(
 
     output MEM_reg_w_en,
     output [2:0] MEM_reg_w_data_sel,
+    output [31:0] MEM_reg_w_data,
     output [31:0] MEM_pc_plus_4,
     output [4:0] MEM_rd,
     output [31:0] MEM_dmem_data,
@@ -62,6 +63,12 @@ module MEM(
     assign D_load_un = EX_load_un;
     assign MEM_reg_w_en = EX_reg_w_en;
     assign MEM_reg_w_data_sel = EX_reg_w_data_sel;
+    // MEM_reg_w_data is used for forwarding to the EX stage of the next instruction
+    // we never forward loaded data to the next instruction (we add a stall instead), so EX_reg_w_data_sel == `REG_W_DATA_MEM is not considered
+    assign MEM_reg_w_data = EX_reg_w_data_sel == `REG_W_DATA_ALU ? EX_alu_result :
+                            EX_reg_w_data_sel == `REG_W_DATA_PC  ? EX_pc_plus_4 :
+                            EX_reg_w_data_sel == `REG_W_DATA_CSR ? EX_csr_r_data :
+                            32'h0;
     assign MEM_pc_plus_4 = EX_pc_plus_4;
     assign MEM_rd = EX_rd;
     assign MEM_dmem_data = D_load_data;

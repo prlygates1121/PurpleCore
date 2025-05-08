@@ -42,6 +42,7 @@ module control_logic(
     output [4:0] rd,
     output [24:0] imm,
     output ecall,
+    output mret,
     output [11:0] csr_addr,
     output [2:0] csr_op
     );
@@ -51,8 +52,11 @@ module control_logic(
     wire [6:0] funct7 = inst[31:25];
 
     wire csr        = opcode == 7'b1110011 & funct3 != `NO_CSR;
+    // ecall: write mtvec to pc and write pc to mepc
     wire I_ecall    = opcode == 7'b1110011 & inst[31:20] == 12'h0;
     wire I_ebreak   = opcode == 7'b1110011 & inst[31:20] == 12'h1;
+    // mret: write mepc to pc
+    wire I_mret     = opcode == 7'b1110011 & inst[31:20] == 12'b001100000010;
 
     wire I_load     = opcode == 7'b0000011;
     wire I_jalr     = opcode == 7'b1100111 & funct3 == 3'h0;
@@ -81,6 +85,7 @@ module control_logic(
 
     assign br_un = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
     
+    // ecall and mret do not trigger reg_w_en, unlike other CSR instructions
     assign reg_w_en = R | U | J | I_load | I_jalr | I_arith | csr;
 
     assign reg_w_data_sel = (J | I_jalr)      ? `REG_W_DATA_PC :        // PC + 4
@@ -129,8 +134,14 @@ module control_logic(
     assign imm = inst[31:7];
 
     assign ecall = I_ecall;
+    assign mret = I_mret;
 
-    assign csr_op = csr ? funct3 : 3'h0;
-    assign csr_addr = csr ? inst[31:20] : 12'h0;
+    // ecall writes to MEPC
+    assign csr_op = I_ecall ? `CSRRW : csr ? funct3 : 3'h0;
+    // ecall reads from MTVEC and mret reads from MEPC
+    // unlike other CSR instructions, they do not need to set the csr_addr to read the data, but directly use the data from the CSR file
+    // for them, csr_addr is only used to specify the address of the CSR to write to
+    //      for example, ecall writes to MEPC, so csr_addr is set to MEPC
+    assign csr_addr = I_ecall ? `MEPC : csr ? inst[31:20] : 12'h0;
 
 endmodule

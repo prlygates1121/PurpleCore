@@ -60,10 +60,14 @@ module ID(
     output ID_branch_predict,
     output [31:0] ID_inst,
     output ID_ecall,
+    output ID_mret,
 
     output [11:0] ID_csr_addr,
     output [2:0] ID_csr_op,
-    output [31:0] ID_csr_r_data
+    output [31:0] ID_csr_r_data,
+
+    output [31:0] ID_mtvec,
+    output [31:0] ID_mepc
 
     );
 
@@ -112,6 +116,7 @@ module ID(
         .rd                 (rd),
         .imm                (imm_raw),
         .ecall              (ID_ecall),
+        .mret               (ID_mret),
         .csr_addr           (csr_addr),
         .csr_op             (csr_op)
     );
@@ -144,7 +149,15 @@ module ID(
         .csr_w_data     (WB_csr_w_data),
         .csr_w_addr     (WB_csr_addr),
         .csr_r_addr     (csr_addr),
-        .csr_r_data     (csr_r_data)
+        .csr_r_data     (csr_r_data),
+
+        .mstatus        (),
+        .mie            (),
+        .mtvec          (ID_mtvec),
+        .mepc           (ID_mepc),
+        .mcause         (),
+        .mtval          (),
+        .mip            ()
     );
 
     assign ID_alu_op_sel = alu_op_sel;

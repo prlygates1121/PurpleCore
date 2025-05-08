@@ -163,11 +163,11 @@ module memory(
     assign D_load_data = (D_load_width == `LOAD_BYTE | D_load_width == `LOAD_BYTE_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {24{1'b0}} : {24{load_word[7]}}), load_word[7:0]} :
                                                                                          byte_offset == 2'h1 ? {(D_load_un ? {24{1'b0}} : {24{load_word[15]}}), load_word[15:8]} :
                                                                                          byte_offset == 2'h2 ? {(D_load_un ? {24{1'b0}} : {24{load_word[24]}}), load_word[23:16]} :
-                                                                                         byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : {32{1'b0}}) :
+                                                                                         byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : 32'h0) :
                          (D_load_width == `LOAD_HALF | D_load_width == `LOAD_HALF_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
-                                                                                         byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : {32{1'b0}}) :
-                          D_load_width == `LOAD_WORD ? (byte_offset == 2'h0 ? load_word : {32{1'b0}}) : 
-                                                                                         load_word;
+                                                                                         byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : 32'h0) :
+                          D_load_width == `LOAD_WORD ? (byte_offset == 2'h0 ? load_word : 32'h0) : 
+                                                                                          32'h0;
 
     // we: global write enable signal, determined directly by the store width and the byte offset
     assign we = D_store_width == `STORE_BYTE ? (4'b1 << byte_offset) :                                     // sb
