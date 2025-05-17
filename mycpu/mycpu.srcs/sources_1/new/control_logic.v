@@ -136,12 +136,7 @@ module control_logic(
     assign ecall = I_ecall;
     assign mret = I_mret;
 
-    // ecall writes to MEPC
-    assign csr_op = I_ecall ? `CSRRW : csr ? funct3 : 3'h0;
-    // ecall reads from MTVEC and mret reads from MEPC
-    // unlike other CSR instructions, they do not need to set the csr_addr to read the data, but directly use the data from the CSR file
-    // for them, csr_addr is only used to specify the address of the CSR to write to
-    //      for example, ecall writes to MEPC, so csr_addr is set to MEPC
-    assign csr_addr = I_ecall ? `MEPC : csr ? inst[31:20] : 12'h0;
+    assign csr_op = csr ? funct3 : 3'h0;
+    assign csr_addr = csr ? inst[31:20] : 12'h0;
 
 endmodule

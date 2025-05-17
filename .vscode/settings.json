@@ -2,6 +2,8 @@
     "files.associations": {
         "seg_display.h": "c",
         "led.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "switch.h": "c",
+        "stdint.h": "c"
     }
 }

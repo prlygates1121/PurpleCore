@@ -94,7 +94,11 @@ module EX(
     output reg [31:0] EX_csr_w_data,
     output [31:0] EX_csr_r_data,
     output EX_csr_w_en,
-    output [2:0] EX_csr_op
+    output [2:0] EX_csr_op,
+
+    output reg [31:0] EX_w_mstatus,
+    output reg [31:0] EX_w_mepc,
+    output reg [31:0] EX_w_mcause
 
     );
 
@@ -134,22 +138,32 @@ module EX(
     );
 
     always @(*) begin
-        if (ID_ecall) begin
-            // ecall sets mepc to pc
-            EX_csr_w_data = ID_pc;
-        end else begin
-            case (ID_csr_op) 
-                `CSRRW:     EX_csr_w_data = fwd_rs1_data;
-                `CSRRS:     EX_csr_w_data = fwd_csr_data | fwd_rs1_data;
-                `CSRRC:     EX_csr_w_data = fwd_csr_data & ~fwd_rs1_data;
-                // ID_rs1 is treated as 5-bit immediate and zero-extended in below instructions
-                `CSRRWI:    EX_csr_w_data = {27'b0, ID_rs1};
-                `CSRRSI:    EX_csr_w_data = fwd_csr_data | {27'b0, ID_rs1};
-                `CSRRCI:    EX_csr_w_data = fwd_csr_data & ~{27'b0, ID_rs1};
-                default:    EX_csr_w_data = 32'h0;
-            endcase
-        end
+        case (ID_csr_op) 
+            `CSRRW:     EX_csr_w_data = fwd_rs1_data;
+            `CSRRS:     EX_csr_w_data = fwd_csr_data | fwd_rs1_data;
+            `CSRRC:     EX_csr_w_data = fwd_csr_data & ~fwd_rs1_data;
+            // ID_rs1 is treated as 5-bit immediate and zero-extended in below instructions
+            `CSRRWI:    EX_csr_w_data = {27'b0, ID_rs1};
+            `CSRRSI:    EX_csr_w_data = fwd_csr_data | {27'b0, ID_rs1};
+            `CSRRCI:    EX_csr_w_data = fwd_csr_data & ~{27'b0, ID_rs1};
+            default:    EX_csr_w_data = 32'h0;
+        endcase
+    end
 
+    always @(*) begin
+        if (ID_ecall) begin
+            EX_w_mepc     = ID_pc;
+            EX_w_mstatus  = 32'h0;
+            EX_w_mcause   = {1'b0, 31'd11};
+        end else if (ID_mret) begin
+            EX_w_mepc     = `CSR_NO_WRITE;
+            EX_w_mstatus  = `MSTATUS_MIE;
+            EX_w_mcause   = `CSR_NO_WRITE;
+        end else begin
+            EX_w_mepc     = `CSR_NO_WRITE;
+            EX_w_mstatus  = `CSR_NO_WRITE;
+            EX_w_mcause   = `CSR_NO_WRITE;
+        end
     end
 
     assign EX_reg_w_en = ID_reg_w_en;

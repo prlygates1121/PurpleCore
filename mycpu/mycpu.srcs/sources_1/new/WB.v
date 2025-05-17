@@ -32,13 +32,19 @@ module WB(
     input [31:0] MEM_csr_w_data,
     input [31:0] MEM_csr_r_data,
     input MEM_csr_w_en,
+    input [31:0] MEM_w_mstatus,
+    input [31:0] MEM_w_mepc,
+    input [31:0] MEM_w_mcause,
 
     output WB_reg_w_en,
     output [31:0] WB_reg_w_data,
     output [4:0] WB_rd,
     output [11:0] WB_csr_addr,
     output [31:0] WB_csr_w_data,
-    output WB_csr_w_en
+    output WB_csr_w_en,
+    output [31:0] WB_w_mstatus,
+    output [31:0] WB_w_mepc,
+    output [31:0] WB_w_mcause
 
     );
 
@@ -52,4 +58,7 @@ module WB(
     assign WB_csr_addr = MEM_csr_addr;
     assign WB_csr_w_data = MEM_csr_w_data;
     assign WB_csr_w_en = MEM_csr_w_en;
+    assign WB_w_mstatus = MEM_w_mstatus;
+    assign WB_w_mepc = MEM_w_mepc;
+    assign WB_w_mcause = MEM_w_mcause;
 endmodule

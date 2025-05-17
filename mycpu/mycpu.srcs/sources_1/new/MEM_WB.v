@@ -34,6 +34,9 @@ module MEM_WB(
     input [31:0] MEM_csr_w_data,
     input MEM_csr_w_en,
     input [31:0] MEM_csr_r_data,
+    input [31:0] MEM_w_mstatus,
+    input [31:0] MEM_w_mepc,
+    input [31:0] MEM_w_mcause,
 
     output reg WB_reg_w_en,
     output reg [2:0] WB_reg_w_data_sel,
@@ -44,7 +47,10 @@ module MEM_WB(
     output reg [11:0] WB_csr_addr,
     output reg [31:0] WB_csr_w_data,
     output reg WB_csr_w_en,
-    output reg [31:0] WB_csr_r_data
+    output reg [31:0] WB_csr_r_data,
+    output reg [31:0] WB_w_mstatus,
+    output reg [31:0] WB_w_mepc,
+    output reg [31:0] WB_w_mcause
     );
 
     always @(posedge clk) begin
@@ -59,6 +65,9 @@ module MEM_WB(
             WB_csr_w_data <= 32'h0;
             WB_csr_w_en <= 1'b0;
             WB_csr_r_data <= 32'h0;
+            WB_w_mstatus <= 32'h0;
+            WB_w_mepc <= 32'h0;
+            WB_w_mcause <= 32'h0;
         end else begin
             WB_reg_w_en <= MEM_reg_w_en;
             WB_reg_w_data_sel <= MEM_reg_w_data_sel;
@@ -70,6 +79,9 @@ module MEM_WB(
             WB_csr_w_data <= MEM_csr_w_data;
             WB_csr_w_en <= MEM_csr_w_en;
             WB_csr_r_data <= MEM_csr_r_data;
+            WB_w_mstatus <= MEM_w_mstatus;
+            WB_w_mepc <= MEM_w_mepc;
+            WB_w_mcause <= MEM_w_mcause;
         end
     end
 endmodule

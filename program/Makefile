@@ -6,16 +6,16 @@ CC = riscv32-unknown-linux-gnu-gcc
 #				3. discard standard library
 # 				4. eliminate the weird .eh_frame sections that otherwise would be included in .text section
 # 				5. specify linker script
-CFLAGS = -O3 -march=rv32im -mabi=ilp32 -nostdlib -nostartfiles -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -T linker.ld
+CFLAGS = -O3 -march=rv32imzicsr -mabi=ilp32 -nostdlib -nostartfiles -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -T linker.ld
 
 # Define the executable name
 TARGET = my_program
 
 # Define source files
-SRCS = user/uart_test.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c
+SRCS = user/uart_test.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c lib/switch/switch.c lib/button/button.c sys/trap_handler.c sys/entry.s sys/trap.s sys/csr.c
 
-# Define object files - substitute .c with .o for each source file
-OBJS = $(SRCS:.c=.o)
+# Define object files - substitute .c or .s with .o for each source file
+OBJS = $(addsuffix .o, $(basename $(SRCS)))
 
 ascii: $(TARGET) elf2ascii.bash
 	@echo "Generating ascii text..."
@@ -24,25 +24,26 @@ ascii: $(TARGET) elf2ascii.bash
 
 # Default Target: The executable
 # Depends on all object files.
-$(TARGET): $(OBJS) entry.o linker.ld
+$(TARGET): $(OBJS) linker.ld
 	@echo "Linking..." # @ hides the command itself
-	$(CC) $(CFLAGS) $(OBJS) entry.o -o $(TARGET)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 	@echo "$(TARGET) created successfully."
 
 # Rule to compile .c files into .o files
 # This is a pattern rule: it tells make how to create any .o file from a .c file
-%.o: %.c lib/uart/uart.h lib/led/led.h lib/seg_display/seg_display.h
+%.o: %.c lib/uart/uart.h lib/led/led.h lib/switch/switch.h lib/seg_display/seg_display.h lib/button/button.h sys/trap_handler.h sys/csr.h
 	@echo "Compiling $<..."
 	$(CC) $(CFLAGS) -c $< -o $@
 
-entry.o: entry.s 
-	@echo "Compiling entry.s"
-	$(CC) $(CFLAGS) -c entry.s -o entry.o
+# Rule to assemble .s files into .o files
+%.o: %.s
+	@echo "Assembling $<..."
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Target to clean up generated files
 clean:
 	@echo "Cleaning up..."
-	rm -f $(TARGET) $(OBJS) entry.o
+	rm -f $(TARGET) $(OBJS)
 
 # Declare 'clean' as a phony target.
 # This means 'clean' isn't a file name; make should always run the recipe

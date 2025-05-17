@@ -34,6 +34,9 @@ module MEM(
     input [31:0] EX_csr_w_data,
     input EX_csr_w_en,
     input [31:0] EX_csr_r_data,
+    input [31:0] EX_w_mstatus,
+    input [31:0] EX_w_mepc,
+    input [31:0] EX_w_mcause,
 
     // interface with data memory
     output [31:0] D_addr,
@@ -53,7 +56,10 @@ module MEM(
     output [11:0] MEM_csr_addr,
     output [31:0] MEM_csr_w_data,
     output MEM_csr_w_en,
-    output [31:0] MEM_csr_r_data
+    output [31:0] MEM_csr_r_data,
+    output [31:0] MEM_w_mstatus,
+    output [31:0] MEM_w_mepc,
+    output [31:0] MEM_w_mcause
     );
 
     assign D_addr = EX_alu_result;
@@ -77,4 +83,7 @@ module MEM(
     assign MEM_csr_w_data = EX_csr_w_data;
     assign MEM_csr_w_en = EX_csr_w_en;
     assign MEM_csr_r_data = EX_csr_r_data;
+    assign MEM_w_mstatus = EX_w_mstatus;
+    assign MEM_w_mepc = EX_w_mepc;
+    assign MEM_w_mcause = EX_w_mcause;
 endmodule

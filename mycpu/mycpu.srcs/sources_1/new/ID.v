@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "params.v"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -35,6 +36,9 @@ module ID(
     input [11:0] WB_csr_addr,
     input WB_csr_w_en,
     input [31:0] WB_csr_w_data,
+    input [31:0] WB_w_mstatus,
+    input [31:0] WB_w_mepc,
+    input [31:0] WB_w_mcause,
 
     output [3:0] ID_alu_op_sel,
     output ID_alu_src1_sel,
@@ -151,13 +155,21 @@ module ID(
         .csr_r_addr     (csr_addr),
         .csr_r_data     (csr_r_data),
 
-        .mstatus        (),
-        .mie            (),
-        .mtvec          (ID_mtvec),
-        .mepc           (ID_mepc),
-        .mcause         (),
-        .mtval          (),
-        .mip            ()
+        .w_mstatus      (WB_w_mstatus),
+        .w_mie          (`CSR_NO_WRITE),
+        .w_mtvec        (`CSR_NO_WRITE),
+        .w_mepc         (WB_w_mepc),
+        .w_mcause       (WB_w_mcause),
+        .w_mtval        (`CSR_NO_WRITE),
+        .w_mip          (`CSR_NO_WRITE),
+
+        .r_mstatus      (),
+        .r_mie          (),
+        .r_mtvec        (ID_mtvec),
+        .r_mepc         (ID_mepc),
+        .r_mcause       (),
+        .r_mtval        (),
+        .r_mip          ()
     );
 
     assign ID_alu_op_sel = alu_op_sel;

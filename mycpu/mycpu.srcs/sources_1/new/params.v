@@ -1,7 +1,7 @@
-`define SIMULATION
+// `define SIMULATION
 `define BRANCH_PREDICT_ENA
 
-`define ADDR_SP_START           32'h0000_BFFC
+`define ADDR_SP_START           32'h0000_B000
 `define ADDR_MMIO_BASE          32'h8000_0000
 `define ADDR_MMIO_SYS_INFO      32'h0000_0000
 `define ADDR_MMIO_ASCII         32'h0010_0000
@@ -124,6 +124,11 @@
 `define MCAUSE                  12'h342
 `define MTVAL                   12'h343
 `define MIP                     12'h344
+
+// csr mstatus bits
+`define MSTATUS_MIE             32'h0000_0008
+
+`define CSR_NO_WRITE            32'hFFFFFFFF
 
 // VGA parameters
 

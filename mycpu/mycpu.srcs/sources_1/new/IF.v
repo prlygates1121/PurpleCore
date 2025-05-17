@@ -69,7 +69,7 @@ module IF (
                           branch_predict ? branch_target :
                           (pc + 4);
 `else 
-    wire [31:0] pc_next = (EX_ecall | EX_mret) ? EX_csr_r_data : EX_pc_sel ? EX_alu_result : (pc + 4);
+    wire [31:0] pc_next = (EX_ecall | EX_mret) ? EX_trap_dest : EX_pc_sel ? EX_alu_result : (pc + 4);
 `endif
 
     always @(posedge clk) begin

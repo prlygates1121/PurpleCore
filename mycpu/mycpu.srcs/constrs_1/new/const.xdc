@@ -176,3 +176,5 @@ set_property PACKAGE_PIN R17 [get_ports {bts[1]}]
 set_property PACKAGE_PIN V1 [get_ports {bts[2]}]
 set_property PACKAGE_PIN R11 [get_ports {bts[3]}]
 set_property PACKAGE_PIN R15 [get_ports {bts[4]}]
+
+set_property MAX_FANOUT 500 [get_nets reset_sync_main_s2]

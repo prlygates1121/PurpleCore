@@ -5,6 +5,12 @@ void uart_putc(char c) {
     UART_DATA_REG = c;
 }
 
+void uart_puts(const char* s, uint32_t len) {
+    for (uint32_t i = 0; i < len; i++) {
+        uart_putc(s[i]);
+    }
+}
+
 char uart_getc() {
     while (!(UART_STATUS_REG & UART_RX_RDY));
     return UART_DATA_REG;

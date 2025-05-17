@@ -144,6 +144,9 @@ module core(
     wire [31:0] EX_out_csr_r_data;
     wire [2:0] EX_out_csr_op;
     wire EX_out_csr_w_en;
+    wire [31:0] EX_out_w_mstatus;
+    wire [31:0] EX_out_w_mepc;
+    wire [31:0] EX_out_w_mcause;
 
     wire [31:0] MEM_reg_w_data_forwarded;
     wire [31:0] WB_reg_w_data_forwarded;
@@ -166,6 +169,9 @@ module core(
     wire [31:0] MEM_in_csr_w_data;
     wire [31:0] MEM_in_csr_r_data;
     wire MEM_in_csr_w_en;
+    wire [31:0] MEM_in_w_mstatus;
+    wire [31:0] MEM_in_w_mepc;
+    wire [31:0] MEM_in_w_mcause;
 
     wire [31:0] MEM_out_alu_result;
     wire MEM_out_reg_w_en;
@@ -178,6 +184,9 @@ module core(
     wire [31:0] MEM_out_csr_w_data;
     wire [31:0] MEM_out_csr_r_data;
     wire MEM_out_csr_w_en;
+    wire [31:0] MEM_out_w_mstatus;
+    wire [31:0] MEM_out_w_mepc;
+    wire [31:0] MEM_out_w_mcause;
 
     wire [31:0] WB_in_alu_result;
     wire WB_in_reg_w_en;
@@ -189,6 +198,9 @@ module core(
     wire [31:0] WB_in_csr_w_data;
     wire [31:0] WB_in_csr_r_data;
     wire WB_in_csr_w_en;
+    wire [31:0] WB_in_w_mstatus;
+    wire [31:0] WB_in_w_mepc;
+    wire [31:0] WB_in_w_mcause;
 
     wire WB_out_reg_w_en;
     wire [31:0] WB_out_reg_w_data;
@@ -196,6 +208,9 @@ module core(
     wire [11:0] WB_out_csr_addr;
     wire [31:0] WB_out_csr_w_data;
     wire WB_out_csr_w_en;
+    wire [31:0] WB_out_w_mstatus;
+    wire [31:0] WB_out_w_mepc;
+    wire [31:0] WB_out_w_mcause;
 
     // branch_prediction_unit
     wire branch_predict;
@@ -275,6 +290,9 @@ module core(
         .WB_csr_addr            (WB_out_csr_addr),
         .WB_csr_w_en            (WB_out_csr_w_en),
         .WB_csr_w_data          (WB_out_csr_w_data),
+        .WB_w_mstatus           (WB_out_w_mstatus),
+        .WB_w_mepc              (WB_out_w_mepc),
+        .WB_w_mcause            (WB_out_w_mcause),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
@@ -439,7 +457,11 @@ module core(
         .EX_csr_w_data              (EX_out_csr_w_data),
         .EX_csr_w_en                (EX_out_csr_w_en),
         .EX_csr_r_data              (EX_out_csr_r_data),
-        .EX_csr_op                  (EX_out_csr_op)
+        .EX_csr_op                  (EX_out_csr_op),
+
+        .EX_w_mstatus               (EX_out_w_mstatus),
+        .EX_w_mepc                  (EX_out_w_mepc),
+        .EX_w_mcause                (EX_out_w_mcause)
     );
 
     EX_MEM ex_mem_0 (
@@ -458,6 +480,9 @@ module core(
         .EX_csr_w_data           (EX_out_csr_w_data),
         .EX_csr_w_en             (EX_out_csr_w_en),
         .EX_csr_r_data           (EX_out_csr_r_data),
+        .EX_w_mstatus            (EX_out_w_mstatus),
+        .EX_w_mepc               (EX_out_w_mepc),
+        .EX_w_mcause             (EX_out_w_mcause),
         .MEM_alu_result          (MEM_in_alu_result),
         .MEM_reg_w_en            (MEM_in_reg_w_en),
         .MEM_reg_w_data_sel      (MEM_in_reg_w_data_sel),
@@ -470,7 +495,10 @@ module core(
         .MEM_csr_addr            (MEM_in_csr_addr),
         .MEM_csr_w_data          (MEM_in_csr_w_data),
         .MEM_csr_w_en            (MEM_in_csr_w_en),
-        .MEM_csr_r_data          (MEM_in_csr_r_data)
+        .MEM_csr_r_data          (MEM_in_csr_r_data),
+        .MEM_w_mstatus           (MEM_in_w_mstatus),
+        .MEM_w_mepc              (MEM_in_w_mepc),
+        .MEM_w_mcause            (MEM_in_w_mcause)
     );
 
     MEM mem_0 (
@@ -487,6 +515,9 @@ module core(
         .EX_csr_w_data           (MEM_in_csr_w_data),
         .EX_csr_w_en             (MEM_in_csr_w_en),
         .EX_csr_r_data           (MEM_in_csr_r_data),
+        .EX_w_mstatus            (MEM_in_w_mstatus),
+        .EX_w_mepc               (MEM_in_w_mepc),
+        .EX_w_mcause             (MEM_in_w_mcause),
         .D_addr                  (D_addr),
         .D_store_data            (D_store_data),
         .D_store_width           (D_store_width),
@@ -503,7 +534,10 @@ module core(
         .MEM_csr_addr            (MEM_out_csr_addr),
         .MEM_csr_w_data          (MEM_out_csr_w_data),
         .MEM_csr_w_en            (MEM_out_csr_w_en),
-        .MEM_csr_r_data          (MEM_out_csr_r_data)
+        .MEM_csr_r_data          (MEM_out_csr_r_data),
+        .MEM_w_mstatus           (MEM_out_w_mstatus),
+        .MEM_w_mepc              (MEM_out_w_mepc),
+        .MEM_w_mcause            (MEM_out_w_mcause)
     );
 
     MEM_WB mem_wb_0 (
@@ -519,6 +553,9 @@ module core(
         .MEM_csr_w_data          (MEM_out_csr_w_data),
         .MEM_csr_w_en            (MEM_out_csr_w_en),
         .MEM_csr_r_data          (MEM_out_csr_r_data),
+        .MEM_w_mstatus           (MEM_out_w_mstatus),
+        .MEM_w_mepc              (MEM_out_w_mepc),
+        .MEM_w_mcause            (MEM_out_w_mcause),
         .WB_reg_w_en             (WB_in_reg_w_en),
         .WB_reg_w_data_sel       (WB_in_reg_w_data_sel),
         .WB_pc_plus_4            (WB_in_pc_plus_4),
@@ -528,7 +565,10 @@ module core(
         .WB_csr_addr             (WB_in_csr_addr),
         .WB_csr_w_data           (WB_in_csr_w_data),
         .WB_csr_w_en             (WB_in_csr_w_en),
-        .WB_csr_r_data           (WB_in_csr_r_data)
+        .WB_csr_r_data           (WB_in_csr_r_data),
+        .WB_w_mstatus            (WB_in_w_mstatus),
+        .WB_w_mepc               (WB_in_w_mepc),
+        .WB_w_mcause             (WB_in_w_mcause)
     );
 
     WB wb_0 (
@@ -542,12 +582,18 @@ module core(
         .MEM_csr_w_data          (WB_in_csr_w_data),
         .MEM_csr_w_en            (WB_in_csr_w_en),
         .MEM_csr_r_data          (WB_in_csr_r_data),
+        .MEM_w_mstatus           (WB_in_w_mstatus),
+        .MEM_w_mepc              (WB_in_w_mepc),
+        .MEM_w_mcause            (WB_in_w_mcause),
         .WB_reg_w_en             (WB_out_reg_w_en),
         .WB_reg_w_data           (WB_out_reg_w_data),
         .WB_rd                   (WB_out_rd),
         .WB_csr_addr             (WB_out_csr_addr),
         .WB_csr_w_data           (WB_out_csr_w_data),
-        .WB_csr_w_en             (WB_out_csr_w_en)
+        .WB_csr_w_en             (WB_out_csr_w_en),
+        .WB_w_mstatus            (WB_out_w_mstatus),
+        .WB_w_mepc               (WB_out_w_mepc),
+        .WB_w_mcause             (WB_out_w_mcause)
     );
 
     hazard_unit hazard_unit_0 (
