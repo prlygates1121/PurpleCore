@@ -26,7 +26,7 @@ SECTIONS
     .data : AT ( _etext ) {
         . = ALIGN(4);
         _sdata = .;
-        *(.data .data*)
+        *(.sdata .data .data*)
         . = ALIGN(4);
         _edata = .;
     } > MEM_DATA

@@ -1,5 +1,6 @@
 // `define SIMULATION
 `define BRANCH_PREDICT_ENA
+`define LOAD_AT_0X200
 
 `define ADDR_SP_START           32'h0000_B000
 `define ADDR_MMIO_BASE          32'h8000_0000
@@ -120,6 +121,7 @@
 `define MSTATUS                 12'h300
 `define MIE                     12'h304
 `define MTVEC                   12'h305
+`define MSCRATCH                12'h340
 `define MEPC                    12'h341
 `define MCAUSE                  12'h342
 `define MTVAL                   12'h343

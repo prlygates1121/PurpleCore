@@ -49,7 +49,7 @@ echo "1. Input is ELF file: $ELF_FILE_PATH"
 
 # Step 2: Extract .text section to hex dump
 echo "2. Extracting .text section from $ELF_FILE_PATH to $OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME..."
-$OBJCOPY -O binary -j .text -j .text.startup -j .data -j .rodata -j .bss "$ELF_FILE_PATH" "$OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME"
+$OBJCOPY -O binary -j .text -j .text.startup -j .rodata* -j .data -j .sdata "$ELF_FILE_PATH" "$OUTPUT_FOLDER/$HEX_DUMP_FILE_NAME"
 if [ $? -ne 0 ]; then
     echo "Error: objcopy failed."
     exit 1

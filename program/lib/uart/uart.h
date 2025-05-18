@@ -7,5 +7,6 @@
 
 void uart_putc(char c);
 void uart_puts(const char* s, uint32_t len);
+void uart_put_num(int num);
 char uart_getc();
 int uart_has_char();

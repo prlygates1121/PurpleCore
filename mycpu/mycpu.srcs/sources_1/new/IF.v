@@ -74,7 +74,15 @@ module IF (
 
     always @(posedge clk) begin
         if (reset) begin
-            pc <= 32'h0;
+            `ifdef SIMULATION
+                `ifdef LOAD_AT_0X200
+                    pc <= 32'h200;
+                `else
+                    pc <= 32'h0;
+                `endif
+            `else
+                pc <= 32'h0;
+            `endif
         end else if (~stall) begin
             pc <= pc_next;
         end

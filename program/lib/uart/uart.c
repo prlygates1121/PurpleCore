@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "../utils.h"
 
 void uart_putc(char c) {
     while (!(UART_STATUS_REG & UART_TX_RDY));
@@ -9,6 +10,12 @@ void uart_puts(const char* s, uint32_t len) {
     for (uint32_t i = 0; i < len; i++) {
         uart_putc(s[i]);
     }
+}
+
+void uart_put_num(int num) {
+    char s[100];
+    itoa(num, s);
+    uart_puts(s, strlen((char*)s));
 }
 
 char uart_getc() {

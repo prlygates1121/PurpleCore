@@ -40,6 +40,7 @@ clear_bss:
     beq a0, a1, clear_bss_end
     sw zero, 0(a0)
     addi a0, a0, 4
+    j clear_bss
 clear_bss_end:
 
     # point mtvec to m_trap in trap.s
