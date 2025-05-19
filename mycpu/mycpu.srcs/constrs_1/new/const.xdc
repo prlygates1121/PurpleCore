@@ -156,25 +156,4 @@ set_property IOSTANDARD LVCMOS33 [get_ports clk_100]
 set_property PACKAGE_PIN P17 [get_ports clk_100]
 
 create_clock -period 10.000 -name clk_100 -waveform {0.000 5.000} [get_ports clk_100]
-
-set_false_path -from [get_pins reset_modules_clk100_reg/C] -to [get_pins reset_sync_pixel_s1_reg/D]
-
-set_property IOSTANDARD LVCMOS33 [get_ports ps2_clk]
-set_property IOSTANDARD LVCMOS33 [get_ports ps2_data]
-set_property PACKAGE_PIN K5 [get_ports ps2_clk]
-set_property PACKAGE_PIN L4 [get_ports ps2_data]
-
-set_false_path -from [get_clocks clk_100] -to [get_clocks -of_objects [get_pins clk_main_gen_0/inst/plle2_adv_inst/CLKOUT0]]
-
-set_property IOSTANDARD LVCMOS33 [get_ports {bts[4]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {bts[3]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {bts[2]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {bts[1]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {bts[0]}]
-set_property PACKAGE_PIN U4 [get_ports {bts[0]}]
-set_property PACKAGE_PIN R17 [get_ports {bts[1]}]
-set_property PACKAGE_PIN V1 [get_ports {bts[2]}]
-set_property PACKAGE_PIN R11 [get_ports {bts[3]}]
-set_property PACKAGE_PIN R15 [get_ports {bts[4]}]
-
-set_property MAX_FANOUT 500 [get_nets reset_sync_main_s2]
+create_clock -period 39.677 -name VIRTUAL_clk_pixel_clk_pixel_gen -waveform {0.000 19.839}

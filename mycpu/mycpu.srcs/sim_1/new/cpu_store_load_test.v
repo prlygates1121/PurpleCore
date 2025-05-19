@@ -82,115 +82,42 @@ module cpu_store_load_test(
         reset_n = 1'b1;
         #(CLK_100_PERIOD * 5000);
 
-        // send_instruction(32'h00009337);
+        send_instruction(32'h0FF00293);
+        send_instruction(32'h0AA00E13);
+        send_instruction(32'h01C12223);
+        send_instruction(32'h00512023);
+        send_instruction(32'h00012303);
+        send_instruction(32'h00030393);
+        send_instruction(32'h00412303);
+        send_instruction(32'h00030393);
+
+        // send_instruction(32'hFFF102B7);
+        // send_instruction(32'h00028293);
+        // send_instruction(32'hFFF00337);
         // send_instruction(32'h00030313);
-        // send_instruction(32'h123452B7);
-        // send_instruction(32'h67828293);
-        // send_instruction(32'h00532023);
-        // send_instruction(32'h00032383);
-        // send_instruction(32'h0E729663);
-        // send_instruction(32'hABCDF2B7);
-        // send_instruction(32'hF0128293);
-        // send_instruction(32'h00532223);
-        // send_instruction(32'h00432383);
-        // send_instruction(32'h0C729C63);
-        // send_instruction(32'h1122F2B7);
-        // send_instruction(32'hEFF28293);
-        // send_instruction(32'h00532423);
-        // send_instruction(32'h000062B7);
-        // send_instruction(32'hA5A28293);
-        // send_instruction(32'h00531423);
-        // send_instruction(32'h00831383);
-        // send_instruction(32'h00006E37);
-        // send_instruction(32'hA5AE0E13);
-        // send_instruction(32'h0BC39863);
-        // send_instruction(32'h00835383);
-        // send_instruction(32'h00006E37);
-        // send_instruction(32'hA5AE0E13);
-        // send_instruction(32'h0BC39063);
-        // send_instruction(32'h0000A2B7);
-        // send_instruction(32'h5A528293);
-        // send_instruction(32'h00531523);
-        // send_instruction(32'h00A31383);
-        // send_instruction(32'hFFFFAE37);
-        // send_instruction(32'h5A5E0E13);
-        // send_instruction(32'h09C39263);
-        // send_instruction(32'h00A35383);
-        // send_instruction(32'h0000AE37);
-        // send_instruction(32'h5A5E0E13);
-        // send_instruction(32'h07C39A63);
-        // send_instruction(32'h112232B7);
-        // send_instruction(32'h34428293);
-        // send_instruction(32'h00532623);
-        // send_instruction(32'h07F00293);
-        // send_instruction(32'h00530623);
-        // send_instruction(32'h00C30383);
-        // send_instruction(32'h07F00E13);
-        // send_instruction(32'h05C39A63);
-        // send_instruction(32'h00C34383);
-        // send_instruction(32'h07F00E13);
-        // send_instruction(32'h05C39463);
-        // send_instruction(32'h08000293);
-        // send_instruction(32'h005306A3);
-        // send_instruction(32'h00D30383);
-        // send_instruction(32'hF8000E13);
-        // send_instruction(32'h03C39A63);
-        // send_instruction(32'h00D34383);
-        // send_instruction(32'h08000E13);
-        // send_instruction(32'h03C39463);
-        // send_instruction(32'h0FF00293);
-        // send_instruction(32'h00530723);
-        // send_instruction(32'h00E30383);
-        // send_instruction(32'hFFF00E13);
-        // send_instruction(32'h01C39A63);
-        // send_instruction(32'h00E34383);
-        // send_instruction(32'h0FF00E13);
-        // send_instruction(32'h01C39463);
-        // send_instruction(32'h0000006F);
-        // send_instruction(32'h00100513);
-        // send_instruction(32'hFFDFF06F);
+        // send_instruction(32'h0002A383);
+        // send_instruction(32'h00730E33);
+        // send_instruction(32'h007E2023);
+        // send_instruction(32'hFF5FF06F);
 
-        send_instruction(32'h00000413);
-        send_instruction(32'h1E000493);
-        send_instruction(32'h00000913);
-        send_instruction(32'h00A00993);
-        send_instruction(32'h01400A13);
-        send_instruction(32'h00A00A93);
-        send_instruction(32'h04940863);
-        send_instruction(32'h28000293);
-        send_instruction(32'h80300337);
-        send_instruction(32'h0F000F93);
-        send_instruction(32'h025403B3);
-        send_instruction(32'h008383B3);
-        send_instruction(32'h0013FE13);
-        send_instruction(32'h002E1E13);
-        send_instruction(32'h01C91EB3);
-        send_instruction(32'h01CFDFB3);
-        send_instruction(32'h0013D393);
-        send_instruction(32'h006383B3);
-        send_instruction(32'h0003CF03);
-        send_instruction(32'h01FF7F33);
-        send_instruction(32'h01DF6F33);
-        send_instruction(32'h01E38023);
-        send_instruction(32'h0003CF03);
-        send_instruction(32'h00190913);
-        send_instruction(32'h00140413);
-        send_instruction(32'hFB5FF06F);
-        send_instruction(32'h0000006F);
-
+        send_instruction(32'h00000293);
+        send_instruction(32'h00A28293);
+        send_instruction(32'hFFDFF06F);
 
         
-        #(CLK_100_PERIOD * 50000);
+
+        
+        #(CLK_100_PERIOD * 15000);
         $finish;
     end
 
-    // initial begin
-    //     sws_l = 8'b0;
-    //     forever #(CLK_100_PERIOD * 5) sws_l <= sws_l + 8'b1;
-    // end
+    initial begin
+        sws_l = 8'b0;
+        forever #(CLK_100_PERIOD * 5) sws_l <= sws_l + 8'b1;
+    end
 
-    // initial begin
-    //     sws_r = 8'b0;
-    //     forever #(CLK_100_PERIOD * 5) sws_r <= sws_r + 8'b1;
-    // end
+    initial begin
+        sws_r = 8'b0;
+        forever #(CLK_100_PERIOD * 5) sws_r <= sws_r + 8'b1;
+    end
 endmodule

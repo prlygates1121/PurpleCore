@@ -61,10 +61,10 @@ module cpu_arith_test(
 
     task send_instruction(input reg [31:0] inst);
         begin
-            send_byte(inst[31:24]);
-            send_byte(inst[23:16]);
-            send_byte(inst[15:8]);
             send_byte(inst[7:0]);
+            send_byte(inst[15:8]);
+            send_byte(inst[23:16]);
+            send_byte(inst[31:24]);
         end
     endtask
 
@@ -108,16 +108,6 @@ module cpu_arith_test(
         send_instruction(32'h00B631B3);
         send_instruction(32'h00C5B233);
 
-        // send some NOPs
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-
         // test immediate arithmetic
         send_instruction(32'h00750293);
         send_instruction(32'h00A60313);
@@ -137,16 +127,7 @@ module cpu_arith_test(
         send_instruction(32'h00C53B93);
         send_instruction(32'h00853193);
         send_instruction(32'h00063213);
-
-        // send some NOPs
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
-        send_instruction(32'h00000013);
+        send_instruction(32'hFFF53413);
 
 
         #(CLK_100_PERIOD * 15000);
@@ -156,7 +137,7 @@ module cpu_arith_test(
     integer reg_read_val;
     task check_reg(input [4:0] reg_num, input [31:0] expected_val);
         begin
-            reg_read_val = top0.core_0.id_0.regfile_0.registers[reg_num];
+            reg_read_val = top0.core_0.regfile_0.registers[reg_num];
             if (reg_read_val == expected_val) begin
                 $display("PASSED: x[%d] = %b.", reg_num, expected_val);
             end else begin
@@ -167,8 +148,8 @@ module cpu_arith_test(
 
     always @(posedge top0.clk_25) begin
         if (top0.core_0.core_mode) begin
-            case (top0.core_0.IF_I_addr)
-                32'h0000008c: begin
+            case (top0.core_0.addra)
+                32'h00000070: begin
                     $display("Testing R-type arithmetic instrucitons:");
                     check_reg(10, 10);
                     check_reg(11, 5);
@@ -194,9 +175,9 @@ module cpu_arith_test(
                     check_reg(22, 1);
                     check_reg(23, 0);
                     check_reg(3, 0);
-                    check_reg(4, 1);  
+                    check_reg(4, 0);  
                 end
-                32'h000000ec: begin
+                32'h000000bc: begin
                     $display("Testing I-type arithmetic instrucitons:");
                     check_reg(10, 10);
                     check_reg(11, 5);

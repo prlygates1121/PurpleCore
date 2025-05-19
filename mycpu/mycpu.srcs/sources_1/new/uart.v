@@ -136,7 +136,6 @@ module uart(
         .clk                (clk),
         .reset              (reset),
         .uart_en            (tx_en),
-
         .tx_new             (tx_new),
         .tx_in              (tx_in),
         .tx_out             (tx_out),

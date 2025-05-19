@@ -26,135 +26,98 @@ module top(
 
     input uart_rx_in,
     output uart_tx_out,
+    
+    input [4:0] bts,
 
     input [7:0] sws_l,
     input [7:0] sws_r,
 
-    input [4:0] bts,
-
     output [7:0] leds_l,
     output [7:0] leds_r,
     
-    output [3:0] vga_r,
-    output [3:0] vga_g,
-    output [3:0] vga_b,
-    output vga_h_sync,
-    output vga_v_sync,
+
 
     output [7:0] tube_ena,
     output [7:0] left_tube_content,
-    output [7:0] right_tube_content,
-
-    input ps2_clk,
-    input ps2_data
+    output [7:0] right_tube_content
 
     );
     
-    wire locked_main, locked_pixel;
-    wire locked = locked_main & locked_pixel;
-
     wire [4:0] bts_state;
-    wire [31:0] seg_display_hex;
-    wire [31:0] vga_addr, vga_data;
-    wire [7:0] key_code;
+    wire clk_25, locked;
+
     wire [7:0] uart_rx_data;
     wire [7:0] uart_tx_data;
-    wire uart_read, uart_write;
+    wire uart_read;
+    wire uart_write, uart_inst_loaded;
+    wire [31:0] uart_addr, uart_inst;
     wire uart_rx_ready, uart_tx_ready;
 
-    wire clk_main;                    // generates clk_main from clk_100
+    // generates clk_25 from clk_100
     clk_main_gen clk_main_gen_0(
-        .clk_out1                       (clk_main),
-        .reset                          (~reset_n),
-        .locked                         (locked_main),
-        .clk_in1                        (clk_100)
+        .clk_out1(clk_25),
+        .reset(~reset_n),
+        .locked(locked),
+        .clk_in1(clk_100)
     );
 
-    wire clk_pixel;                 // Pixel clock: 25.20325 MHz ~= 800 * 525 * 60
-    clk_pixel_gen clk_gen(
-    .clk_system                         (clk_100),
-        .reset                          (~reset_n),
-        .locked                         (locked_pixel),
-        .clk_pixel                      (clk_pixel)
-    );
-
-    // the init_counter starts once all clocks are locked
-    // when the init_counter reaches 0, the reset_modules signal is released
-    // this is used to reset the modules in the design
+    // reset_modules is sent as reset signal to all modules once clk_25 is locked
+    // it remains high for 2^8 cycles (100Mhz)
     reg [7:0] init_counter;
-    reg reset_modules_clk100;
-
+    wire reset_modules = |init_counter;
     always @(posedge clk_100) begin
         if (~reset_n) begin
             init_counter <= 8'hFF;
-            reset_modules_clk100 <= 1'b1; // hold reset
         end else if (locked) begin
             // decrement until reaching 0
             if (|init_counter) begin
                 init_counter <= init_counter - 1;
-            end else begin
-                reset_modules_clk100 <= 1'b0; // release reset
             end
-        end else begin
-            reset_modules_clk100 <= 1'b1; // hold reset
         end
     end
 
-    reg reset_sync_pixel_s1, reset_sync_pixel_s2;
-    always @(posedge clk_pixel) begin
-        reset_sync_pixel_s1 <= reset_modules_clk100;
-        reset_sync_pixel_s2 <= reset_sync_pixel_s1;
-    end
-
-    reg reset_sync_main_s1, reset_sync_main_s2;
-    always @(posedge clk_main) begin
-        reset_sync_main_s1 <= reset_modules_clk100;
-        reset_sync_main_s2 <= reset_sync_main_s1;
-    end
+    wire [31:0] I_read;
 
     core core_0(
-        .clk                            (clk_main),
-        .reset                          (reset_sync_main_s2),
+        .clk(clk_25),
+        .reset(reset_modules),
+        
 
-        .sws_l                          (sws_l),
-        .sws_r                          (sws_r),
+        .I_read(I_read),
 
+        .sws_l(sws_l),
+        .sws_r(sws_r),
+        
         .bts_state                      (bts_state),
 
-        .seg_display_hex                (seg_display_hex),
+        .seg_display_hex                (I_read),
 
-        .leds_l                         (leds_l),
-        .leds_r                         (leds_r),
+        .leds_l(leds_l),
+        .leds_r(leds_r),
 
-        .clk_pixel                      (clk_pixel),
-        .vga_addr                       (vga_addr),
-        .vga_data                       (vga_data),
-
-        .key_code                       (key_code),
 
         .uart_rx_data                   (uart_rx_data),
         .uart_tx_data                   (uart_tx_data),
         .uart_read                      (uart_read),
+        //changed by uart_write
         .uart_write                     (uart_write),
         .uart_rx_ready                  (uart_rx_ready),
         .uart_tx_ready                  (uart_tx_ready)
     );
 
-    vga_top vga(
-        .clk                            (clk_pixel),
-        .reset                          (reset_sync_pixel_s2),
-        .r                              (vga_r),
-        .g                              (vga_g),
-        .b                              (vga_b),
-        .h_sync                         (vga_h_sync),
-        .v_sync                         (vga_v_sync),
-        .vga_addr                       (vga_addr),
-        .vga_data                       (vga_data)
-    );
+    // vga_top vga(
+    //     .clk(clk_100),
+    //     .reset(reset_modules),
+    //     .r(vga_r),
+    //     .g(vga_g),
+    //     .b(vga_b),
+    //     .h_sync(vga_h_sync),
+    //     .v_sync(vga_v_sync)
+    // );
 
     uart uart_0(
-    	.clk    	                    (clk_main),
-    	.reset  	                    (reset_sync_main_s2),
+    	.clk    	                    (clk_25),
+    	.reset  	                    (reset_modules),
     	.read   	                    (uart_read),
     	.rx_in  	                    (uart_rx_in),
     	.rx_out 	                    (uart_rx_data),
@@ -165,46 +128,36 @@ module top(
         .tx_ready                       (uart_tx_ready)
     );
 
+
     seg_display_handler seg_display_handler_0(
-        .clk                            (clk_main),
-        .reset                          (reset_sync_main_s2),
-        .hex_digits                     (seg_display_hex),
-        .tube_ena                       (tube_ena),
-        .left_tube_content              (left_tube_content),
-        .right_tube_content             (right_tube_content)
+        .clk(clk_25),
+        .reset(reset_modules),
+        .hex_digits(I_read),
+        .tube_ena(tube_ena),
+        .left_tube_content(left_tube_content),
+        .right_tube_content(right_tube_content)
     );
-
-    wire debug_shift;
-    wire [7:0] debug_scan_code;
-    keyboard keyboard_0 (
-        .debug_shift                    (debug_shift),
-        .debug_scan_code                (debug_scan_code),
-
-        .clk                            (clk_main),
-        .reset                          (reset_sync_main_s2),
-        .ps2_clk                        (ps2_clk),
-        .ps2_data                       (ps2_data),
-        .key_code                       (key_code)
-    );
-
+    
+   
+    
     genvar i;
     generate
         for (i = 0; i < 5; i = i + 1) begin
             button_handler button_handler_0(
-                .clk         	        (clk_main),
-                .reset       	        (reset_sync_main_s2),
+                .clk         	        (clk_25),
+                .reset       	        (reset_modules),
                 .bt_raw      	        (bts[i]),
                 .bt_state    	        (bts_state[i])
             );
         end
     endgenerate
 
+
+
     // assign leds_l = uart_addr[15:8];
     // assign leds_l[2] = uart_rx_in;
     // assign leds_l[1] = load_begin;
     // assign leds_l[0] = uart_inst_loaded;
-    // assign leds_l[1] = debug_shift;
     // assign leds_r = uart_addr[7:0];
-
 
 endmodule

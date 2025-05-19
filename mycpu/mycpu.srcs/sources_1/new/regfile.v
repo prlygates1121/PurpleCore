@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-`include "params.v"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -44,7 +43,6 @@ module regfile(
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) begin
                 if (i == 2) begin
-                    // initialize the stack pointer, needed only in simulation where there is no bootloader & startup code
                     registers[i] <= `ADDR_SP_START;
                 end else begin
                     registers[i] <= 32'h0;
