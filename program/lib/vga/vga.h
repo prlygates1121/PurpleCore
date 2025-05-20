@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define VGA_BASE_ADDR ((volatile uint8_t*)0x80300000)
+#define VGA_BASE_ADDR ((volatile uint8_t*)0x80400000)
 #define VGA_HEIGHT_PIXELS 480
 #define VGA_WIDTH_PIXELS 640
 #define VGA_HEIGHT_BYTES (VGA_HEIGHT_PIXELS/2)

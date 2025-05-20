@@ -6,6 +6,7 @@
         "switch.h": "c",
         "stdint.h": "c",
         "string.h": "c",
-        "csr.h": "c"
+        "csr.h": "c",
+        "vga.h": "c"
     }
 }

@@ -57,11 +57,11 @@ module vga_top(
     reg [2:0] vga_addr_offset;          // Offset for access to each 4-bit pixel in a word
     always @(posedge clk) begin
         if (reset) begin
-            vga_addr <= 32'h8030_0000;  // VGA memory base address
+            vga_addr <= 32'h8040_0000;  // VGA memory base address
             vga_addr_offset <= 3'b0;
         end else if (data_en) begin
             if (vga_addr_offset == 3'b111) begin
-                vga_addr <= (vga_addr == 32'h8032_57FC) ? 32'h8030_0000 : vga_addr + 4; //A002_57FC
+                vga_addr <= (vga_addr == 32'h8042_57FC) ? 32'h8040_0000 : vga_addr + 4; //A002_57FC
                 vga_addr_offset <= 3'b0;
             end else begin
                 vga_addr_offset <= vga_addr_offset + 1;

@@ -127,7 +127,7 @@ module memory(
     
     assign byte_offset = D_addr[1:0];
     assign store = D_store_width != 2'h3;
-    assign load  = D_load_width  != 2'h3;
+    assign load  = D_load_width  != 3'h3;
 
     // select from uart data register and uart status register
     assign uart_sel = D_addr[5:2];
