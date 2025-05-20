@@ -39,7 +39,7 @@ module regfile(
 
     integer i;
 
-    always @(negedge clk) begin
+    always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) begin
                 if (i == 2) begin

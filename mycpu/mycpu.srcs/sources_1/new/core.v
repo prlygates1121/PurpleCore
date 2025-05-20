@@ -73,12 +73,9 @@ module core(
     wire [2:0] imm_sel;
     wire br_un;
     
-        // Program Counter
-    reg pc_sel_reg;
-    
     reg [31:0] pc;    
     wire [31:0] mem_inst;
-    wire [31:0] inst = (pc_sel_reg) ? `NOP : mem_inst;
+    wire [31:0] inst = mem_inst;
 
     wire [31:0] D_load_data; 
 
@@ -89,7 +86,7 @@ module core(
     // Register File
     wire [31:0] reg_w_data = reg_w_data_sel == 2'h0 ? alu_result :
                              reg_w_data_sel == 2'h1 ? D_load_data :
-                             reg_w_data_sel == 2'h2 ? pc : 32'h0;
+                             reg_w_data_sel == 2'h2 ? pc + 4: 32'h0;
                              
     wire [31:0] rs1_data, rs2_data;
     
@@ -117,21 +114,6 @@ module core(
             pc <= pc_next;
         end
     end
-
-    always @(posedge clk) begin
-        if (core_reset) begin
-            pc_sel_reg <= 1'b0;
-        end else begin
-            pc_sel_reg <= pc_sel;
-        end
-    end
-
-
-
-
-
-
-
     // io
 
     control_logic ctrl_logic_0(
@@ -238,28 +220,5 @@ module core(
         .result(alu_result)
     );
 
-    reg stop;
-    reg [31:0] pc_debug, addra_debug, inst_debug;
-    reg pc_sel_debug;
-    always @(posedge clk) begin
-        if (core_reset) begin
-            stop <= 1'b0;
-        end else if (inst != 32'h0) begin
-            if (stop == 1'b0) begin
-                pc_debug <= pc; // save the pc when we first meet an illegal instruction
-                pc_sel_debug <= pc_sel;
-                addra_debug <= addra;
-                inst_debug <= inst;
-            end
-            stop <= 1'b1;
-        end
-    end
-
-    // assign leds_l = pc[7:0];
-
-    // assign leds_l[7] = stop;
-    // assign leds_l[6:0] = inst_debug[6:0];
-    // assign leds_r = {pc_sel_debug, pc_debug[5:0], core_mode};
-    assign I_read = inst_debug;
 
 endmodule

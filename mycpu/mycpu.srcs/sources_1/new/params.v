@@ -1,7 +1,7 @@
-`define SIMULATION
+//`define SIMULATION
 `define BRANCH_PREDICT_ENA
 
-`define ADDR_SP_START           32'h0000_BFFC
+`define ADDR_SP_START           32'h0000_B000
 `define ADDR_MMIO_BASE          32'h8000_0000
 `define ADDR_MMIO_SYS_INFO      32'h0000_0000
 `define ADDR_MMIO_ASCII         32'h0010_0000
@@ -15,7 +15,7 @@
 
 // Frequencies
 `define CLK_100_FREQ            32'd100_000_000
-`define CLK_MAIN_FREQ           32'd40_000_000
+`define CLK_MAIN_FREQ           32'd25_000_000
 `ifdef SIMULATION
     `define UART_FREQ               32'd2_000_000
 `else
