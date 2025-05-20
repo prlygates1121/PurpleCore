@@ -1,20 +1,14 @@
 #include "../lib/uart/uart.h"
 #include "../lib/keyboard/keyboard.h"
+#include "../lib/vga/vga.h"
 
 void ecall_test();
 
 int main() {
-    uint8_t key;
-    uint8_t pressed = 0;
-    while (1) {
-        key = keyboard_read();
-        if (key != k_NONE) {
-            if (!pressed) {
-                uart_putc(key + 0x20);
-                pressed = 1;
-            }
-        } else {
-            pressed = 0;
-        }
+    vga_clear(BACKGROUND_COLOR);
+    vga_print_char(100, 100, 'a', 0, WHITE);
+    vga_print_char(400, 400, '!', 0, BLUE);
+    for (int i = 0; i < 40; i++) {
+        vga_draw_point(i, i, i & 0xF);
     }
 }

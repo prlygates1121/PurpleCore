@@ -23,5 +23,32 @@
 #define SUPERNOVA           14
 #define GRAY                15
 
+#define BACKGROUND_COLOR    BLACK
+
+/**
+ * 8x8 monochrome bitmap fonts for rendering
+ * Author: Daniel Hepper <daniel@hepper.net>
+ *
+ * License: Public Domain
+ *
+ * Based on:
+ * // Summary: font8x8.h
+ * // 8x8 monochrome bitmap fonts for rendering
+ * //
+ * // Author:
+ * //     Marcel Sondaar
+ * //     International Business Machines (public domain VGA fonts)
+ * //
+ * // License:
+ * //     Public Domain
+ *
+ * Fetched from: http://dimensionalrift.homelinux.net/combuster/mos3/?p=viewsource&file=/modules/gfx/font8_8.asm
+ **/
+
+// Constant: font8x8_basic
+// Contains an 8x8 font map for unicode points U+0000 - U+007F (basic latin)
+extern const char font_88[128][8];
+
 void vga_draw_point(uint32_t x, uint32_t y, uint8_t color);
 void vga_clear(uint8_t color);
+void vga_print_char(uint32_t x, uint32_t y, uint8_t char_code, uint8_t fill, uint8_t color);
