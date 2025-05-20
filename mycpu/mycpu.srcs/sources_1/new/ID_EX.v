@@ -54,6 +54,8 @@ module ID_EX(
     input [31:0] ID_csr_r_data,
     input [31:0] ID_mtvec,
     input [31:0] ID_mepc,
+    input [31:0] ID_mboot,
+    input ID_reset,
 
     output reg [3:0] EX_alu_op_sel,
     output reg EX_alu_src1_sel,
@@ -84,7 +86,9 @@ module ID_EX(
     output reg [2:0]  EX_csr_op,
     output reg [31:0] EX_csr_r_data,
     output reg [31:0] EX_mtvec,
-    output reg [31:0] EX_mepc
+    output reg [31:0] EX_mepc,
+    output reg [31:0] EX_mboot,
+    output reg EX_reset
 
     );
 
@@ -105,7 +109,15 @@ module ID_EX(
             EX_rs1 <= 5'h0;
             EX_rs2 <= 5'h0;
             EX_rd <= 5'h0;
-            EX_pc <= 32'h0;
+            `ifdef SIMULATION
+                `ifdef LOAD_AT_0X200
+                    EX_pc <= 32'h200;
+                `else
+                    EX_pc <= 32'h0;
+                `endif
+            `else
+                EX_pc <= 32'h0;
+            `endif
             EX_pc_plus_4 <= 32'h0;
             EX_jal <= 1'b0;
             EX_jalr <= 1'b0;
@@ -152,5 +164,7 @@ module ID_EX(
             EX_mtvec <= ID_mtvec;
             EX_mepc <= ID_mepc;
         end
+        EX_mboot <= ID_mboot;
+        EX_reset <= reset | ID_reset;
     end
 endmodule

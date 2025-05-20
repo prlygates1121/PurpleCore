@@ -25,10 +25,11 @@ module IF (
     input clk,
     input reset,
     input stall,
+    input inst_access_fault,
 
     input [31:0] EX_trap_dest,
     
-    input EX_ecall,
+    input EX_excp,
     input EX_mret,
     input EX_pc_sel,
     input EX_false_direction,
@@ -54,22 +55,13 @@ module IF (
     reg [31:0] pc;
 
 `ifdef BRANCH_PREDICT_ENA
-    // pc_next logic:
-    // - if EX knows that "there was a branch instruction" & "the branch target was outdated"
-    //   - if the branch should have been taken, use the updated branch target (EX_alu_result)
-    //   - if the branch should not have been taken, use the PC+4 value at the time of the branch instruction (EX_pc_plus_4)
-    // - else if EX knows that ("there was a branch instruction" & "the predicted direction was incorrect") | ("there was no branch instruction" & "the predicted direction was to take the branch")
-    //   - if the branch was predicted to be taken, which was incorrect, use the PC+4 value at the time of the branch instruction (EX_pc_plus_4)
-    //   - if the branch was predicted to be not taken, which was incorrect, use the updated branch target (EX_alu_result)
-    // - else if the branch is currently predicted to be taken, use the branch target
-    // - else use the current PC+4 value
-    wire [31:0] pc_next = (EX_ecall | EX_mret) ? EX_trap_dest :
+    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest :
                           EX_false_target ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
                           EX_false_direction ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
                           branch_predict ? branch_target :
                           (pc + 4);
 `else 
-    wire [31:0] pc_next = (EX_ecall | EX_mret) ? EX_trap_dest : EX_pc_sel ? EX_alu_result : (pc + 4);
+    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest : EX_pc_sel ? EX_alu_result : (pc + 4);
 `endif
 
     always @(posedge clk) begin
@@ -83,6 +75,8 @@ module IF (
             `else
                 pc <= 32'h0;
             `endif
+        end else if (inst_access_fault) begin
+            pc <= pc_next;
         end else if (~stall) begin
             pc <= pc_next;
         end

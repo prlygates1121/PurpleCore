@@ -37,6 +37,7 @@ module csr(
     input [31:0] w_mcause,
     input [31:0] w_mtval,
     input [31:0] w_mip,
+    input [31:0] w_mboot,
 
     output [31:0] r_mstatus,
     output [31:0] r_mie,
@@ -45,7 +46,8 @@ module csr(
     output [31:0] r_mepc,
     output [31:0] r_mcause,
     output [31:0] r_mtval,
-    output [31:0] r_mip
+    output [31:0] r_mip,
+    output [31:0] r_mboot
     );
 
     reg [31:0] mstatus;
@@ -56,6 +58,7 @@ module csr(
     reg [31:0] mcause;
     reg [31:0] mtval;
     reg [31:0] mip;
+    reg [31:0] mboot;
 
     always @(negedge clk) begin
         if (reset) begin
@@ -67,6 +70,7 @@ module csr(
             mcause      <= 32'h0;
             mtval       <= 32'h0;
             mip         <= 32'h0;
+            mboot       <= 32'h1;
         end else if (csr_w_en) begin
             case (csr_w_addr)
                 `MSTATUS    :   mstatus     <= csr_w_data;
@@ -77,6 +81,7 @@ module csr(
                 `MCAUSE     :   mcause      <= csr_w_data;
                 `MTVAL      :   mtval       <= csr_w_data;
                 `MIP        :   mip         <= csr_w_data;
+                `MBOOT      :   mboot       <= csr_w_data;
             endcase
         end else begin
             if (w_mstatus   != `CSR_NO_WRITE) mstatus   <= w_mstatus    ;
@@ -87,6 +92,7 @@ module csr(
             if (w_mcause    != `CSR_NO_WRITE) mcause    <= w_mcause     ;
             if (w_mtval     != `CSR_NO_WRITE) mtval     <= w_mtval      ;
             if (w_mip       != `CSR_NO_WRITE) mip       <= w_mip        ;
+            if (w_mboot     != `CSR_NO_WRITE) mboot     <= w_mboot      ;
         end
     end
 
@@ -100,6 +106,7 @@ module csr(
             `MCAUSE     :   csr_r_data = mcause     ;
             `MTVAL      :   csr_r_data = mtval      ;
             `MIP        :   csr_r_data = mip        ;
+            `MBOOT      :   csr_r_data = mboot      ;
             default:        csr_r_data = 32'h0;
         endcase
     end
@@ -112,4 +119,5 @@ module csr(
     assign r_mcause     = mcause;
     assign r_mtval      = mtval;
     assign r_mip        = mip;
+    assign r_mboot      = mboot;
 endmodule

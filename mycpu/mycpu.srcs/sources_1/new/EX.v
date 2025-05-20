@@ -65,6 +65,9 @@ module EX(
     input [31:0] ID_csr_r_data,
     input [31:0] ID_mtvec,
     input [31:0] ID_mepc,
+    input [31:0] ID_mboot,
+
+    input ID_reset,
 
     output [31:0] EX_alu_result,                // -> MEM -> WB
     output EX_pc_sel,                           // -> IF
@@ -97,28 +100,71 @@ module EX(
     output [2:0] EX_csr_op,
 
     output reg [31:0] EX_w_mstatus,
-    output reg [31:0] EX_w_mepc,
-    output reg [31:0] EX_w_mcause
+    output [31:0] EX_w_mepc,
+    output [31:0] EX_w_mcause,
+
+    output EX_excp,
+    output inst_access_fault
 
     );
 
-    wire [31:0] fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
-                               (forward_rs1_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  : ID_rs1_data;
-    wire [31:0] fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
-                               (forward_rs2_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  : ID_rs2_data;
-    wire [31:0] fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
-                               (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  : ID_csr_r_data;
-
-    wire [31:0] alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? fwd_rs1_data : ID_I_addr;
-    wire [31:0] alu_src2 = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? fwd_rs2_data : ID_imm;
-
+    wire [31:0] fwd_rs1_data;
+    wire [31:0] fwd_rs2_data;
+    wire [31:0] fwd_csr_data;
+    wire [31:0] alu_src1;
+    wire [31:0] alu_src2;
+    reg [30:0] excp_code;
     wire EX_br_eq, EX_br_lt;
-    wire branch = ID_branch_type == `BEQ  ?   EX_br_eq :
-                  ID_branch_type == `BNE  ?  ~EX_br_eq :
-                  ID_branch_type == `BLT  ?   EX_br_lt :
-                  ID_branch_type == `BGE  ?  ~EX_br_lt :
-                  ID_branch_type == `BLTU ?   EX_br_lt :
-                  ID_branch_type == `BGEU ?  ~EX_br_lt : 1'b0;
+
+    always @(*) begin
+        excp_code = `NO_EXCP;
+
+        if (~ID_reset) begin
+            // once the control leaves bootloader, it is not allowed to execute bootloader code
+            if (ID_mboot == 32'h0 & (ID_pc < `S_TEXT | ID_pc >= `S_DATA)) begin
+                excp_code = `INST_ACCESS_FAULT;
+            end
+
+            if (ID_ecall) begin
+                excp_code = `ECALL_M;
+            end
+
+            if (ID_mboot == 32'h0) begin
+                if (ID_store_width != `NO_STORE) begin
+                    if (EX_alu_result[31] == 1'b0 & EX_alu_result < `S_DATA) begin
+                        excp_code = `STORE_ACCESS_FAULT;
+                    end
+                end
+                if (ID_load_width != `NO_LOAD) begin
+                    if (EX_alu_result[31] == 1'b0 & EX_alu_result < `S_TEXT) begin
+                        excp_code = `LOAD_ACCESS_FAULT;
+                    end
+                end
+            end
+        end
+    end
+
+    assign inst_access_fault = excp_code == `INST_ACCESS_FAULT;
+
+    assign fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
+                          (forward_rs1_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  : ID_rs1_data;
+    assign fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
+                          (forward_rs2_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  : ID_rs2_data;
+    assign fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
+                          (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  : ID_csr_r_data;
+
+    assign alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? fwd_rs1_data : ID_I_addr;
+    assign alu_src2 = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? fwd_rs2_data : ID_imm;
+
+    assign EX_w_mcause = EX_excp ? {1'b0, excp_code} : `CSR_NO_WRITE;
+    assign EX_w_mepc   = EX_excp ? ID_pc : `CSR_NO_WRITE;
+
+    assign branch = ID_branch_type == `BEQ  ?   EX_br_eq :
+                    ID_branch_type == `BNE  ?  ~EX_br_eq :
+                    ID_branch_type == `BLT  ?   EX_br_lt :
+                    ID_branch_type == `BGE  ?  ~EX_br_lt :
+                    ID_branch_type == `BLTU ?   EX_br_lt :
+                    ID_branch_type == `BGEU ?  ~EX_br_lt : 1'b0;
     assign EX_pc_sel = ID_jal | ID_jalr | branch;
 
     branch_comp branch_comp_0(
@@ -152,24 +198,18 @@ module EX(
 
     always @(*) begin
         if (ID_ecall) begin
-            EX_w_mepc     = ID_pc;
             EX_w_mstatus  = 32'h0;
-            EX_w_mcause   = {1'b0, 31'd11};
         end else if (ID_mret) begin
-            EX_w_mepc     = `CSR_NO_WRITE;
             EX_w_mstatus  = `MSTATUS_MIE;
-            EX_w_mcause   = `CSR_NO_WRITE;
         end else begin
-            EX_w_mepc     = `CSR_NO_WRITE;
             EX_w_mstatus  = `CSR_NO_WRITE;
-            EX_w_mcause   = `CSR_NO_WRITE;
         end
     end
 
-    assign EX_reg_w_en = ID_reg_w_en;
+    assign EX_reg_w_en = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : ID_reg_w_en;
     assign EX_reg_w_data_sel = ID_reg_w_data_sel;
-    assign EX_store_width = ID_store_width;
-    assign EX_load_width = ID_load_width;
+    assign EX_store_width = excp_code == `STORE_ACCESS_FAULT ? `NO_STORE : ID_store_width;
+    assign EX_load_width = excp_code == `LOAD_ACCESS_FAULT ? `NO_LOAD : ID_load_width;
     assign EX_load_un = ID_load_un;
     assign EX_pc_plus_4 = ID_pc_plus_4;
     assign EX_rd = ID_rd;
@@ -183,7 +223,8 @@ module EX(
     assign EX_branch_type = ID_branch_type;
     assign EX_ecall = ID_ecall;
     assign EX_mret = ID_mret;
-    assign EX_trap_dest = ID_ecall ? ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
+    assign EX_trap_dest = (ID_ecall | EX_excp) ? 
+                                     ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
                                       (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  :
                                        ID_mtvec) :
                           ID_mret  ? ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded :
@@ -197,4 +238,5 @@ module EX(
     // see unprivileged RISC-V manual page 46
     assign EX_csr_w_en = (ID_csr_op == `CSRRW | ID_csr_op == `CSRRWI) | 
                          (ID_csr_op == `CSRRC | ID_csr_op == `CSRRCI | ID_csr_op == `CSRRS | ID_csr_op == `CSRRSI) & (ID_rs1 != 5'h0);
+    assign EX_excp = excp_code != `NO_EXCP;
 endmodule

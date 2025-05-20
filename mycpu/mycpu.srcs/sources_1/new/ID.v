@@ -71,7 +71,8 @@ module ID(
     output [31:0] ID_csr_r_data,
 
     output [31:0] ID_mtvec,
-    output [31:0] ID_mepc
+    output [31:0] ID_mepc,
+    output [31:0] ID_mboot
 
     );
 
@@ -163,6 +164,7 @@ module ID(
         .w_mcause       (WB_w_mcause),
         .w_mtval        (`CSR_NO_WRITE),
         .w_mip          (`CSR_NO_WRITE),
+        .w_mboot        (`CSR_NO_WRITE),
 
         .r_mstatus      (),
         .r_mie          (),
@@ -171,7 +173,8 @@ module ID(
         .r_mepc         (ID_mepc),
         .r_mcause       (),
         .r_mtval        (),
-        .r_mip          ()
+        .r_mip          (),
+        .r_mboot        (ID_mboot)
     );
 
     assign ID_alu_op_sel = alu_op_sel;

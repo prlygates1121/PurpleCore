@@ -51,11 +51,12 @@ module core(
     input uart_tx_ready
     );
 
-    localparam LOADING = 0, RUNNING = 1;
+    wire inst_access_fault;
 
     wire [31:0] IF_I_addr, I_load_data;
     wire [31:0] IF_out_pc, IF_out_pc_plus_4, IF_out_inst, IF_out_I_addr;
     wire [31:0] ID_in_pc, ID_in_pc_plus_4, ID_in_inst, ID_in_I_addr;
+    wire IF_ID_reset;
     wire ID_in_branch_predict;
     wire [1:0] ID_out_store_width;
     wire [2:0] ID_out_load_width;
@@ -88,6 +89,7 @@ module core(
     wire [31:0] ID_out_csr_r_data;
     wire [31:0] ID_out_mtvec;
     wire [31:0] ID_out_mepc;
+    wire [31:0] ID_out_mboot;
 
     wire [3:0] EX_in_alu_op_sel;
     wire EX_in_alu_src1_sel;
@@ -120,6 +122,8 @@ module core(
     wire [31:0] EX_in_csr_r_data;
     wire [31:0] EX_in_mtvec;
     wire [31:0] EX_in_mepc;
+    wire [31:0] EX_in_mboot;
+    wire ID_EX_reset;
 
     wire [31:0] EX_out_alu_result;
     wire EX_out_pc_sel;
@@ -147,6 +151,7 @@ module core(
     wire [31:0] EX_out_w_mstatus;
     wire [31:0] EX_out_w_mepc;
     wire [31:0] EX_out_w_mcause;
+    wire EX_out_excp;
 
     wire [31:0] MEM_reg_w_data_forwarded;
     wire [31:0] WB_reg_w_data_forwarded;
@@ -235,9 +240,10 @@ module core(
         .clk                        (clk),
         .reset                      (reset),
         .stall                      (load_stall),
+        .inst_access_fault          (inst_access_fault),
 
         .EX_trap_dest               (EX_out_trap_dest),
-        .EX_ecall                   (EX_out_ecall),
+        .EX_excp                    (EX_out_excp),
         .EX_mret                    (EX_out_mret),
         .EX_pc_sel                  (EX_out_pc_sel),
         .EX_false_direction         (EX_false_direction),
@@ -260,7 +266,7 @@ module core(
 
     IF_ID if_id_0(
         .clk                    (clk),
-        .reset                  (reset | EX_branch_flush | EX_out_ecall | EX_out_mret),
+        .reset                  (reset | EX_branch_flush | EX_out_excp | EX_out_mret),
         .stall                  (load_stall),
 
         .IF_pc                  (IF_out_pc),
@@ -273,7 +279,8 @@ module core(
         .ID_pc_plus_4           (ID_in_pc_plus_4),
         .ID_inst                (ID_in_inst),
         .ID_I_addr              (ID_in_I_addr),
-        .ID_branch_predict      (ID_in_branch_predict)
+        .ID_branch_predict      (ID_in_branch_predict),
+        .ID_reset               (IF_ID_reset)
     );
 
     ID id_0 (
@@ -322,12 +329,13 @@ module core(
         .ID_csr_op              (ID_out_csr_op),
         .ID_csr_r_data          (ID_out_csr_r_data),
         .ID_mtvec               (ID_out_mtvec),
-        .ID_mepc                (ID_out_mepc)
+        .ID_mepc                (ID_out_mepc),
+        .ID_mboot               (ID_out_mboot)
     );
 
     ID_EX id_ex_0 (
         .clk                    (clk),
-        .reset                  (reset | load_flush | EX_branch_flush | EX_out_ecall | EX_out_mret),
+        .reset                  (reset | load_flush | EX_branch_flush | EX_out_excp | EX_out_mret),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
@@ -358,6 +366,8 @@ module core(
         .ID_csr_r_data          (ID_out_csr_r_data),
         .ID_mtvec               (ID_out_mtvec),
         .ID_mepc                (ID_out_mepc),
+        .ID_mboot               (ID_out_mboot),
+        .ID_reset               (IF_ID_reset),
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
         .EX_alu_src1_sel        (EX_in_alu_src1_sel),
@@ -388,7 +398,9 @@ module core(
         .EX_csr_op              (EX_in_csr_op),
         .EX_csr_r_data          (EX_in_csr_r_data),
         .EX_mtvec               (EX_in_mtvec),
-        .EX_mepc                (EX_in_mepc)
+        .EX_mepc                (EX_in_mepc),
+        .EX_mboot               (EX_in_mboot),
+        .EX_reset               (ID_EX_reset)
     );
 
     EX ex_0 (
@@ -422,6 +434,9 @@ module core(
         .ID_csr_r_data              (EX_in_csr_r_data),
         .ID_mtvec                   (EX_in_mtvec),
         .ID_mepc                    (EX_in_mepc),
+        .ID_mboot                   (EX_in_mboot),
+
+        .ID_reset                   (ID_EX_reset),
 
         .MEM_reg_w_data_forwarded   (MEM_reg_w_data_forwarded),
         .WB_reg_w_data_forwarded    (WB_reg_w_data_forwarded),
@@ -461,7 +476,10 @@ module core(
 
         .EX_w_mstatus               (EX_out_w_mstatus),
         .EX_w_mepc                  (EX_out_w_mepc),
-        .EX_w_mcause                (EX_out_w_mcause)
+        .EX_w_mcause                (EX_out_w_mcause),
+        .EX_excp                    (EX_out_excp),
+
+        .inst_access_fault          (inst_access_fault)
     );
 
     EX_MEM ex_mem_0 (

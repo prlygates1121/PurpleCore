@@ -35,12 +35,21 @@ module IF_ID(
     output reg [31:0] ID_pc_plus_4,
     output reg [31:0] ID_inst,
     output reg [31:0] ID_I_addr,
-    output reg ID_branch_predict
+    output reg ID_branch_predict,
+    output reg ID_reset
     );
 
     always @(posedge clk) begin
         if (reset) begin
-            ID_pc <= 32'b0;
+            `ifdef SIMULATION
+                `ifdef LOAD_AT_0X200
+                    ID_pc <= 32'h200;
+                `else
+                    ID_pc <= 32'h0;
+                `endif
+            `else
+                ID_pc <= 32'h0;
+            `endif
             ID_pc_plus_4 <= 32'b0;
             ID_inst <= `NOP;
             ID_I_addr <= 32'b0;
@@ -52,6 +61,7 @@ module IF_ID(
             ID_I_addr <= IF_I_addr;
             ID_branch_predict <= IF_branch_predict;
         end
+        ID_reset <= reset;
     end
     
 endmodule

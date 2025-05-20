@@ -13,7 +13,7 @@ def hex_nibbles_to_ascii_reversed_words(input_filename, output_filename, skip_by
     Interprets each byte (in the reversed order) as two 4-bit hex digits (nibbles),
     converts each nibble to its ASCII hex character ('0'-'9', 'A'-'F'),
     and writes the resulting characters to an output file.
-    Remaining bytes (< word_size) are processed individually without reversal.
+    Remaining bytes (< word_size) are padded with zeros to form a complete word and then reversed.
 
     Args:
         input_filename (str): The path to the input file.
@@ -33,8 +33,7 @@ def hex_nibbles_to_ascii_reversed_words(input_filename, output_filename, skip_by
 
             num_bytes = len(byte_data)
             num_full_words = num_bytes // word_size
-            processed_bytes = 0
-
+            
             # Process full words with byte reversal
             for i in range(num_full_words):
                 start_index = i * word_size
@@ -59,27 +58,39 @@ def hex_nibbles_to_ascii_reversed_words(input_filename, output_filename, skip_by
                 
                 # Write a newline character after each word for clarity (optional)
                 outfile.write('\n')
-                processed_bytes += word_size
 
-            # Process any remaining bytes without reversal
-            remaining_bytes_start = processed_bytes
-            for i in range(remaining_bytes_start, num_bytes):
-                byte = byte_data[i]
-                # Extract the high nibble (first 4 bits)
-                high_nibble = (byte >> 4) & 0x0F
-                # Extract the low nibble (last 4 bits)
-                low_nibble = byte & 0x0F
+            # Process any remaining bytes with zero padding to form a complete word
+            remaining_bytes_start = num_full_words * word_size
+            remaining_bytes_count = num_bytes - remaining_bytes_start
+            
+            if remaining_bytes_count > 0:
+                # Get the remaining bytes
+                remaining_bytes = byte_data[remaining_bytes_start:]
+                # Pad with zeros to form a complete word
+                padded_word = bytearray(remaining_bytes) + bytearray([0] * (word_size - remaining_bytes_count))
+                # Reverse the padded word
+                reversed_padded_word = padded_word[::-1]
+                
+                # Process each byte in the reversed padded word
+                for byte in reversed_padded_word:
+                    # Extract the high nibble (first 4 bits)
+                    high_nibble = (byte >> 4) & 0x0F
+                    # Extract the low nibble (last 4 bits)
+                    low_nibble = byte & 0x0F
 
-                # Convert nibbles to their hex character representation
-                high_char = format(high_nibble, 'X')
-                low_char = format(low_nibble, 'X')
+                    # Convert nibbles to their hex character representation
+                    high_char = format(high_nibble, 'X')
+                    low_char = format(low_nibble, 'X')
 
-                # Write the two ASCII characters to the output file
-                outfile.write(high_char)
-                outfile.write(low_char)
-
+                    # Write the two ASCII characters to the output file
+                    outfile.write(high_char)
+                    outfile.write(low_char)
+                
+                # Write a newline character after the last word (optional)
+                outfile.write('\n')
 
         print(f"Successfully converted nibbles from '{input_filename}' (skipping first {skip_bytes} bytes, reversing {word_size}-byte words) to ASCII hex characters in '{output_filename}'.")
+        print(f"Remaining bytes ({remaining_bytes_count}) were padded with zeros to form a complete word and reversed.")
 
     except FileNotFoundError:
         print(f"Error: Input file '{input_filename}' not found.")

@@ -1,4 +1,11 @@
 #include <stdint.h>
+
+#define INST_ACCESS_FAULT  1
+#define LOAD_ACCESS_FAULT  5
+#define STORE_ACCESS_FAULT 7
+#define ECALL_M            11
+#define NO_EXCP            24
+
 struct trapframe {
     /*   0 */ uint32_t trap_sp;           // top of the trap stack
     /*   4 */ uint32_t trap_handler;      // address of the trap handler function

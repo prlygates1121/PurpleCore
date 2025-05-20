@@ -2,6 +2,10 @@
 `define BRANCH_PREDICT_ENA
 `define LOAD_AT_0X200
 
+`define S_BOOTLOADER            32'h0000_0000
+`define S_TEXT                  32'h0000_0200
+`define S_DATA                  32'h0000_9000
+
 `define ADDR_SP_START           32'h0000_B000
 `define ADDR_MMIO_BASE          32'h8000_0000
 `define ADDR_MMIO_SYS_INFO      32'h0000_0000
@@ -13,6 +17,13 @@
 `define ADDR_MMIO_BUTTON        32'h0060_0000
 `define ADDR_MMIO_SEG_DISPLAY   32'h0070_0000
 `define ADDR_MMIO_UART          32'h0080_0000
+
+// Exception codes
+`define INST_ACCESS_FAULT       31'd1
+`define LOAD_ACCESS_FAULT       31'd5
+`define STORE_ACCESS_FAULT      31'd7
+`define ECALL_M                 31'd11
+`define NO_EXCP                 31'd24
 
 // Frequencies
 `define CLK_100_FREQ            32'd100_000_000
@@ -126,6 +137,7 @@
 `define MCAUSE                  12'h342
 `define MTVAL                   12'h343
 `define MIP                     12'h344
+`define MBOOT                   12'h7C0
 
 // csr mstatus bits
 `define MSTATUS_MIE             32'h0000_0008

@@ -6,16 +6,16 @@ void uart_putc(char c) {
     UART_DATA_REG = c;
 }
 
-void uart_puts(const char* s, uint32_t len) {
-    for (uint32_t i = 0; i < len; i++) {
-        uart_putc(s[i]);
+void uart_puts(const char* s) {
+    while (*s) {
+        uart_putc(*s++);
     }
 }
 
 void uart_put_num(int num) {
-    char s[100];
+    char s[12];
     itoa(num, s);
-    uart_puts(s, strlen((char*)s));
+    uart_puts(s);
 }
 
 char uart_getc() {

@@ -9,7 +9,7 @@ CC = riscv32-unknown-linux-gnu-gcc
 CFLAGS = -O3 -march=rv32imzicsr -mabi=ilp32 -nostdlib -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -T linker.ld
 
 # Define the executable name
-TARGET = my_program
+TARGET = output/my_program
 
 # Define source files
 SRCS = user/main.c user/user_ecall.s lib/utils.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c lib/switch/switch.c lib/button/button.c sys/trap_handler.c sys/entry.s sys/trap.s sys/csr.c
