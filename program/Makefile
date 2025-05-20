@@ -12,7 +12,7 @@ CFLAGS = -O3 -march=rv32imzicsr -mabi=ilp32 -nostdlib -fomit-frame-pointer -fno-
 TARGET = output/my_program
 
 # Define source files
-SRCS = user/main.c user/user_ecall.s lib/utils.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c lib/switch/switch.c lib/button/button.c lib/vga/vga.c sys/trap_handler.c sys/entry.s sys/trap.s sys/csr.c
+SRCS = user/main.c user/user_ecall.s lib/utils.c lib/keyboard/keyboard.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c lib/switch/switch.c lib/button/button.c lib/vga/vga.c sys/trap_handler.c sys/entry.s sys/trap.s sys/csr.c
 
 # Define object files - substitute .c or .s with .o for each source file
 OBJS = $(addsuffix .o, $(basename $(SRCS)))
@@ -31,7 +31,7 @@ $(TARGET): $(OBJS) linker.ld
 
 # Rule to compile .c files into .o files
 # This is a pattern rule: it tells make how to create any .o file from a .c file
-%.o: %.c lib/utils.h lib/uart/uart.h lib/led/led.h lib/switch/switch.h lib/seg_display/seg_display.h lib/button/button.h lib/vga/vga.h sys/trap_handler.h sys/csr.h
+%.o: %.c lib/utils.h lib/keyboard/keyboard.h lib/uart/uart.h lib/led/led.h lib/switch/switch.h lib/seg_display/seg_display.h lib/button/button.h lib/vga/vga.h sys/trap_handler.h sys/csr.h
 	@echo "Compiling $<..."
 	$(CC) $(CFLAGS) -c $< -o $@
 
