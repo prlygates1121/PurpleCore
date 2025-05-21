@@ -24,8 +24,7 @@ module top(
     input clk_100,
     input reset_n,
 
-    input uart_rx_in,
-    output uart_tx_out,
+
     
     input [4:0] bts,
 
@@ -45,13 +44,6 @@ module top(
     
     wire [4:0] bts_state;
     wire clk_25, locked;
-
-    wire [7:0] uart_rx_data;
-    wire [7:0] uart_tx_data;
-    wire uart_read;
-    wire uart_write, uart_inst_loaded;
-    wire [31:0] uart_addr, uart_inst;
-    wire uart_rx_ready, uart_tx_ready;
 
     // generates clk_25 from clk_100
     clk_main_gen clk_main_gen_0(
@@ -93,16 +85,8 @@ module top(
         .seg_display_hex                (I_read),
 
         .leds_l(leds_l),
-        .leds_r(leds_r),
+        .leds_r(leds_r)
 
-
-        .uart_rx_data                   (uart_rx_data),
-        .uart_tx_data                   (uart_tx_data),
-        .uart_read                      (uart_read),
-        //changed by uart_write
-        .uart_write                     (uart_write),
-        .uart_rx_ready                  (uart_rx_ready),
-        .uart_tx_ready                  (uart_tx_ready)
     );
 
     // vga_top vga(
@@ -114,19 +98,6 @@ module top(
     //     .h_sync(vga_h_sync),
     //     .v_sync(vga_v_sync)
     // );
-
-    uart uart_0(
-    	.clk    	                    (clk_25),
-    	.reset  	                    (reset_modules),
-    	.read   	                    (uart_read),
-    	.rx_in  	                    (uart_rx_in),
-    	.rx_out 	                    (uart_rx_data),
-        .rx_ready                       (uart_rx_ready),
-    	.write  	                    (uart_write),
-    	.tx_in  	                    (uart_tx_data),
-    	.tx_out 	                    (uart_tx_out),
-        .tx_ready                       (uart_tx_ready)
-    );
 
 
     seg_display_handler seg_display_handler_0(

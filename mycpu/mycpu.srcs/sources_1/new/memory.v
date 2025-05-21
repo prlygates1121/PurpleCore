@@ -48,29 +48,18 @@ module memory(
     output reg [31:0] seg_display_hex,
 
     output reg [7:0] leds_l,
-    output reg [7:0] leds_r,
+    output reg [7:0] leds_r
 
-
-
-
-
-    input [7:0] uart_rx_data,
-    output reg [7:0] uart_tx_data,
-    output uart_read,
-    output uart_write,
-    input uart_rx_ready,
-    input uart_tx_ready
 );
     wire store, load;
     wire [1:0] byte_offset;
     wire [31:0] load_word;
-    wire [31:0] mem_load_word, uart_load_word;
+    wire [31:0] mem_load_word;
     wire [31:0] mem_store_data;
     wire [3:0] we, web;
     wire io_en;
     wire [10:0] io_sel;
     wire [31:0] io_load_word;
-    wire [3:0] uart_sel;
 
 `ifdef SIMULATION
     my_blk_mem main_memory(
@@ -112,10 +101,6 @@ module memory(
 
     localparam [10:0] BUTTON        = 11'd6;    // r_
     localparam [10:0] SEG_DISPLAY   = 11'd7;    // _w
-    localparam [10:0] UART          = 11'd8;    // rw
-
-    localparam [3:0] UART_DATA_REG      = 4'd0;
-    localparam [3:0] UART_STATUS_REG    = 4'd1;
 
     /*
         D_load_data <---part_select--- load_word <-----io_en--- mem_load_word <------------ main memory
@@ -130,10 +115,6 @@ module memory(
     assign load  = D_load_width  != 3'h3;
 
     // select from uart data register and uart status register
-    assign uart_sel = D_addr[5:2];
-    // 
-    assign uart_read = (io_sel == UART) & (uart_sel == UART_DATA_REG) & load;
-    assign uart_write = (io_sel == UART) & (uart_sel == UART_DATA_REG) & store;
 
     // io_en: the instruction is accessing memory mapped I/O
     assign io_en = D_addr[31];
@@ -144,12 +125,8 @@ module memory(
                           io_sel == ASCII       ? (D_addr[2] ? ascii_data[D_addr[9:3]][63:32] : ascii_data[D_addr[9:3]][31:0]) :
                           io_sel == SW          ? {16'h0, sws_l, sws_r} : 
                           io_sel == BUTTON      ? {27'h0, bts_state} :
-                          io_sel == UART        ? uart_load_word :
                           32'h0;
 
-    assign uart_load_word = uart_sel == UART_DATA_REG ? {24'b0, uart_rx_data} :
-                            uart_sel == UART_STATUS_REG ? {30'b0, uart_tx_ready, uart_rx_ready} :
-                            32'h0;
 
     // load_word: the 32-bit data loaded from either the main memory or the I/O
     assign load_word = io_en ? io_load_word : mem_load_word;
@@ -188,7 +165,6 @@ module memory(
             leds_l <= 8'b0;
             leds_r <= 8'b0;
             seg_display_hex <= 32'h0;
-            uart_tx_data <= 8'h0;
         end else begin
             if (io_en & store) begin
                 // here lists all the writable I/O
@@ -202,11 +178,6 @@ module memory(
                         if (we[1]) seg_display_hex[15:8]  <= mem_store_data[15:8];
                         if (we[2]) seg_display_hex[23:16] <= mem_store_data[23:16];
                         if (we[3]) seg_display_hex[31:24] <= mem_store_data[31:24];
-                    end
-                    UART: begin
-                        if (uart_sel == UART_DATA_REG) begin
-                            if (we[0]) uart_tx_data <= mem_store_data[7:0];
-                        end
                     end
                 endcase
             end

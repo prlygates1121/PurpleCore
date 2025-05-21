@@ -35,15 +35,7 @@ module core(
     output [31:0] seg_display_hex,
 
     output [7:0] leds_l,
-    output [7:0] leds_r,
-
-
-    input [7:0] uart_rx_data,
-    output [7:0] uart_tx_data,
-    output uart_read,
-    output uart_write,
-    input uart_rx_ready,
-    input uart_tx_ready
+    output [7:0] leds_r
     );
 
     parameter LOADING = 0, RUNNING = 1;
@@ -200,16 +192,8 @@ module core(
         .seg_display_hex            (seg_display_hex),
 
         .leds_l                     (leds_l),
-        .leds_r                     (leds_r),
+        .leds_r                     (leds_r)
 
-
-        .uart_rx_data               (uart_rx_data),
-        .uart_tx_data               (uart_tx_data),
-        .uart_read                  (uart_read),
-        .uart_write                 (uart_write),
-
-        .uart_rx_ready              (uart_rx_ready),
-        .uart_tx_ready              (uart_tx_ready)
     );
 
 

@@ -1,4 +1,4 @@
-//`define SIMULATION
+`define SIMULATION
 `define BRANCH_PREDICT_ENA
 
 `define ADDR_SP_START           32'h0000_B000
