@@ -114,6 +114,9 @@ module top(
     end
 
     core core_0(
+        `ifdef DEBUG
+            .clk_100                    (clk_100),
+        `endif
         .clk                            (clk_main),
         .reset                          (reset_sync_main_s2),
 

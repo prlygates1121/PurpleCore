@@ -22,6 +22,9 @@
 
 
 module core(
+    `ifdef DEBUG
+        input clk_100,
+    `endif
     input clk,
     input reset,
 
@@ -49,6 +52,13 @@ module core(
     input uart_tx_ready,
     output [31:0] uart_ctrl
     );
+
+    `ifdef DEBUG
+        wire [31:0] t0;
+        wire [31:0] t1;
+        wire [31:0] t2;
+        wire [31:0] t3;
+    `endif
 
     wire inst_access_fault;
 
@@ -283,6 +293,12 @@ module core(
     );
 
     ID id_0 (
+        `ifdef DEBUG
+            .t0                 (t0),
+            .t1                 (t1),
+            .t2                 (t2),
+            .t3                 (t3),
+        `endif
         .clk                    (clk),
         .reset                  (reset),
         .IF_pc                  (ID_in_pc),
@@ -715,5 +731,29 @@ module core(
 
         .uart_ctrl                  (uart_ctrl)
     );
+
+    `ifdef DEBUG
+        ila_0 ila_0_0 (
+            .clk                     (clk),
+            .probe0                  (),
+            .probe1                  (EX_branch_flush),
+            .probe2                  (load_stall),
+            .probe3                  (IF_out_pc),
+            .probe4                  (IF_out_inst),
+            .probe5                  (EX_in_pc),
+            .probe6                  (EX_in_inst),
+            .probe7                  (MEM_reg_w_data_forwarded),
+            .probe8                  (WB_reg_w_data_forwarded),
+            .probe9                  (EX_in_rs1_data),
+            .probe10                 (EX_in_rs2_data),
+            .probe11                 (EX_out_alu_result),
+            .probe12                 (t0),
+            .probe13                 (t1),
+            .probe14                 (t2),
+            .probe15                 (t3),
+            .probe16                 (),
+            .probe17                 ()
+        );
+    `endif
 
 endmodule

@@ -181,3 +181,5 @@ set_property MAX_FANOUT 100 [get_nets reset_sync_main_s2]
 set_property MAX_FANOUT 50 [get_nets core_0/id_ex_0/*]
 set_property MAX_FANOUT 50 [get_nets core_0/branch_prediction_unit_0/*]
 set_property MAX_FANOUT 50 [get_nets core_0/branch_prediction_unit_0/RAS/*]
+
+connect_debug_port dbg_hub/clk [get_nets clk_main]

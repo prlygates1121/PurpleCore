@@ -22,6 +22,12 @@
 
 
 module regfile(
+    `ifdef DEBUG
+        output [31:0] t0,
+        output [31:0] t1,
+        output [31:0] t2,
+        output [31:0] t3,
+    `endif
     input clk,
     input reset,
     input write_en,
@@ -44,7 +50,7 @@ module regfile(
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) begin
                 if (i == 2) begin
-                    // initialize the stack pointer, needed only in simulation where there is no bootloader & startup code
+                    // initialize the stack pointer, needed only when there is no startup code (entry.s)
                     registers[i] <= `ADDR_SP_START;
                 end else begin
                     registers[i] <= 32'h0;
@@ -54,4 +60,11 @@ module regfile(
             registers[dest] <= write_data;
         end
     end
+
+    `ifdef DEBUG
+        assign t0 = registers[5];
+        assign t1 = registers[6];
+        assign t2 = registers[7];
+        assign t3 = registers[28];
+    `endif
 endmodule

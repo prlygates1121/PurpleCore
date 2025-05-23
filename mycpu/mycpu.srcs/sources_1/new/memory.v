@@ -228,22 +228,24 @@ module memory(
         end
     end
 
-    blk_mem_vga vga_memory(
-        // ports by which VGA controller reads data from memory
-        .clka(~clk_pixel),
-        .ena(1'b1),
-        .wea(4'b0),
-        .addra(vga_addr[17:2]), // valid vga address is 17 bits
-        .dina(32'h0),
-        .douta(vga_data),
+    `ifdef VGA
+        blk_mem_vga vga_memory(
+            // ports by which VGA controller reads data from memory
+            .clka(~clk_pixel),
+            .ena(1'b1),
+            .wea(4'b0),
+            .addra(vga_addr[17:2]), // valid vga address is 17 bits
+            .dina(32'h0),
+            .douta(vga_data),
 
-        // ports by which CPU writes data to memory
-        .clkb(~clk),
-        .enb(1'b1),
-        .web(wevga),
-        .addrb(D_addr[17:2]),   // valid vga address is 17 bits
-        .dinb(mem_store_data),
-        .doutb(vga_load_word)
-    );
+            // ports by which CPU writes data to memory
+            .clkb(~clk),
+            .enb(1'b1),
+            .web(wevga),
+            .addrb(D_addr[17:2]),   // valid vga address is 17 bits
+            .dinb(mem_store_data),
+            .doutb(vga_load_word)
+        );
+    `endif
 
 endmodule

@@ -1,6 +1,13 @@
 // `define SIMULATION
+
+`ifdef SIMULATION
+    // `define LOAD_AT_0X200
+`else
+    `define DEBUG
+`endif
+
+// `define VGA
 `define BRANCH_PREDICT_ENA
-// `define LOAD_AT_0X200
 
 `define S_BOOTLOADER            32'h0000_0000
 `define S_TEXT                  32'h0000_0200

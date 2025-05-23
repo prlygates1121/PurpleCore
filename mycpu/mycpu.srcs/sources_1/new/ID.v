@@ -22,6 +22,12 @@
 
 
 module ID(
+    `ifdef DEBUG
+        output [31:0] t0,
+        output [31:0] t1,
+        output [31:0] t2,
+        output [31:0] t3,
+    `endif
     input clk,
     input reset,
     
@@ -135,6 +141,12 @@ module ID(
 
     // NOTE: Writeback-related signals come from the WB stage
     regfile regfile_0(
+        `ifdef DEBUG
+            .t0         (t0),
+            .t1         (t1),
+            .t2         (t2),
+            .t3         (t3),
+        `endif
         .clk            (clk),
         .reset          (reset),
         .write_en       (WB_reg_w_en),
