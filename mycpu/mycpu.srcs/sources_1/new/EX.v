@@ -123,19 +123,14 @@ module EX(
             // once the control leaves bootloader, it is not allowed to execute bootloader code
             if (ID_mboot == 32'h0 & (ID_pc < `S_TEXT | ID_pc >= `S_DATA)) begin
                 excp_code = `INST_ACCESS_FAULT;
-            end
-
-            if (ID_ecall) begin
+            end else if (ID_ecall) begin
                 excp_code = `ECALL_M;
-            end
-
-            if (ID_mboot == 32'h0) begin
+            end else if (ID_mboot == 32'h0) begin
                 if (ID_store_width != `NO_STORE) begin
                     if (EX_alu_result[31] == 1'b0 & EX_alu_result < `S_DATA) begin
                         excp_code = `STORE_ACCESS_FAULT;
                     end
-                end
-                if (ID_load_width != `NO_LOAD) begin
+                end else if (ID_load_width != `NO_LOAD) begin
                     if (EX_alu_result[31] == 1'b0 & EX_alu_result < `S_TEXT) begin
                         excp_code = `LOAD_ACCESS_FAULT;
                     end

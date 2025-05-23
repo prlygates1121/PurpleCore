@@ -113,6 +113,7 @@ module control_logic(
                          I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
                         (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
                         (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh
+                        (R & funct3 == 3'h2 & funct7 == 7'h01)          ? `MULSU:    // mulsu
                         (R & funct3 == 3'h3 & funct7 == 7'h01)          ? `MULU :    // mulu
                         (opcode == 7'b0110111)                          ? `BSEL :    // lui
                         `ADD;

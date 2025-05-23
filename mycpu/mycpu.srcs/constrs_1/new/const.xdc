@@ -164,7 +164,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports ps2_data]
 set_property PACKAGE_PIN K5 [get_ports ps2_clk]
 set_property PACKAGE_PIN L4 [get_ports ps2_data]
 
-set_false_path -from [get_clocks clk_100] -to [get_clocks -of_objects [get_pins clk_main_gen_0/inst/plle2_adv_inst/CLKOUT0]]
+# set_false_path -from [get_clocks clk_100] -to [get_clocks -of_objects [get_pins clk_main_gen_0/inst/plle2_adv_inst/CLKOUT0]]
 
 set_property IOSTANDARD LVCMOS33 [get_ports {bts[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {bts[3]}]
@@ -177,4 +177,7 @@ set_property PACKAGE_PIN V1 [get_ports {bts[2]}]
 set_property PACKAGE_PIN R11 [get_ports {bts[3]}]
 set_property PACKAGE_PIN R15 [get_ports {bts[4]}]
 
-set_property MAX_FANOUT 500 [get_nets reset_sync_main_s2]
+set_property MAX_FANOUT 100 [get_nets reset_sync_main_s2]
+set_property MAX_FANOUT 50 [get_nets core_0/id_ex_0/*]
+set_property MAX_FANOUT 50 [get_nets core_0/branch_prediction_unit_0/*]
+set_property MAX_FANOUT 50 [get_nets core_0/branch_prediction_unit_0/RAS/*]

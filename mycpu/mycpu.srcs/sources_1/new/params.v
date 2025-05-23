@@ -1,6 +1,6 @@
 // `define SIMULATION
 `define BRANCH_PREDICT_ENA
-`define LOAD_AT_0X200
+// `define LOAD_AT_0X200
 
 `define S_BOOTLOADER            32'h0000_0000
 `define S_TEXT                  32'h0000_0200
@@ -50,8 +50,9 @@
 `define SLTU                    4'd9
 `define MUL                     4'd10
 `define MULH                    4'd11
-`define MULU                    4'd12
-`define BSEL                    4'd13
+`define MULSU                   4'd12
+`define MULU                    4'd13
+`define BSEL                    4'd14
 
 // imm_sel [2:0]
 `define IMM_I_SHIFT             3'h0

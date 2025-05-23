@@ -1,14 +1,14 @@
 #include "../lib/uart/uart.h"
-#include "../lib/keyboard/keyboard.h"
-#include "../lib/vga/vga.h"
-
+#include "../lib/seg_display/seg_display.h"
+#include "../sys/csr.h"
 void ecall_test();
 
 int main() {
-    vga_clear(BACKGROUND_COLOR);
-    vga_print_char(100, 100, 'a', 0, WHITE);
-    vga_print_char(400, 400, '!', 0, BLUE);
-    for (int i = 0; i < 40; i++) {
-        vga_draw_point(i, i, i & 0xF);
-    }
+    // for (uint32_t i = 0; ; i++) {
+    //     seg_display_show_num(i);
+    //     ecall_test();
+    // }
+    w_mboot(0);
+    volatile uint32_t *ptr = (volatile uint32_t*)(0x00000008);
+    goto *ptr;
 }
