@@ -14,8 +14,14 @@ void uart_puts(const char* s) {
 
 void uart_put_num(int num) {
     char s[12];
-    itoa(num, s);
+    itoa_dec(num, s);
     uart_puts(s);
+}
+
+void uart_put_num_hex(uint32_t num) {
+    char s[15];
+    itoa_hex(num, s);
+    uart_puts(s); 
 }
 
 char uart_getc() {

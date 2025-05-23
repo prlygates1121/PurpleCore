@@ -25,7 +25,7 @@ void reverse(char str[], int length) {
 // value: The integer to convert
 // buffer: The character array to store the resulting string
 // Returns: A pointer to the buffer
-char* itoa(int value, char* buffer) {
+void itoa_dec(int value, char* buffer) {
     int i = 0; // Index for the buffer
     int is_negative = 0;
     unsigned int u_value; // Use unsigned int to handle magnitude of INT_MIN
@@ -34,22 +34,10 @@ char* itoa(int value, char* buffer) {
     if (value == 0) {
         buffer[i++] = '0';
         buffer[i] = '\0';
-        return buffer;
+        return;
     }
 
-    // 2. Handle negative numbers and determine absolute value as unsigned
-    if (value < 0) {
-        is_negative = 1;
-        // Using -(unsigned int)value correctly handles INT_MIN.
-        // For INT_MIN, (unsigned int)INT_MIN gives its 2's complement representation,
-        // and unary minus on that unsigned value gives its magnitude.
-        // e.g., if int is 32-bit, INT_MIN = -2147483648.
-        // (unsigned int)INT_MIN = 0x80000000 (2147483648 as unsigned).
-        // -(unsigned int)INT_MIN also results in 0x80000000 (2147483648).
-        u_value = -(unsigned int)value;
-    } else {
-        u_value = (unsigned int)value;
-    }
+    u_value = (unsigned int)value;
 
     // 3. Process individual digits by repeatedly subtracting 10
     // Digits are generated in reverse order
@@ -81,5 +69,19 @@ char* itoa(int value, char* buffer) {
     // 6. Reverse the string to get the correct order
     reverse(buffer, i); // i is the current length of the string
 
-    return buffer;
+}
+
+void itoa_hex(uint32_t value, char* buffer) {
+    int i = 2;
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    for (int j = 7; j >= 0; j--) {
+        uint8_t digit = (value >> (j << 2)) & 0xF;
+        if (digit < 10) {
+            buffer[i++] = digit + '0';
+        } else {
+            buffer[i++] = digit - 10 + 'A';
+        }
+    }
+    buffer[i] = '\0';
 }
