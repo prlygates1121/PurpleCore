@@ -33,10 +33,10 @@ module uart(
     input write,
     input [7:0] tx_in,
     output tx_out,
-    output reg tx_ready
-    );
+    output reg tx_ready,
 
-    localparam [31:0] COUNTER_MAX = `CLK_MAIN_FREQ / `UART_FREQ;
+    input [31:0] ctrl
+    );
 
     reg rx_en, tx_en;
     reg [9:0] rx_counter, tx_counter;
@@ -72,11 +72,11 @@ module uart(
             rx_en <= 1'b0;
         end else if (rx_negedge & (rx_state == 2'b00 | rx_state == 2'b11)) begin
             // when encountering rx_negedge while in IDLE or STOP state, set next sample at 1/2 uart period later, exactly at the center of the start bit signal
-            rx_counter <= COUNTER_MAX/2;
+            rx_counter <= (ctrl >> 1);
             rx_en <= 1'b0;
         end else if (rx_active) begin
             // increment rx_counter if data reception has started
-            if (rx_counter != COUNTER_MAX) begin
+            if (rx_counter != ctrl) begin
                 rx_counter <= rx_counter + 1;
                 rx_en <= 1'b0;
             end else begin
@@ -112,7 +112,7 @@ module uart(
             tx_counter <= 10'b0;
             tx_en <= 1'b0;
         end else begin
-            if (tx_counter != COUNTER_MAX) begin
+            if (tx_counter != ctrl) begin
                 tx_counter <= tx_counter + 1;
                 tx_en <= 1'b0;
             end else begin

@@ -61,7 +61,8 @@ module memory(
     output uart_read,
     output uart_write,
     input uart_rx_ready,
-    input uart_tx_ready
+    input uart_tx_ready,
+    output reg [31:0] uart_ctrl
 );
     wire store, load;
     wire [1:0] byte_offset;
@@ -118,6 +119,7 @@ module memory(
 
     localparam [3:0] UART_DATA_REG      = 4'd0;
     localparam [3:0] UART_STATUS_REG    = 4'd1;
+    localparam [3:0] UART_CONTROL_REG   = 4'd2;
 
     /*
         D_load_data <---part_select--- load_word <-----io_en--- mem_load_word <------------ main memory
@@ -150,6 +152,7 @@ module memory(
 
     assign uart_load_word = uart_sel == UART_DATA_REG ? {24'b0, uart_rx_data} :
                             uart_sel == UART_STATUS_REG ? {30'b0, uart_tx_ready, uart_rx_ready} :
+                            uart_sel == UART_CONTROL_REG ? uart_ctrl :
                             32'h0;
 
     // load_word: the 32-bit data loaded from either the main memory or the I/O
@@ -192,6 +195,7 @@ module memory(
             leds_r <= 8'b0;
             seg_display_hex <= 32'h0;
             uart_tx_data <= 8'h0;
+            uart_ctrl <= `CLK_MAIN_FREQ / `UART_FREQ;
         end else begin
             if (io_en & store) begin
                 // here lists all the writable I/O
@@ -207,9 +211,17 @@ module memory(
                         if (we[3]) seg_display_hex[31:24] <= mem_store_data[31:24];
                     end
                     UART: begin
-                        if (uart_sel == UART_DATA_REG) begin
-                            if (we[0]) uart_tx_data <= mem_store_data[7:0];
-                        end
+                        case (uart_sel)
+                            UART_DATA_REG: begin
+                                if (we[0]) uart_tx_data <= mem_store_data[7:0];
+                            end
+                            UART_CONTROL_REG: begin
+                                if (we[0]) uart_ctrl[7:0]   <= mem_store_data[7:0];
+                                if (we[1]) uart_ctrl[15:8]  <= mem_store_data[15:8];
+                                if (we[2]) uart_ctrl[23:16] <= mem_store_data[23:16];
+                                if (we[3]) uart_ctrl[31:24] <= mem_store_data[31:24];
+                            end
+                        endcase
                     end
                 endcase
             end

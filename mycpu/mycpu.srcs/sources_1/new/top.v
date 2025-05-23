@@ -61,6 +61,7 @@ module top(
     wire [7:0] uart_tx_data;
     wire uart_read, uart_write;
     wire uart_rx_ready, uart_tx_ready;
+    wire [31:0] uart_ctrl;
 
     wire clk_main;                    // generates clk_main from clk_100
     clk_main_gen clk_main_gen_0(
@@ -137,7 +138,8 @@ module top(
         .uart_read                      (uart_read),
         .uart_write                     (uart_write),
         .uart_rx_ready                  (uart_rx_ready),
-        .uart_tx_ready                  (uart_tx_ready)
+        .uart_tx_ready                  (uart_tx_ready),
+        .uart_ctrl                      (uart_ctrl)
     );
 
     vga_top vga(
@@ -162,7 +164,8 @@ module top(
     	.write  	                    (uart_write),
     	.tx_in  	                    (uart_tx_data),
     	.tx_out 	                    (uart_tx_out),
-        .tx_ready                       (uart_tx_ready)
+        .tx_ready                       (uart_tx_ready),
+        .ctrl                           (uart_ctrl)
     );
 
     seg_display_handler seg_display_handler_0(
@@ -198,13 +201,5 @@ module top(
             );
         end
     endgenerate
-
-    // assign leds_l = uart_addr[15:8];
-    // assign leds_l[2] = uart_rx_in;
-    // assign leds_l[1] = load_begin;
-    // assign leds_l[0] = uart_inst_loaded;
-    // assign leds_l[1] = debug_shift;
-    // assign leds_r = uart_addr[7:0];
-
 
 endmodule

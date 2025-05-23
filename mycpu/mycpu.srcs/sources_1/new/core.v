@@ -25,8 +25,6 @@ module core(
     input clk,
     input reset,
 
-    output [31:0] I_read,
-
     input [7:0] sws_l,
     input [7:0] sws_r,
 
@@ -48,7 +46,8 @@ module core(
     output uart_read,
     output uart_write,
     input uart_rx_ready,
-    input uart_tx_ready
+    input uart_tx_ready,
+    output [31:0] uart_ctrl
     );
 
     wire inst_access_fault;
@@ -712,33 +711,9 @@ module core(
         .uart_write                 (uart_write),
 
         .uart_rx_ready              (uart_rx_ready),
-        .uart_tx_ready              (uart_tx_ready)
+        .uart_tx_ready              (uart_tx_ready),
+
+        .uart_ctrl                  (uart_ctrl)
     );
-
-    /* -------------------------------------- Debug -------------------------------------- */
-
-    // reg stop;
-    // reg [31:0] pc_debug, addra_debug, inst_debug;
-    // reg pc_sel_debug;
-    // always @(posedge clk) begin
-    //     if (reset) begin
-    //         stop <= 1'b0;
-    //     end else if (inst != 32'h0) begin
-    //         if (stop == 1'b0) begin
-    //             pc_debug <= pc; // save the pc when we first meet an illegal instruction
-    //             pc_sel_debug <= pc_sel;
-    //             addra_debug <= addra;
-    //             inst_debug <= inst;
-    //         end
-    //         stop <= 1'b1;
-    //     end
-    // end
-
-    // assign leds_l = pc[7:0];
-
-    // assign leds_l[7] = stop;
-    // assign leds_l[6:0] = inst_debug[6:0];
-    // assign leds_r = {pc_sel_debug, pc_debug[5:0], core_mode};
-    // assign I_read = inst_debug;
 
 endmodule
