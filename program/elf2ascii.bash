@@ -79,7 +79,7 @@ echo "Final ASCII output: $OUTPUT_FOLDER/$OUTPUT_ASCII_FILE"
 
 # Also, display the disassembly of the object file in the terminal using objdump
 echo "4. Disassembling $ELF_FILE_PATH for verification..."
-$OBJDUMP -D "$ELF_FILE_PATH"
+$OBJDUMP -D "$ELF_FILE_PATH" > "$OUTPUT_FOLDER/objdump.txt"
 if [ $? -ne 0 ]; then
     echo "Error: objdump failed."
     exit 1

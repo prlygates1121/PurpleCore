@@ -11,8 +11,7 @@ extern void m_ret(uint32_t a0);
 void m_trap_handler() {
     // save user trap pc in trapframe
     trapframe.user_pc = r_mepc();
-    seg_display_show_num(trapframe.user_pc);
-
+    
     // ecall
     uint32_t cause = r_mcause();
     switch (cause) {
