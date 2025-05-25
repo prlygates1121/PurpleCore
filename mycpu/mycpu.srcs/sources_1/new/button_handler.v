@@ -33,7 +33,12 @@ module button_handler(
     // timeout in ns
     // localparam TIMEOUT = 200_000_000_000;
     // counter max out value
-    localparam COUNTER_MAX = 5_000_00;
+    `ifdef SIMULATION
+        localparam COUNTER_MAX = 1;
+    `else
+        localparam COUNTER_MAX = 2_000_00;
+    `endif
+
 
     reg [31:0] counter;
     wire counter_max_out = counter == COUNTER_MAX;

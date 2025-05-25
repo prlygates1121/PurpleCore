@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "params.v"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -29,9 +30,8 @@ module seg_display_handler(
     output [7:0] right_tube_content
     );
 
-    parameter CLK_FREQ = 32'd25_000_000;
     parameter TUBE_FREQ = 32'd500;
-    parameter COUNTER_MAX = CLK_FREQ / TUBE_FREQ;
+    parameter COUNTER_MAX = `CLK_MAIN_FREQ / TUBE_FREQ;
 
     reg [31:0] counter;
     always @(posedge clk) begin

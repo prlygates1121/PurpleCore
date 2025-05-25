@@ -21,6 +21,11 @@
 
 
 module regfile(
+    output [31:0] t0,
+    output [31:0] t1,
+    output [31:0] sp,
+    output [31:0] a0,
+
     input clk,
     input reset,
     input write_en,
@@ -52,4 +57,9 @@ module regfile(
             registers[dest] <= write_data;
         end
     end
+
+    assign t0 = registers[5];
+    assign t1 = registers[6];
+    assign sp = registers[2];
+    assign a0 = registers[10];
 endmodule

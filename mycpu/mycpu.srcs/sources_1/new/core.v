@@ -106,7 +106,8 @@ module core(
             pc <= pc_next;
         end
     end
-    // io
+
+    wire [31:0] t0, t1, sp, a0;
 
     control_logic ctrl_logic_0(
         .inst(inst),
@@ -154,6 +155,10 @@ module core(
     );
 
     regfile regfile_0(
+        .t0(t0),
+        .t1(t1),
+        .sp(sp),
+        .a0(a0),
         .clk(clk),
         .reset(core_reset),
         .write_en(reg_w_en),
@@ -204,5 +209,27 @@ module core(
         .result(alu_result)
     );
 
+    ila_0 ila_0_0 (
+        .clk(clk),
+        .probe0(pc),
+        .probe1(inst),
+        .probe2(t0),
+        .probe3(t1),
+        .probe4(sp),
+        .probe5(D_load_data),
+        .probe6(D_load_width),
+        .probe7(D_load_un),
+        .probe8(D_addr),
+        .probe9(alu_src1),
+        .probe10(alu_src2),
+        .probe11(alu_result),
+        .probe12(pc_sel),
+        .probe13(rs1_data),
+        .probe14(rs2_data),
+        .probe15(br_eq),
+        .probe16(br_lt),
+        .probe17(br_un),
+        .probe18(a0)
+    );
 
 endmodule

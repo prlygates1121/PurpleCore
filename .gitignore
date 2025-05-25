@@ -27,7 +27,6 @@ mycpu.gen/
 *.xml_bak
 *.xpr.user*
 *.xsa
-*.wcfg
 
 # Other common ignore patterns
 *.backup*

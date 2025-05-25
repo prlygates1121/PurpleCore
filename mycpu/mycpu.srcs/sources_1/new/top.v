@@ -123,12 +123,4 @@ module top(
         end
     endgenerate
 
-
-
-    // assign leds_l = uart_addr[15:8];
-    // assign leds_l[2] = uart_rx_in;
-    // assign leds_l[1] = load_begin;
-    // assign leds_l[0] = uart_inst_loaded;
-    // assign leds_r = uart_addr[7:0];
-
 endmodule

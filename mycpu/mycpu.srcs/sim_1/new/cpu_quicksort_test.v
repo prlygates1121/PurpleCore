@@ -26,16 +26,21 @@ module cpu_quicksort_test(
     );
     parameter CLK_100_PERIOD = 10;
     parameter CLK_100_FREQ = 100_000_000;
+    parameter CLK_MAIN_PERIOD = 40;
 
     reg clk_100, reset_n;
+    reg [7:0] sws_l, sws_r;
+    reg [4:0] bts_state;
 
     top top0(
         .clk_100(clk_100),
-        .reset_n(reset_n)    
+        .reset_n(reset_n),
+        .sws_l(sws_l),
+        .sws_r(sws_r),
+        .bts(bts_state)
     );
 
     integer i;
-
 
     initial begin
         clk_100 = 1'b0;
@@ -43,10 +48,34 @@ module cpu_quicksort_test(
     end
 
     initial begin
+        sws_l = 8'd0;
+        sws_r = 8'd0;
+        bts_state = 5'b00000;
         reset_n = 1'b0;
         #(CLK_100_PERIOD * 2);
         reset_n = 1'b1;
         #(CLK_100_PERIOD * 2000);
+        sws_r = 8'd1;
+        #(CLK_MAIN_PERIOD * 30);
+        sws_l = 8'd4;
+        #(CLK_MAIN_PERIOD * 30);
+        bts_state = 5'b10000;
+        #(CLK_MAIN_PERIOD * 30);
+        bts_state = 5'b00000;
+        #(CLK_MAIN_PERIOD * 30);
+        sws_r = 8'd2;
+        #(CLK_MAIN_PERIOD * 30);
+        sws_l = 8'd4;
+        #(CLK_MAIN_PERIOD * 30);
+        bts_state = 5'b10000;
+        #(CLK_MAIN_PERIOD * 30);
+        bts_state = 5'b00000;
+        #(CLK_MAIN_PERIOD * 30);
+        sws_r = 8'd3;
+        #(CLK_MAIN_PERIOD * 30);
+        bts_state = 5'b10000;
+        #(CLK_MAIN_PERIOD * 30);
+        bts_state = 5'b00000;
     end
 
     always @(posedge top0.clk_25) begin
@@ -55,81 +84,6 @@ module cpu_quicksort_test(
         end
     end
 
-    integer cycle = 0;
-    integer branch_count = 0;
-    integer jump_count = 0;
-    integer return_count = 0;
-    integer total_branch_jump_return = 0;
-    integer branch_taken = 0;
-    integer branch_untaken = 0;
-    integer misprediction_branch = 0;
-    integer misprediction_jump = 0;
-    integer misprediction_return = 0;
-    integer total_mispredictions = 0;
-    integer branch_target_outdated = 0;
-    integer branch_flushes = 0;
-    always @(posedge top0.clk_25) begin
-        if (top0.core_0.reset == 0) begin
-            cycle = cycle + 1;
-            
-//            if (top0.core_0.ex_0.ID_branch_type != `NO_BRANCH) begin
-//                branch_count = branch_count + 1;
-//                if (top0.core_0.ex_0.branch) begin
-//                    branch_taken = branch_taken + 1;
-//                end else begin
-//                    branch_untaken = branch_untaken + 1;
-//                end
-//            end
-            
-//            if (top0.core_0.ex_0.ID_jal) begin
-//                jump_count = jump_count + 1;
-//            end
 
-//            if (top0.core_0.ex_0.ID_jalr) begin
-//                return_count = return_count + 1;
-//            end
-
-//            if (top0.core_0.EX_branch_flush) begin
-//                branch_flushes = branch_flushes + 1;
-//                if (top0.core_0.EX_false_target) begin
-//                    branch_target_outdated = branch_target_outdated + 1;
-//                end
-//                if (top0.core_0.EX_false_direction) begin
-//                    if (top0.core_0.ex_0.ID_jal) begin
-//                        misprediction_jump = misprediction_jump + 1;
-//                    end else if (top0.core_0.ex_0.ID_jalr) begin
-//                        misprediction_return = misprediction_return + 1;
-//                    end else begin
-//                        misprediction_branch = misprediction_branch + 1;
-//                    end
-//                end
-//            end
-
-            // if (top0.core_0.ex_0.ID_ecall) begin
-            //     total_branch_jump_return = branch_count + jump_count + return_count;
-            //     total_mispredictions = misprediction_branch + misprediction_jump + misprediction_return;
-            //     $display("Cycles:                       %0d",    cycle);
-            //     $display("End Address:                  0x%h",   top0.core_0.if_0.IF_pc);
-            //     $display("Jumps:                        %0d",    jump_count);
-            //     $display("Branches:                     %0d",    branch_count);
-            //     $display("Returns:                      %0d",    return_count);
-            //     $display("Jumps + Branches + Returns:   %0d",    total_branch_jump_return);
-            //     $display("Branches Taken:               %0d",    branch_taken);
-            //     $display("Branches Untaken:             %0d",    branch_untaken);
-            //     $display("Mispredictions (Branch):      %0d",    misprediction_branch);
-            //     $display("Mispredictions (Jump):        %0d",    misprediction_jump);
-            //     $display("Mispredictions (Return):      %0d",    misprediction_return);
-            //     $display("Mispredictions (Total):       %0d",    total_mispredictions);
-            //     $display("Target Outdated:              %0d",    branch_target_outdated);
-            //     $display("Flushes:                      %0d",    branch_flushes);
-            //     $display("Flush Rate:                   %0f%%",  branch_flushes * 100.0 / (total_branch_jump_return));
-            //     $display("Mispredict Rate:              %0f%%",  total_mispredictions * 100.0 / (total_branch_jump_return));
-            //     $display("Target Outdated Rate:         %0f%%",  branch_target_outdated * 100.0 / (total_branch_jump_return));
-            //    $finish;
-            // end
-        end
-    end
-
-    
 endmodule
 

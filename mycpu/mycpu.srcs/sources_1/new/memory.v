@@ -61,38 +61,38 @@ module memory(
     wire [10:0] io_sel;
     wire [31:0] io_load_word;
 
-`ifdef SIMULATION
+// `ifdef SIMULATION
     my_blk_mem main_memory(
         .clka(clk),
-        .ena(I_en),
+        // .ena(I_en),
         .wea(I_write_en),
         .addra(I_addr[15:2]),
         .dina(I_store_data),
         .douta(I_load_data),
 
         .clkb(clk),
-        .enb(D_en),
+        // .enb(D_en),
         .web(web),
         .addrb(D_addr[15:2]),
         .dinb(mem_store_data),
         .doutb(mem_load_word)
     );
-`else
-    blk_mem main_memory(
-        .clka(clk),
-        .ena(I_en),
-        .wea(I_write_en),
-        .addra(I_addr[15:2]),
-        .dina(I_store_data),
-        .douta(I_load_data),
-        .clkb(clk),
-        .enb(D_en),
-        .web(web),
-        .addrb(D_addr[15:2]),
-        .dinb(mem_store_data),
-        .doutb(mem_load_word)
-    );
-`endif
+// `else
+//     blk_mem main_memory(
+//         .clka(~clk),
+//         .ena(I_en),
+//         .wea(I_write_en),
+//         .addra(I_addr[15:2]),
+//         .dina(I_store_data),
+//         .douta(I_load_data),
+//         .clkb(~clk),
+//         .enb(D_en),
+//         .web(web),
+//         .addrb(D_addr[15:2]),
+//         .dinb(mem_store_data),
+//         .doutb(mem_load_word)
+//     );
+// `endif
 
     localparam [10:0] SYS_INFO      = 11'd0;    // r_
     localparam [10:0] ASCII         = 11'd1;    // r_
