@@ -25,7 +25,7 @@ PurpleCore is the course project of **CS202** **Computer Organization** (Spring 
 
 ## Documentation
 
-Check [this](docs\doc.pdf) out for documentation.
+Check [this](docs/doc.pdf) out for documentation.
 
 ## Directory Tree
 
@@ -103,7 +103,7 @@ First, prepare the following:
 
 ## Compilation Flags
 
-You can choose to set the following compilation flags in
+You can choose to set the following compilation flags in `params.v` in the sources.
 
 1. `SIMULATION`.
 
