@@ -39,3 +39,4 @@ mycpu/vivado_pid25048.str
 *.o
 /program/output
 /.vscode
+mycpu/vivado_pid29692.str
