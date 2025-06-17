@@ -1,11 +1,10 @@
-# Define the compiler
 CC = riscv32-unknown-linux-gnu-gcc
 
 # Flags used to 1. enable optimization
-#               2. specify architecture and abi
+#				2. specify architecture and abi
 #				3. discard standard library
-# 				4. eliminate the weird .eh_frame sections that otherwise would be included in .text section
-# 				5. specify linker script
+#				4. eliminate the weird .eh_frame sections that otherwise would be included in .text section
+#				5. specify linker script
 CFLAGS = -O3 -march=rv32imzicsr -mabi=ilp32 -nostdlib -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -T linker.ld
 
 # Define the executable name
@@ -45,7 +44,4 @@ clean:
 	@echo "Cleaning up..."
 	rm -f $(TARGET) $(OBJS)
 
-# Declare 'clean' as a phony target.
-# This means 'clean' isn't a file name; make should always run the recipe
-# without checking for a file named 'clean'.
 .PHONY: clean

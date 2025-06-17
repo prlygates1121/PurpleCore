@@ -12,7 +12,6 @@ mycpu.gen/
 *.aux
 *.toc
 *.bcf
-*.dcp
 *.ngc
 *.ngo
 *.pcf
@@ -39,3 +38,4 @@ mycpu/vivado_pid25048.str
 /mycpu/mycpu.srcs/.vscode
 *.o
 /program/output
+/.vscode
