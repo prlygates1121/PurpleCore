@@ -30,6 +30,7 @@ module ID(
     `endif
     input clk,
     input reset,
+    input stall,
     
     input [31:0] IF_pc,
     input [31:0] IF_pc_plus_4,
@@ -37,8 +38,11 @@ module ID(
     input [31:0] IF_I_addr,
     input IF_branch_predict,
     input [31:0] WB_reg_w_data,
+    input [31:0] WB_reg_w_data_mul,
     input WB_reg_w_en,
+    input WB_reg_w_en_mul,
     input [4:0] WB_rd,
+    input [4:0] WB_rd_mul,
     input [11:0] WB_csr_addr,
     input WB_csr_w_en,
     input [31:0] WB_csr_w_data,
@@ -78,7 +82,10 @@ module ID(
 
     output [31:0] ID_mtvec,
     output [31:0] ID_mepc,
-    output [31:0] ID_mboot
+    output [31:0] ID_mboot,
+
+    output ID_calc_slow,
+    output reg [14:0] rd_queue
 
     );
 
@@ -105,6 +112,21 @@ module ID(
     wire [11:0] csr_addr;
     wire [2:0] csr_op;
     wire [31:0] csr_r_data;
+
+    assign ID_calc_slow = alu_op_sel == `MUL    |
+                       alu_op_sel == `MULH   |
+                       alu_op_sel == `MULSU  |
+                       alu_op_sel == `MULU;
+
+    always @(posedge clk) begin
+        if (reset) begin
+            rd_queue <= 15'h0;
+        end else if (ID_calc_slow) begin
+            rd_queue <= {rd, rd_queue[14:5]};
+        end else begin
+            rd_queue <= {5'b0, rd_queue[14:5]};
+        end 
+    end
 
     control_logic ctrl_logic_0(
         .inst               (IF_inst),
@@ -150,10 +172,13 @@ module ID(
         .clk            (clk),
         .reset          (reset),
         .write_en       (WB_reg_w_en),
+        .write_en_mul   (WB_reg_w_en_mul),
         .rs1            (rs1),
         .rs2            (rs2),
         .dest           (WB_rd),
+        .dest_mul       (WB_rd_mul),
         .write_data     (WB_reg_w_data),
+        .write_data_mul (WB_reg_w_data_mul),
 
         .rs1_data       (ID_rs1_data),
         .rs2_data       (ID_rs2_data)

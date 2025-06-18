@@ -60,8 +60,13 @@ module hazard_unit(
     input [4:0] EX_rd, 
     input EX_load,     
 
+    input [14:0] rd_queue,
+
     output load_stall, 
-    output load_flush  
+    output load_flush,
+
+    output calc_stall,
+    output calc_flush
 
     );
 
@@ -92,6 +97,12 @@ module hazard_unit(
                                                                                     `FORWARD_NONE;
 
     assign load_stall = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
-    assign load_flush = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
+    assign load_flush = load_stall;
+
+    assign calc_stall = (ID_rs1 != 5'b0 & (rd_queue[9:5]   == ID_rs1 |
+                                           rd_queue[14:10] == ID_rs1)) |
+                        (ID_rs2 != 5'b0 & (rd_queue[9:5]   == ID_rs2 |
+                                           rd_queue[14:10] == ID_rs2));
+    assign calc_flush = calc_stall;
 
 endmodule

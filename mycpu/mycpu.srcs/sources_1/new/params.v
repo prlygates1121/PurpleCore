@@ -1,9 +1,9 @@
-// `define SIMULATION
+`define SIMULATION
 
 `ifdef SIMULATION
-    `define LOAD_AT_0X200
+    // `define LOAD_AT_0X200
 `else
-    `define DEBUG
+    // `define DEBUG
 `endif
 
 // `define VGA

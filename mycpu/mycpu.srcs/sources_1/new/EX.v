@@ -22,6 +22,9 @@
 
 
 module EX(
+    input clk,
+    input reset,
+
     input [3:0] ID_alu_op_sel,
     input ID_alu_src1_sel,
     input ID_alu_src2_sel,
@@ -67,6 +70,8 @@ module EX(
     input [31:0] ID_mepc,
     input [31:0] ID_mboot,
 
+    input ID_calc_slow,
+
     input ID_reset,
 
     output [31:0] EX_alu_result,                // -> MEM -> WB
@@ -104,7 +109,11 @@ module EX(
     output [31:0] EX_w_mcause,
 
     output EX_excp,
-    output inst_access_fault
+    output inst_access_fault,
+
+    output [31:0] EX_alu_mul_result,
+    output EX_reg_w_en_mul,
+    output [4:0] EX_rd_mul
 
     );
 
@@ -115,6 +124,8 @@ module EX(
     wire [31:0] alu_src2;
     reg [30:0] excp_code;
     wire EX_br_eq, EX_br_lt;
+
+    wire [3:0] alu_mul_op_sel;
 
     always @(*) begin
         excp_code = `NO_EXCP;
@@ -176,6 +187,44 @@ module EX(
         .src2(alu_src2),
         .op_sel(ID_alu_op_sel),
         .result(EX_alu_result)
+    );
+
+    alu_mul alu_mul_0 (
+        .clk(clk),
+        .src1(alu_src1),
+        .src2(alu_src2),
+        .op_sel(alu_mul_op_sel),
+        .result(EX_alu_mul_result)
+    );
+
+    shift_reg #(
+        .BIT_WIDTH      (4),
+        .DEPTH          (2)
+    ) shift_reg_op_sel (
+        .clk            (clk),
+        .reset          (reset),
+        .data_in        (ID_calc_slow ? ID_alu_op_sel : 0),
+        .data_out       (alu_mul_op_sel)
+    );
+
+    shift_reg #(
+        .BIT_WIDTH      (1),
+        .DEPTH          (2)
+    ) shift_reg_reg_w_en (
+        .clk            (clk),
+        .reset          (reset),
+        .data_in        (ID_calc_slow ? ID_reg_w_en : 0),
+        .data_out       (EX_reg_w_en_mul)
+    );
+
+    shift_reg #(
+        .BIT_WIDTH      (5),
+        .DEPTH          (2)
+    ) shift_reg_rd (
+        .clk            (clk),
+        .reset          (reset),
+        .data_in        (ID_calc_slow ? ID_rd : 0),
+        .data_out       (EX_rd_mul)
     );
 
     always @(*) begin
