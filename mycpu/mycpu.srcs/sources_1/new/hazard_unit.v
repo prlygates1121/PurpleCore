@@ -70,11 +70,16 @@ module hazard_unit(
 
     input [14:0] rd_queue,
 
+    input ID_reg_w_en,
+    input ID_rd,
+
     output load_stall, 
     output load_flush,
 
     output calc_stall,
-    output calc_flush
+    output calc_flush,
+
+    output write_disorder
 
     );
 
@@ -118,5 +123,7 @@ module hazard_unit(
                         (ID_rs2 != 5'b0 & (rd_queue[9:5]   == ID_rs2 |
                                            rd_queue[14:10] == ID_rs2));
     assign calc_flush = calc_stall;
+
+    assign write_disorder = ID_reg_w_en & (ID_rd == rd_queue[14:10]) & (ID_rd != 5'b0); 
 
 endmodule

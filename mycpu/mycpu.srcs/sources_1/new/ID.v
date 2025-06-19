@@ -31,6 +31,7 @@ module ID(
     input clk,
     input reset,
     input stall,
+    input write_disorder,
     
     input [31:0] IF_pc,
     input [31:0] IF_pc_plus_4,
@@ -125,9 +126,13 @@ module ID(
         if (reset) begin
             rd_queue <= 15'h0;
         end else if (ID_calc_slow & ~stall) begin
-            rd_queue <= {rd, rd_queue[14:5]};
+            rd_queue[14:10] <= rd;
+            rd_queue[9:5] <= write_disorder ? 5'b0 : rd_queue[14:10];
+            rd_queue[4:0] <= rd_queue[9:5];
         end else begin
-            rd_queue <= {5'b0, rd_queue[14:5]};
+            rd_queue[14:0] <= 5'b0;
+            rd_queue[9:5] <= write_disorder ? 5'b0 : rd_queue[14:10];
+            rd_queue[4:0] <= rd_queue[9:5];
         end 
     end
 
