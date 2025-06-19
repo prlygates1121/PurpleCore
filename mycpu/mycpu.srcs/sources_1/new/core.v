@@ -264,6 +264,7 @@ module core(
     // hazard_unit
     wire load_stall, load_flush;
     wire calc_stall, calc_flush;
+    wire write_disorder;
 
     // Memory
     wire [3:0] wea = 4'b0;
@@ -331,6 +332,7 @@ module core(
         .clk                    (clk),
         .reset                  (reset),
         .stall                  (calc_stall),
+        .write_disorder         (write_disorder),
         .IF_pc                  (ID_in_pc),
         .IF_pc_plus_4           (ID_in_pc_plus_4),
         .IF_inst                (ID_in_inst),
@@ -467,6 +469,7 @@ module core(
     EX ex_0 (
         .clk                        (clk),
         .reset                      (reset),
+        .write_disorder             (write_disorder),
         .ID_alu_op_sel              (EX_in_alu_op_sel),
         .ID_alu_mul_op_sel          (EX_in_alu_mul_op_sel),
         .ID_alu_src1_sel            (EX_in_alu_src1_sel),
@@ -738,6 +741,8 @@ module core(
         .MEM_csr_w_data              (MEM_out_csr_w_data),
         .WB_csr_w_data               (WB_out_csr_w_data),
         .rd_queue                    (rd_queue),
+        .ID_reg_w_en                 (ID_out_reg_w_en),
+        .ID_rd                       (ID_out_rd),
 
         .MEM_csr_w_data_forwarded    (MEM_csr_w_data_forwarded),
         .WB_csr_w_data_forwarded     (WB_csr_w_data_forwarded),
@@ -755,7 +760,8 @@ module core(
         .load_stall                  (load_stall),
         .load_flush                  (load_flush),
         .calc_stall                  (calc_stall),
-        .calc_flush                  (calc_flush)
+        .calc_flush                  (calc_flush),
+        .write_disorder              (write_disorder)
     );
 
 `ifdef BRANCH_PREDICT_ENA

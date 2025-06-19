@@ -24,6 +24,7 @@
 module EX(
     input clk,
     input reset,
+    input write_disorder,
 
     input [3:0] ID_alu_op_sel,
     input [3:0] ID_alu_mul_op_sel,
@@ -214,7 +215,7 @@ module EX(
     ) shift_reg_op_sel (
         .clk            (clk),
         .reset          (reset),
-        .data_in        (ID_alu_mul_op_sel),
+        .data_in        (write_disorder ? `ADD : ID_alu_mul_op_sel),
         .data_out       (alu_mul_op_sel)
     );
 
@@ -224,7 +225,7 @@ module EX(
     ) shift_reg_reg_w_en (
         .clk            (clk),
         .reset          (reset),
-        .data_in        (ID_reg_w_en_mul),
+        .data_in        (write_disorder ? 1'b0 : ID_reg_w_en_mul),
         .data_out       (EX_reg_w_en_mul)
     );
 
@@ -234,7 +235,7 @@ module EX(
     ) shift_reg_rd (
         .clk            (clk),
         .reset          (reset),
-        .data_in        (ID_rd_mul),
+        .data_in        (write_disorder ? 5'b0 : ID_rd_mul),
         .data_out       (EX_rd_mul)
     );
 
