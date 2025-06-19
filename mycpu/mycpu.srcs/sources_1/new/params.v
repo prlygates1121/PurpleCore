@@ -109,9 +109,11 @@
 `define ALU_SRC2_RS2            1'b1
 
 // forward_sel [1:0]
-`define FORWARD_PREV            2'b01
-`define FORWARD_PREV_PREV       2'b10
-`define FORWARD_NONE            2'b00
+`define FORWARD_PREV            3'd1
+`define FORWARD_PREV_PREV       3'd2
+`define FORWARD_PREV_MUL        3'd3
+`define FORWARD_PREV_PREV_MUL   3'd4
+`define FORWARD_NONE            3'd0
 
 // ring buffer operation [1:0]
 `define RING_PUSH               2'h0

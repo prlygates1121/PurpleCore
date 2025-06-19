@@ -170,9 +170,11 @@ module core(
     wire EX_out_reg_w_en_mul;
 
     wire [31:0] MEM_reg_w_data_forwarded;
+    wire [31:0] MEM_reg_w_data_mul_forwarded;
     wire [31:0] WB_reg_w_data_forwarded;
-    wire [1:0] forward_rs1_sel;
-    wire [1:0] forward_rs2_sel;
+    wire [31:0] WB_reg_w_data_mul_forwarded;
+    wire [2:0] forward_rs1_sel;
+    wire [2:0] forward_rs2_sel;
     wire [31:0] MEM_csr_w_data_forwarded;
     wire [31:0] WB_csr_w_data_forwarded;
     wire [1:0] forward_csr_sel;
@@ -201,6 +203,7 @@ module core(
     wire MEM_out_reg_w_en;
     wire [2:0] MEM_out_reg_w_data_sel;
     wire [31:0] MEM_out_reg_w_data;
+    wire [31:0] MEM_out_reg_w_data_mul;
     wire [31:0] MEM_out_pc_plus_4;
     wire [4:0] MEM_out_rd;
     wire [31:0] MEM_out_dmem_data;
@@ -486,7 +489,9 @@ module core(
         .ID_reset                   (ID_EX_reset),
 
         .MEM_reg_w_data_forwarded   (MEM_reg_w_data_forwarded),
+        .MEM_reg_w_data_mul_forwarded(MEM_reg_w_data_mul_forwarded),
         .WB_reg_w_data_forwarded    (WB_reg_w_data_forwarded),
+        .WB_reg_w_data_mul_forwarded(WB_reg_w_data_mul_forwarded),
         .forward_rs1_sel            (forward_rs1_sel),
         .forward_rs2_sel            (forward_rs2_sel),
 
@@ -605,6 +610,7 @@ module core(
         .MEM_reg_w_en_mul        (MEM_out_reg_w_en_mul),
         .MEM_reg_w_data_sel      (MEM_out_reg_w_data_sel),
         .MEM_reg_w_data          (MEM_out_reg_w_data),
+        .MEM_reg_w_data_mul      (MEM_out_reg_w_data_mul),
         .MEM_pc_plus_4           (MEM_out_pc_plus_4),
         .MEM_rd                  (MEM_out_rd),
         .MEM_rd_mul              (MEM_out_rd_mul),
@@ -690,11 +696,17 @@ module core(
 
     hazard_unit hazard_unit_0 (
         .MEM_rd                      (MEM_out_rd),
+        .MEM_rd_mul                  (MEM_out_rd_mul),
         .MEM_reg_w_en                (MEM_out_reg_w_en),
+        .MEM_reg_w_en_mul            (MEM_out_reg_w_en_mul),
         .MEM_reg_w_data              (MEM_out_reg_w_data),
+        .MEM_reg_w_data_mul          (MEM_out_reg_w_data_mul),
         .WB_rd                       (WB_out_rd),
+        .WB_rd_mul                   (WB_out_rd_mul),
         .WB_reg_w_en                 (WB_out_reg_w_en),
+        .WB_reg_w_en_mul             (WB_out_reg_w_en_mul),
         .WB_reg_w_data               (WB_out_reg_w_data),
+        .WB_reg_w_data_mul           (WB_out_reg_w_data_mul),
         .EX_rs1                      (EX_out_rs1),
         .EX_rs2                      (EX_out_rs2),
         .EX_ecall                    (EX_out_ecall), 
@@ -713,7 +725,9 @@ module core(
         .WB_csr_w_data_forwarded     (WB_csr_w_data_forwarded),
         .forward_csr_sel             (forward_csr_sel),
         .MEM_reg_w_data_forwarded    (MEM_reg_w_data_forwarded),
+        .MEM_reg_w_data_mul_forwarded(MEM_reg_w_data_mul_forwarded),
         .WB_reg_w_data_forwarded     (WB_reg_w_data_forwarded),
+        .WB_reg_w_data_mul_forwarded (WB_reg_w_data_mul_forwarded),
         .forward_rs1_sel             (forward_rs1_sel),
         .forward_rs2_sel             (forward_rs2_sel),
         .ID_rs1                      (ID_out_rs1),

@@ -24,12 +24,18 @@
 module hazard_unit(
 
     input [4:0] MEM_rd,         
+    input [4:0] MEM_rd_mul,
     input [31:0] MEM_reg_w_data,
+    input [31:0] MEM_reg_w_data_mul,
     input MEM_reg_w_en,
+    input MEM_reg_w_en_mul,
 
-    input [4:0] WB_rd,          
+    input [4:0] WB_rd,     
+    input [4:0] WB_rd_mul,     
     input [31:0] WB_reg_w_data, 
+    input [31:0] WB_reg_w_data_mul,
     input WB_reg_w_en,
+    input WB_reg_w_en_mul,
 
     input [2:0] EX_csr_op,
     input [4:0] EX_rs1,
@@ -48,11 +54,13 @@ module hazard_unit(
     input WB_csr_w_en,
 
     output [31:0] MEM_reg_w_data_forwarded,
+    output [31:0] MEM_reg_w_data_mul_forwarded,
     output [31:0] WB_reg_w_data_forwarded, 
+    output [31:0] WB_reg_w_data_mul_forwarded,
     output [31:0] MEM_csr_w_data_forwarded,
     output [31:0] WB_csr_w_data_forwarded,
-    output [1:0] forward_rs1_sel,
-    output [1:0] forward_rs2_sel,
+    output [2:0] forward_rs1_sel,
+    output [2:0] forward_rs2_sel,
     output [1:0] forward_csr_sel,
 
     input [4:0] ID_rs1,
@@ -71,15 +79,21 @@ module hazard_unit(
     );
 
     assign MEM_reg_w_data_forwarded = MEM_reg_w_data;
+    assign MEM_reg_w_data_mul_forwarded = MEM_reg_w_data_mul;
     assign WB_reg_w_data_forwarded = WB_reg_w_data;
+    assign WB_reg_w_data_mul_forwarded = WB_reg_w_data_mul;
 
     // when to forward? the same register (MEM_rd == EX_rs1) is previously written to (MEM_reg_w_en) and currently read (EX_rs1 != 5'b0)
     assign forward_rs1_sel = (MEM_reg_w_en & (EX_rs1 != 5'b0) & (MEM_rd == EX_rs1)) ? `FORWARD_PREV :
                              (WB_reg_w_en  & (EX_rs1 != 5'b0) & (WB_rd  == EX_rs1)) ? `FORWARD_PREV_PREV : 
+                             (MEM_reg_w_en_mul & (EX_rs1 != 5'b0) & (MEM_rd_mul == EX_rs1)) ? `FORWARD_PREV_MUL :
+                             (WB_reg_w_en_mul & (EX_rs1 != 5'b0) & (WB_rd_mul == EX_rs1)) ? `FORWARD_PREV_PREV_MUL :
                                                                                       `FORWARD_NONE;
 
     assign forward_rs2_sel = (MEM_reg_w_en & (EX_rs2 != 5'b0) & (MEM_rd == EX_rs2)) ? `FORWARD_PREV :
                              (WB_reg_w_en  & (EX_rs2 != 5'b0) & (WB_rd  == EX_rs2)) ? `FORWARD_PREV_PREV : 
+                             (MEM_reg_w_en_mul & (EX_rs2 != 5'b0) & (MEM_rd_mul == EX_rs2)) ? `FORWARD_PREV_MUL :
+                             (WB_reg_w_en_mul & (EX_rs2 != 5'b0) & (WB_rd_mul == EX_rs2)) ? `FORWARD_PREV_PREV_MUL :
                                                                                       `FORWARD_NONE;
 
     assign MEM_csr_w_data_forwarded = MEM_csr_w_data;

@@ -53,6 +53,7 @@ module MEM(
     output MEM_reg_w_en_mul,
     output [2:0] MEM_reg_w_data_sel,
     output [31:0] MEM_reg_w_data,
+    output [31:0] MEM_reg_w_data_mul,
     output [31:0] MEM_pc_plus_4,
     output [4:0] MEM_rd,
     output [4:0] MEM_rd_mul,
@@ -82,6 +83,7 @@ module MEM(
                             EX_reg_w_data_sel == `REG_W_DATA_PC  ? EX_pc_plus_4 :
                             EX_reg_w_data_sel == `REG_W_DATA_CSR ? EX_csr_r_data :
                             32'h0;
+    assign MEM_reg_w_data_mul = EX_alu_mul_result;
     assign MEM_pc_plus_4 = EX_pc_plus_4;
     assign MEM_rd = EX_rd;
     assign MEM_rd_mul = EX_rd_mul;

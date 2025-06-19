@@ -121,7 +121,7 @@ module ID(
     always @(posedge clk) begin
         if (reset) begin
             rd_queue <= 15'h0;
-        end else if (ID_calc_slow) begin
+        end else if (ID_calc_slow & ~stall) begin
             rd_queue <= {rd, rd_queue[14:5]};
         end else begin
             rd_queue <= {5'b0, rd_queue[14:5]};
