@@ -73,9 +73,11 @@ module core(
     wire [2:0] ID_out_load_width;
 
     wire [3:0] ID_out_alu_op_sel;
+    wire [3:0] ID_out_alu_mul_op_sel;
     wire ID_out_alu_src1_sel;
     wire ID_out_alu_src2_sel;
     wire ID_out_reg_w_en;
+    wire ID_out_reg_w_en_mul;
     wire [2:0] ID_out_reg_w_data_sel;
     wire ID_out_load_un;
     wire [31:0] ID_out_imm;
@@ -85,6 +87,7 @@ module core(
     wire [4:0] ID_out_rs1;
     wire [4:0] ID_out_rs2;
     wire [4:0] ID_out_rd;
+    wire [4:0] ID_out_rd_mul;
     wire [31:0] ID_out_pc;
     wire [31:0] ID_out_pc_plus_4;
     wire [31:0] ID_out_I_addr;
@@ -104,9 +107,11 @@ module core(
     wire ID_out_calc_slow;
 
     wire [3:0] EX_in_alu_op_sel;
+    wire [3:0] EX_in_alu_mul_op_sel;
     wire EX_in_alu_src1_sel;
     wire EX_in_alu_src2_sel;
     wire EX_in_reg_w_en;
+    wire EX_in_reg_w_en_mul;
     wire [2:0] EX_in_reg_w_data_sel;
     wire [1:0] EX_in_store_width;
     wire [2:0] EX_in_load_width;
@@ -118,6 +123,7 @@ module core(
     wire [4:0] EX_in_rs1;
     wire [4:0] EX_in_rs2;
     wire [4:0] EX_in_rd;
+    wire [4:0] EX_in_rd_mul;
     wire [31:0] EX_in_pc;
     wire [31:0] EX_in_pc_plus_4;
     wire [31:0] EX_in_I_addr;
@@ -343,9 +349,11 @@ module core(
         .WB_w_mepc              (WB_out_w_mepc),
         .WB_w_mcause            (WB_out_w_mcause),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
+        .ID_alu_mul_op_sel      (ID_out_alu_mul_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
         .ID_reg_w_en            (ID_out_reg_w_en),
+        .ID_reg_w_en_mul        (ID_out_reg_w_en_mul),
         .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
         .ID_store_width         (ID_out_store_width),
         .ID_load_width          (ID_out_load_width),
@@ -357,6 +365,7 @@ module core(
         .ID_rs1                 (ID_out_rs1),
         .ID_rs2                 (ID_out_rs2),
         .ID_rd                  (ID_out_rd),
+        .ID_rd_mul              (ID_out_rd_mul),
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
         .ID_I_addr              (ID_out_I_addr),
@@ -381,9 +390,11 @@ module core(
         .clk                    (clk),
         .reset                  (reset | load_flush | calc_flush | EX_branch_flush | EX_out_excp | EX_out_mret),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
+        .ID_alu_mul_op_sel      (ID_out_alu_mul_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
         .ID_reg_w_en            (ID_out_reg_w_en),
+        .ID_reg_w_en_mul        (ID_out_reg_w_en_mul),
         .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
         .ID_store_width         (ID_out_store_width),
         .ID_load_width          (ID_out_load_width),
@@ -395,6 +406,7 @@ module core(
         .ID_rs1                 (ID_out_rs1),
         .ID_rs2                 (ID_out_rs2),
         .ID_rd                  (ID_out_rd),
+        .ID_rd_mul              (ID_out_rd_mul),
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
         .ID_I_addr              (ID_out_I_addr),
@@ -415,9 +427,11 @@ module core(
         .ID_reset               (IF_ID_reset),
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
+        .EX_alu_mul_op_sel      (EX_in_alu_mul_op_sel),
         .EX_alu_src1_sel        (EX_in_alu_src1_sel),
         .EX_alu_src2_sel        (EX_in_alu_src2_sel),
         .EX_reg_w_en            (EX_in_reg_w_en),
+        .EX_reg_w_en_mul        (EX_in_reg_w_en_mul),
         .EX_reg_w_data_sel      (EX_in_reg_w_data_sel),
         .EX_store_width         (EX_in_store_width),
         .EX_load_width          (EX_in_load_width),
@@ -429,6 +443,7 @@ module core(
         .EX_rs1                 (EX_in_rs1),
         .EX_rs2                 (EX_in_rs2),
         .EX_rd                  (EX_in_rd),
+        .EX_rd_mul              (EX_in_rd_mul),
         .EX_pc                  (EX_in_pc),
         .EX_pc_plus_4           (EX_in_pc_plus_4),
         .EX_I_addr              (EX_in_I_addr),
@@ -453,6 +468,7 @@ module core(
         .clk                        (clk),
         .reset                      (reset),
         .ID_alu_op_sel              (EX_in_alu_op_sel),
+        .ID_alu_mul_op_sel          (EX_in_alu_mul_op_sel),
         .ID_alu_src1_sel            (EX_in_alu_src1_sel),
         .ID_alu_src2_sel            (EX_in_alu_src2_sel),
         .ID_imm                     (EX_in_imm),
@@ -463,10 +479,12 @@ module core(
         .ID_rs1                     (EX_in_rs1),
         .ID_rs2                     (EX_in_rs2),
         .ID_rd                      (EX_in_rd),
+        .ID_rd_mul                  (EX_in_rd_mul),
         .ID_store_width             (EX_in_store_width),
         .ID_load_width              (EX_in_load_width),
         .ID_load_un                 (EX_in_load_un),
         .ID_reg_w_en                (EX_in_reg_w_en),
+        .ID_reg_w_en_mul            (EX_in_reg_w_en_mul),
         .ID_reg_w_data_sel          (EX_in_reg_w_data_sel),
         .ID_pc                      (EX_in_pc),
         .ID_pc_plus_4               (EX_in_pc_plus_4),
@@ -539,7 +557,7 @@ module core(
 
     EX_MEM ex_mem_0 (
         .clk                     (clk),
-        .reset                   (reset | calc_flush),
+        .reset                   (reset),
         .EX_alu_result           (EX_out_alu_result),
         .EX_alu_mul_result       (EX_out_alu_mul_result),
         .EX_reg_w_en             (EX_out_reg_w_en),

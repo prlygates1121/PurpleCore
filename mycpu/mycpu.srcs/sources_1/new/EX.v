@@ -26,6 +26,7 @@ module EX(
     input reset,
 
     input [3:0] ID_alu_op_sel,
+    input [3:0] ID_alu_mul_op_sel,
     input ID_alu_src1_sel,
     input ID_alu_src2_sel,
     input [31:0] ID_imm,
@@ -37,12 +38,14 @@ module EX(
     input [4:0] ID_rs1,
     input [4:0] ID_rs2,
     input [4:0] ID_rd,
+    input [4:0] ID_rd_mul,
 
     input [1:0] ID_store_width,
     input [2:0] ID_load_width,
     input ID_load_un,
 
     input ID_reg_w_en,
+    input ID_reg_w_en_mul,
     input [2:0] ID_reg_w_data_sel,
 
     input [31:0] ID_pc,
@@ -211,7 +214,7 @@ module EX(
     ) shift_reg_op_sel (
         .clk            (clk),
         .reset          (reset),
-        .data_in        (ID_calc_slow ? ID_alu_op_sel : 0),
+        .data_in        (ID_alu_mul_op_sel),
         .data_out       (alu_mul_op_sel)
     );
 
@@ -221,7 +224,7 @@ module EX(
     ) shift_reg_reg_w_en (
         .clk            (clk),
         .reset          (reset),
-        .data_in        (ID_calc_slow ? ID_reg_w_en : 0),
+        .data_in        (ID_reg_w_en_mul),
         .data_out       (EX_reg_w_en_mul)
     );
 
@@ -231,7 +234,7 @@ module EX(
     ) shift_reg_rd (
         .clk            (clk),
         .reset          (reset),
-        .data_in        (ID_calc_slow ? ID_rd : 0),
+        .data_in        (ID_rd_mul),
         .data_out       (EX_rd_mul)
     );
 

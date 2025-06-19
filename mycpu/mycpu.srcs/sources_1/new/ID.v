@@ -51,9 +51,11 @@ module ID(
     input [31:0] WB_w_mcause,
 
     output [3:0] ID_alu_op_sel,
+    output [3:0] ID_alu_mul_op_sel,
     output ID_alu_src1_sel,
     output ID_alu_src2_sel,
     output ID_reg_w_en,
+    output ID_reg_w_en_mul,
     output [2:0] ID_reg_w_data_sel,
     output [1:0] ID_store_width,
     output [2:0] ID_load_width,
@@ -65,6 +67,7 @@ module ID(
     output [4:0] ID_rs1,
     output [4:0] ID_rs2,
     output [4:0] ID_rd,
+    output [4:0] ID_rd_mul,
     output [31:0] ID_pc,
     output [31:0] ID_pc_plus_4,
     output [31:0] ID_I_addr,
@@ -214,10 +217,12 @@ module ID(
         .r_mboot        (ID_mboot)
     );
 
-    assign ID_alu_op_sel = alu_op_sel;
+    assign ID_alu_op_sel = ID_calc_slow ? `ADD : alu_op_sel;
+    assign ID_alu_mul_op_sel = ID_calc_slow ? alu_op_sel : `ADD;
     assign ID_alu_src1_sel = alu_src1_sel;
     assign ID_alu_src2_sel = alu_src2_sel;
-    assign ID_reg_w_en = reg_w_en;
+    assign ID_reg_w_en = ID_calc_slow ? 1'b0 : reg_w_en;
+    assign ID_reg_w_en_mul = ID_calc_slow ? reg_w_en : 1'b0;
     assign ID_reg_w_data_sel = reg_w_data_sel;
     assign ID_store_width = D_store_width;
     assign ID_load_width = D_load_width;
@@ -226,7 +231,8 @@ module ID(
     assign ID_br_un = br_un;
     assign ID_rs1 = rs1;
     assign ID_rs2 = rs2;
-    assign ID_rd = rd;
+    assign ID_rd = ID_calc_slow ? 5'b0 : rd;
+    assign ID_rd_mul = ID_calc_slow ? rd : 5'b0;
     assign ID_pc = IF_pc;
     assign ID_pc_plus_4 = IF_pc_plus_4;
     assign ID_I_addr = IF_I_addr;
