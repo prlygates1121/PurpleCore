@@ -25,6 +25,7 @@ module EX(
     input clk,
     input reset,
     input write_disorder,
+    input write_disorder,
 
     input [3:0] ID_alu_op_sel,
     input [3:0] ID_alu_mul_op_sel,
