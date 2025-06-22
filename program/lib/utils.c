@@ -6,6 +6,14 @@ uint32_t strlen(const char *str) {
     return (s - str);
 }
 
+void *memset(void *ptr, int value, unsigned int num) {
+    volatile unsigned char *p = ptr;
+    for (volatile unsigned int i = 0; i < num; i++) {
+        p[i] = (unsigned char)value;
+    }
+    return ptr;
+}
+
 // Helper function to reverse a string
 // str: The character array to reverse
 // length: The length of the string in the array
