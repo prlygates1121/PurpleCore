@@ -45,7 +45,6 @@ module IF (
     output [31:0] IF_pc,
     output [31:0] IF_pc_plus_4,
     output [31:0] IF_inst,
-    output [31:0] IF_I_addr,
 
     input branch_predict,
     input [31:0] branch_target
@@ -86,5 +85,4 @@ module IF (
     assign IF_pc_plus_4 = pc + 4;
     assign IF_inst = (reset) ? `NOP : I_load_data;
     assign I_addr = pc;
-    assign IF_I_addr = I_addr;
 endmodule

@@ -34,7 +34,6 @@ module EX(
     input [31:0] ID_rs1_data,
     input [31:0] ID_rs2_data,
     input ID_br_un,
-    input [31:0] ID_I_addr,
 
     input [4:0] ID_rs1,
     input [4:0] ID_rs2,
@@ -171,7 +170,7 @@ module EX(
     assign fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
                           (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  : ID_csr_r_data;
 
-    assign alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? fwd_rs1_data : ID_I_addr;
+    assign alu_src1 = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? fwd_rs1_data : ID_pc;
     assign alu_src2 = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? fwd_rs2_data : ID_imm;
 
     assign EX_w_mcause = EX_excp ? {1'b0, excp_code} : `CSR_NO_WRITE;

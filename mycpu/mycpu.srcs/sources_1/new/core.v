@@ -64,9 +64,8 @@ module core(
 
     wire inst_access_fault;
 
-    wire [31:0] IF_I_addr, I_load_data;
-    wire [31:0] IF_out_pc, IF_out_pc_plus_4, IF_out_inst, IF_out_I_addr;
-    wire [31:0] ID_in_pc, ID_in_pc_plus_4, ID_in_inst, ID_in_I_addr;
+    wire [31:0] IF_out_pc, IF_out_pc_plus_4, IF_out_inst;
+    wire [31:0] ID_in_pc, ID_in_pc_plus_4, ID_in_inst;
     wire IF_ID_reset;
     wire ID_in_branch_predict;
     wire [1:0] ID_out_store_width;
@@ -90,7 +89,6 @@ module core(
     wire [4:0] ID_out_rd_mul;
     wire [31:0] ID_out_pc;
     wire [31:0] ID_out_pc_plus_4;
-    wire [31:0] ID_out_I_addr;
     wire [31:0] ID_out_inst;
     wire ID_out_jal;
     wire ID_out_jalr;
@@ -126,7 +124,6 @@ module core(
     wire [4:0] EX_in_rd_mul;
     wire [31:0] EX_in_pc;
     wire [31:0] EX_in_pc_plus_4;
-    wire [31:0] EX_in_I_addr;
     wire EX_in_jal;
     wire EX_in_jalr;
     wire [2:0] EX_in_branch_type;
@@ -268,8 +265,9 @@ module core(
 
     // Memory
     wire [3:0] wea = 4'b0;
-    wire [31:0] I_addr = IF_I_addr;
+    wire [31:0] I_addr;
     wire [31:0] I_store_data = 32'b0;
+    wire [31:0] I_load_data;
     wire [31:0] D_addr, D_store_data, D_load_data;
     wire [1:0] D_store_width;
     wire [2:0] D_load_width;
@@ -291,13 +289,12 @@ module core(
         .EX_pc_plus_4               (EX_out_pc_plus_4),
         .EX_branch_predict          (EX_out_branch_predict),
 
-        .I_addr                     (IF_I_addr),
+        .I_addr                     (I_addr),
         .I_load_data                (I_load_data),
 
         .IF_pc                      (IF_out_pc),
         .IF_pc_plus_4               (IF_out_pc_plus_4),
         .IF_inst                    (IF_out_inst),
-        .IF_I_addr                  (IF_out_I_addr),
 
         .branch_predict             (branch_predict),
         .branch_target              (branch_target)
@@ -311,13 +308,11 @@ module core(
         .IF_pc                  (IF_out_pc),
         .IF_pc_plus_4           (IF_out_pc_plus_4),
         .IF_inst                (IF_out_inst),
-        .IF_I_addr              (IF_out_I_addr),
         .IF_branch_predict      (branch_predict),
 
         .ID_pc                  (ID_in_pc),
         .ID_pc_plus_4           (ID_in_pc_plus_4),
         .ID_inst                (ID_in_inst),
-        .ID_I_addr              (ID_in_I_addr),
         .ID_branch_predict      (ID_in_branch_predict),
         .ID_reset               (IF_ID_reset)
     );
@@ -336,7 +331,6 @@ module core(
         .IF_pc                  (ID_in_pc),
         .IF_pc_plus_4           (ID_in_pc_plus_4),
         .IF_inst                (ID_in_inst),
-        .IF_I_addr              (ID_in_I_addr),
         .IF_branch_predict      (ID_in_branch_predict),
         .WB_reg_w_data          (WB_out_reg_w_data),
         .WB_reg_w_data_mul      (WB_out_reg_w_data_mul),
@@ -370,7 +364,6 @@ module core(
         .ID_rd_mul              (ID_out_rd_mul),
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
-        .ID_I_addr              (ID_out_I_addr),
         .ID_jal                 (ID_out_jal),
         .ID_jalr                (ID_out_jalr),
         .ID_branch_type         (ID_out_branch_type),
@@ -411,7 +404,6 @@ module core(
         .ID_rd_mul              (ID_out_rd_mul),
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
-        .ID_I_addr              (ID_out_I_addr),
         .ID_jal                 (ID_out_jal),
         .ID_jalr                (ID_out_jalr),
         .ID_branch_type         (ID_out_branch_type),
@@ -448,7 +440,6 @@ module core(
         .EX_rd_mul              (EX_in_rd_mul),
         .EX_pc                  (EX_in_pc),
         .EX_pc_plus_4           (EX_in_pc_plus_4),
-        .EX_I_addr              (EX_in_I_addr),
         .EX_jal                 (EX_in_jal),
         .EX_jalr                (EX_in_jalr),
         .EX_branch_type         (EX_in_branch_type),
@@ -478,7 +469,6 @@ module core(
         .ID_rs1_data                (EX_in_rs1_data),
         .ID_rs2_data                (EX_in_rs2_data),
         .ID_br_un                   (EX_in_br_un),
-        .ID_I_addr                  (EX_in_I_addr),
         .ID_rs1                     (EX_in_rs1),
         .ID_rs2                     (EX_in_rs2),
         .ID_rd                      (EX_in_rd),

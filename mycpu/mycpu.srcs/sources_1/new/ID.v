@@ -36,7 +36,6 @@ module ID(
     input [31:0] IF_pc,
     input [31:0] IF_pc_plus_4,
     input [31:0] IF_inst,
-    input [31:0] IF_I_addr,
     input IF_branch_predict,
     input [31:0] WB_reg_w_data,
     input [31:0] WB_reg_w_data_mul,
@@ -71,7 +70,6 @@ module ID(
     output [4:0] ID_rd_mul,
     output [31:0] ID_pc,
     output [31:0] ID_pc_plus_4,
-    output [31:0] ID_I_addr,
     output ID_jal,
     output ID_jalr,
     output [2:0] ID_branch_type,
@@ -240,7 +238,6 @@ module ID(
     assign ID_rd_mul = ID_calc_slow ? rd : 5'b0;
     assign ID_pc = IF_pc;
     assign ID_pc_plus_4 = IF_pc_plus_4;
-    assign ID_I_addr = IF_I_addr;
     assign ID_branch_predict = IF_branch_predict;
     assign ID_inst = IF_inst;
     assign ID_csr_addr = csr_addr;
