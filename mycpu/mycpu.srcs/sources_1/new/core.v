@@ -788,9 +788,9 @@ module core(
         .I_load_data                (I_load_data),
 
         .D_en                       (1'b1),
-        .D_addr                     (D_addr),
-        .D_store_data               (D_store_data),
-        .D_store_width              (D_store_width),
+        .D_addr                     (EX_out_alu_result),
+        .D_store_data               (EX_out_rs2_data),
+        .D_store_width              (EX_out_store_width),
         .D_load_data                (D_load_data),
         .D_load_width               (D_load_width),
         .D_load_un                  (D_load_un),

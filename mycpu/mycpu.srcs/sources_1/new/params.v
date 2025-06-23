@@ -1,4 +1,4 @@
-`define SIMULATION
+// `define SIMULATION
 
 `ifdef SIMULATION
     // `define LOAD_AT_0X200
@@ -6,7 +6,7 @@
     // `define DEBUG
 `endif
 
-// `define VGA
+`define VGA
 `define BRANCH_PREDICT_ENA
 
 `define S_BOOTLOADER            32'h0000_0000
@@ -34,7 +34,7 @@
 
 // Frequencies
 `define CLK_100_FREQ            32'd100_000_000
-`define CLK_MAIN_FREQ           32'd40_000_000
+`define CLK_MAIN_FREQ           32'd50_000_000
 `ifdef SIMULATION
     `define UART_FREQ               32'd2_000_000
 `else

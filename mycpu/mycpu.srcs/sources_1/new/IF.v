@@ -57,10 +57,11 @@ module IF (
     wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest :
                           EX_false_target ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
                           EX_false_direction ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
+                          stall ? pc :
                           branch_predict ? branch_target :
                           (pc + 4);
 `else 
-    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest : EX_pc_sel ? EX_alu_result : (pc + 4);
+    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest : EX_pc_sel ? EX_alu_result : stall ? pc : (pc + 4);
 `endif
 
     always @(posedge clk) begin
@@ -84,5 +85,5 @@ module IF (
     assign IF_pc = pc;
     assign IF_pc_plus_4 = pc + 4;
     assign IF_inst = (reset) ? `NOP : I_load_data;
-    assign I_addr = pc;
+    assign I_addr = reset ? pc : pc_next;
 endmodule
