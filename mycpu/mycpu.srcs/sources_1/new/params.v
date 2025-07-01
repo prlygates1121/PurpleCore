@@ -1,4 +1,4 @@
-// `define SIMULATION
+`define SIMULATION
 
 `ifdef SIMULATION
     // `define LOAD_AT_0X200
