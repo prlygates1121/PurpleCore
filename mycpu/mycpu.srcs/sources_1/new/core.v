@@ -176,6 +176,8 @@ module core(
     wire [31:0] MEM_reg_w_data_mul_forwarded;
     wire [31:0] WB_reg_w_data_forwarded;
     wire [31:0] WB_reg_w_data_mul_forwarded;
+    wire [31:0] POST_WB_reg_w_data_forwarded;
+    wire [31:0] POST_WB_reg_w_data_mul_forwarded;
     wire [2:0] forward_rs1_sel;
     wire [2:0] forward_rs2_sel;
     wire [31:0] MEM_csr_w_data_forwarded;
@@ -241,6 +243,9 @@ module core(
     wire WB_out_reg_w_en;
     wire [31:0] WB_out_reg_w_data;
     wire [4:0] WB_out_rd;
+    wire POST_WB_out_reg_w_en;
+    wire [31:0] POST_WB_out_reg_w_data;
+    wire [4:0] POST_WB_out_rd;
     wire [11:0] WB_out_csr_addr;
     wire [31:0] WB_out_csr_w_data;
     wire WB_out_csr_w_en;
@@ -250,6 +255,10 @@ module core(
     wire [31:0] WB_out_reg_w_data_mul;
     wire [4:0] WB_out_rd_mul;
     wire WB_out_reg_w_en_mul;
+    wire [31:0] POST_WB_out_reg_w_data_mul;
+    wire [4:0] POST_WB_out_rd_mul;
+    wire POST_WB_out_reg_w_en_mul;
+    
 
     // branch_prediction_unit
     wire branch_predict;
@@ -503,6 +512,8 @@ module core(
         .MEM_reg_w_data_mul_forwarded(MEM_reg_w_data_mul_forwarded),
         .WB_reg_w_data_forwarded    (WB_reg_w_data_forwarded),
         .WB_reg_w_data_mul_forwarded(WB_reg_w_data_mul_forwarded),
+        .POST_WB_reg_w_data_forwarded    (POST_WB_reg_w_data_forwarded),
+        .POST_WB_reg_w_data_mul_forwarded(POST_WB_reg_w_data_mul_forwarded),
         .forward_rs1_sel            (forward_rs1_sel),
         .forward_rs2_sel            (forward_rs2_sel),
 
@@ -662,7 +673,7 @@ module core(
         .WB_pc_plus_4            (WB_in_pc_plus_4),
         .WB_rd                   (WB_in_rd),
         .WB_rd_mul               (WB_in_rd_mul),
-        .WB_dmem_data            (WB_in_dmem_data),
+        .WB_dmem_data            (),
         .WB_alu_result           (WB_in_alu_result),
         .WB_alu_mul_result       (WB_in_alu_mul_result),
         .WB_csr_addr             (WB_in_csr_addr),
@@ -675,6 +686,8 @@ module core(
     );
 
     WB wb_0 (
+        .clk                     (clk),
+        .reset                   (reset),
         .MEM_reg_w_en            (WB_in_reg_w_en),
         .MEM_reg_w_en_mul        (WB_in_reg_w_en_mul),
         .MEM_reg_w_data_sel      (WB_in_reg_w_data_sel),
@@ -697,6 +710,12 @@ module core(
         .WB_reg_w_data_mul       (WB_out_reg_w_data_mul),
         .WB_rd                   (WB_out_rd),
         .WB_rd_mul               (WB_out_rd_mul),
+        .POST_WB_reg_w_en        (POST_WB_out_reg_w_en),
+        .POST_WB_reg_w_en_mul    (POST_WB_out_reg_w_en_mul),
+        .POST_WB_reg_w_data      (POST_WB_out_reg_w_data),
+        .POST_WB_reg_w_data_mul  (POST_WB_out_reg_w_data_mul),
+        .POST_WB_rd              (POST_WB_out_rd),
+        .POST_WB_rd_mul          (POST_WB_out_rd_mul),
         .WB_csr_addr             (WB_out_csr_addr),
         .WB_csr_w_data           (WB_out_csr_w_data),
         .WB_csr_w_en             (WB_out_csr_w_en),
@@ -718,6 +737,12 @@ module core(
         .WB_reg_w_en_mul             (WB_out_reg_w_en_mul),
         .WB_reg_w_data               (WB_out_reg_w_data),
         .WB_reg_w_data_mul           (WB_out_reg_w_data_mul),
+        .POST_WB_rd                  (POST_WB_out_rd),
+        .POST_WB_rd_mul              (POST_WB_out_rd_mul),
+        .POST_WB_reg_w_en            (POST_WB_out_reg_w_en),
+        .POST_WB_reg_w_en_mul        (POST_WB_out_reg_w_en_mul),
+        .POST_WB_reg_w_data          (POST_WB_out_reg_w_data),
+        .POST_WB_reg_w_data_mul      (POST_WB_out_reg_w_data_mul),
         .EX_rs1                      (EX_out_rs1),
         .EX_rs2                      (EX_out_rs2),
         .EX_ecall                    (EX_out_ecall), 
@@ -741,6 +766,8 @@ module core(
         .MEM_reg_w_data_mul_forwarded(MEM_reg_w_data_mul_forwarded),
         .WB_reg_w_data_forwarded     (WB_reg_w_data_forwarded),
         .WB_reg_w_data_mul_forwarded (WB_reg_w_data_mul_forwarded),
+        .POST_WB_reg_w_data_forwarded     (POST_WB_reg_w_data_forwarded),
+        .POST_WB_reg_w_data_mul_forwarded (POST_WB_reg_w_data_mul_forwarded),
         .forward_rs1_sel             (forward_rs1_sel),
         .forward_rs2_sel             (forward_rs2_sel),
         .ID_rs1                      (ID_out_rs1),
@@ -791,7 +818,7 @@ module core(
         .D_addr                     (D_addr),
         .D_store_data               (D_store_data),
         .D_store_width              (D_store_width),
-        .D_load_data                (D_load_data),
+        .D_load_data                (WB_in_dmem_data),
         .D_load_width               (D_load_width),
         .D_load_un                  (D_load_un),
 

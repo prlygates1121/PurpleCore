@@ -1,4 +1,4 @@
-`define SIMULATION
+// `define SIMULATION
 
 `ifdef SIMULATION
     // `define LOAD_AT_0X200
@@ -6,7 +6,7 @@
     // `define DEBUG
 `endif
 
-// `define VGA
+`define VGA
 `define BRANCH_PREDICT_ENA
 
 `define S_BOOTLOADER            32'h0000_0000
@@ -111,8 +111,10 @@
 // forward_sel [1:0]
 `define FORWARD_PREV            3'd1
 `define FORWARD_PREV_PREV       3'd2
+`define FORWARD_PREV_PREV_PREV  3'd5
 `define FORWARD_PREV_MUL        3'd3
 `define FORWARD_PREV_PREV_MUL   3'd4
+`define FORWARD_PREV_PREV_PREV_MUL 3'd6
 `define FORWARD_NONE            3'd0
 
 // ring buffer operation [1:0]

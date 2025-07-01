@@ -87,7 +87,12 @@ module my_blk_mem(
             if (wea[3]) ram[addra][31:24] <= dina[31:24];
             
             // Read operation (WRITE_FIRST mode)
-            douta <= ram[addra];
+            if (wea != 4'b0000) begin
+                douta <= dina;  // If writing, output the written data
+            end else begin
+                // If not writing, read from memory
+                douta <= ram[addra];
+            end
         end
     end
 
@@ -101,7 +106,12 @@ module my_blk_mem(
             if (web[3]) ram[addrb][31:24] <= dinb[31:24];
             
             // Read operation (WRITE_FIRST mode)
-            doutb <= ram[addrb];
+            if (web != 4'b0000) begin
+                doutb <= dinb;  // If writing, output the written data
+            end else begin
+                // If not writing, read from memory
+                doutb <= ram[addrb];
+            end
         end
     end
 

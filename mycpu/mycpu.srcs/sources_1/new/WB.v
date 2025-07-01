@@ -22,6 +22,9 @@
 
 
 module WB(
+    input clk,
+    input reset,
+
     input MEM_reg_w_en,
     input MEM_reg_w_en_mul,
     input [2:0] MEM_reg_w_data_sel,
@@ -45,6 +48,14 @@ module WB(
     output [31:0] WB_reg_w_data_mul,
     output [4:0] WB_rd,
     output [4:0] WB_rd_mul,
+
+    output reg POST_WB_reg_w_en,
+    output reg POST_WB_reg_w_en_mul,
+    output reg [31:0] POST_WB_reg_w_data,
+    output reg [31:0] POST_WB_reg_w_data_mul,
+    output reg [4:0] POST_WB_rd,
+    output reg [4:0] POST_WB_rd_mul,
+
     output [11:0] WB_csr_addr,
     output [31:0] WB_csr_w_data,
     output WB_csr_w_en,
@@ -53,6 +64,24 @@ module WB(
     output [31:0] WB_w_mcause
 
     );
+
+    always @(posedge clk) begin
+        if (reset) begin
+            POST_WB_reg_w_en <= 1'b0;
+            POST_WB_reg_w_en_mul <= 1'b0;
+            POST_WB_reg_w_data <= 32'h0;
+            POST_WB_reg_w_data_mul <= 32'h0;
+            POST_WB_rd <= 5'h0;
+            POST_WB_rd_mul <= 5'h0;
+        end else begin
+            POST_WB_reg_w_en <= MEM_reg_w_en;
+            POST_WB_reg_w_en_mul <= MEM_reg_w_en_mul;
+            POST_WB_reg_w_data <= WB_reg_w_data;
+            POST_WB_reg_w_data_mul <= WB_reg_w_data_mul;
+            POST_WB_rd <= MEM_rd;
+            POST_WB_rd_mul <= MEM_rd_mul;
+        end
+    end
 
     assign WB_reg_w_data = MEM_reg_w_data_sel == `REG_W_DATA_ALU ? MEM_alu_result :
                            MEM_reg_w_data_sel == `REG_W_DATA_MEM ? MEM_dmem_data :

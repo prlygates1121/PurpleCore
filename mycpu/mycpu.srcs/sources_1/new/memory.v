@@ -64,6 +64,10 @@ module memory(
     input uart_tx_ready,
     output reg [31:0] uart_ctrl
 );
+    reg [31:0] D_addr_prev;
+    wire [31:0] D_addr_real;
+    reg [2:0] D_load_width_prev;
+    wire [2:0] D_load_width_real;
     wire store, load;
     wire [1:0] byte_offset;
     wire [31:0] load_word;
@@ -77,14 +81,14 @@ module memory(
 
 `ifdef SIMULATION
     my_blk_mem main_memory(
-        .clka(~clk),
+        .clka(clk),
         .ena(I_en),
         .wea(I_write_en),
         .addra(I_addr[15:2]),
         .dina(I_store_data),
         .douta(I_load_data),
 
-        .clkb(~clk),
+        .clkb(clk),
         .enb(D_en),
         .web(web),
         .addrb(D_addr[15:2]),
@@ -93,13 +97,13 @@ module memory(
     );
 `else
     blk_mem main_memory(
-        .clka(~clk),
+        .clka(clk),
         .ena(I_en),
         .wea(I_write_en),
         .addra(I_addr[15:2]),
         .dina(I_store_data),
         .douta(I_load_data),
-        .clkb(~clk),
+        .clkb(clk),
         .enb(D_en),
         .web(web),
         .addrb(D_addr[15:2]),
@@ -126,21 +130,39 @@ module memory(
                                                     |
                                                     --!io_en--- io_load_word  <---io_sel--- I/Os
     */
+
+    always @(posedge clk) begin
+        if (reset) begin
+            D_addr_prev <= 32'h0;
+            D_load_width_prev <= 3'h0;
+        end else begin
+            D_addr_prev <= D_addr;
+            D_load_width_prev <= D_load_width;
+        end
+    end
+
+    assign D_addr_real = load ? D_addr_prev : 
+                         store ? D_addr :
+                         32'h0;
     
-    assign byte_offset = D_addr[1:0];
+    assign D_load_width_real = load ? D_load_width_prev : 
+                               store ? D_load_width :
+                               3'h0;
+
+    assign byte_offset = D_addr_real[1:0];
     assign store = D_store_width != 2'h3;
     assign load  = D_load_width  != 3'h3;
 
     // select from uart data register and uart status register
-    assign uart_sel = D_addr[5:2];
+    assign uart_sel = D_addr_real[5:2];
     // 
     assign uart_read = (io_sel == UART) & (uart_sel == UART_DATA_REG) & load;
     assign uart_write = (io_sel == UART) & (uart_sel == UART_DATA_REG) & store;
 
     // io_en: the instruction is accessing memory mapped I/O
-    assign io_en = D_addr[31];
+    assign io_en = D_addr_real[31];
     // io_sel: select a type of I/O
-    assign io_sel = D_addr[30:20];
+    assign io_sel = D_addr_real[30:20];
     // io_load_word: the data loaded from memory mapped I/O
     assign io_load_word = io_sel == SYS_INFO    ? 32'h0 :
                           io_sel == SW          ? {16'h0, sws_l, sws_r} : 
@@ -159,13 +181,13 @@ module memory(
     assign load_word = io_en ? io_load_word : mem_load_word;
 
     // D_load_data: the part-selected data of load_word
-    assign D_load_data = (D_load_width == `LOAD_BYTE | D_load_width == `LOAD_BYTE_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {24{1'b0}} : {24{load_word[7]}}), load_word[7:0]} :
+    assign D_load_data = (D_load_width_real == `LOAD_BYTE | D_load_width_real == `LOAD_BYTE_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {24{1'b0}} : {24{load_word[7]}}), load_word[7:0]} :
                                                                                          byte_offset == 2'h1 ? {(D_load_un ? {24{1'b0}} : {24{load_word[15]}}), load_word[15:8]} :
                                                                                          byte_offset == 2'h2 ? {(D_load_un ? {24{1'b0}} : {24{load_word[24]}}), load_word[23:16]} :
                                                                                          byte_offset == 2'h3 ? {(D_load_un ? {24{1'b0}} : {24{load_word[31]}}), load_word[31:24]} : 32'h0) :
-                         (D_load_width == `LOAD_HALF | D_load_width == `LOAD_HALF_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
+                         (D_load_width_real == `LOAD_HALF | D_load_width_real == `LOAD_HALF_UN) ? (byte_offset == 2'h0 ? {(D_load_un ? {16{1'b0}} : {16{load_word[15]}}), load_word[15:0]} :
                                                                                          byte_offset == 2'h2 ? {(D_load_un ? {16{1'b0}} : {16{load_word[31]}}), load_word[31:16]} : 32'h0) :
-                          D_load_width == `LOAD_WORD ? (byte_offset == 2'h0 ? load_word : 32'h0) : 
+                          D_load_width_real == `LOAD_WORD ? (byte_offset == 2'h0 ? load_word : 32'h0) : 
                                                                                           32'h0;
 
     // we: global write enable signal, determined directly by the store width and the byte offset
@@ -231,7 +253,7 @@ module memory(
     `ifdef VGA
         blk_mem_vga vga_memory(
             // ports by which VGA controller reads data from memory
-            .clka(~clk_pixel),
+            .clka(clk_pixel),
             .ena(1'b1),
             .wea(4'b0),
             .addra(vga_addr[17:2]), // valid vga address is 17 bits
@@ -239,7 +261,7 @@ module memory(
             .douta(vga_data),
 
             // ports by which CPU writes data to memory
-            .clkb(~clk),
+            .clkb(clk),
             .enb(1'b1),
             .web(wevga),
             .addrb(D_addr[17:2]),   // valid vga address is 17 bits

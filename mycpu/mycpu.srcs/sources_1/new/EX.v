@@ -61,6 +61,8 @@ module EX(
     input [31:0] MEM_reg_w_data_mul_forwarded,
     input [31:0] WB_reg_w_data_forwarded,
     input [31:0] WB_reg_w_data_mul_forwarded,
+    input [31:0] POST_WB_reg_w_data_forwarded,
+    input [31:0] POST_WB_reg_w_data_mul_forwarded,
     input [2:0] forward_rs1_sel,
     input [2:0] forward_rs2_sel,
 
@@ -159,13 +161,17 @@ module EX(
 
     assign fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
                           (forward_rs1_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  :
+                          (forward_rs1_sel == `FORWARD_PREV_PREV_PREV) ? POST_WB_reg_w_data_forwarded :
                           (forward_rs1_sel == `FORWARD_PREV_MUL)   ? MEM_reg_w_data_mul_forwarded :
                           (forward_rs1_sel == `FORWARD_PREV_PREV_MUL) ? WB_reg_w_data_mul_forwarded :
+                          (forward_rs1_sel == `FORWARD_PREV_PREV_PREV_MUL) ? POST_WB_reg_w_data_mul_forwarded :
                         ID_rs1_data;
     assign fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)       ? MEM_reg_w_data_forwarded :
                           (forward_rs2_sel == `FORWARD_PREV_PREV)  ? WB_reg_w_data_forwarded  :
+                          (forward_rs2_sel == `FORWARD_PREV_PREV_PREV) ? POST_WB_reg_w_data_forwarded :
                           (forward_rs2_sel == `FORWARD_PREV_MUL)   ? MEM_reg_w_data_mul_forwarded :
                           (forward_rs2_sel == `FORWARD_PREV_PREV_MUL) ? WB_reg_w_data_mul_forwarded :
+                          (forward_rs2_sel == `FORWARD_PREV_PREV_PREV_MUL) ? POST_WB_reg_w_data_mul_forwarded :
                         ID_rs2_data;
     assign fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
                           (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  : ID_csr_r_data;
@@ -279,12 +285,8 @@ module EX(
     assign EX_ecall = ID_ecall;
     assign EX_mret = ID_mret;
     assign EX_trap_dest = (ID_ecall | EX_excp) ? 
-                                     ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
-                                      (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  :
-                                       ID_mtvec) :
-                          ID_mret  ? ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded :
-                                      (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  :
-                                       ID_mepc) : 
+                                       ID_mtvec :
+                          ID_mret  ? ID_mepc : 
                                      32'h0;
     assign EX_csr_addr = ID_csr_addr;
     assign EX_csr_r_data = fwd_csr_data;
