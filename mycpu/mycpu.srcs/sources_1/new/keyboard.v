@@ -22,14 +22,14 @@
 
 
 module keyboard(
-    output debug_shift,
-    output [7:0] debug_scan_code,
+    output              debug_shift,
+    output [7:0]        debug_scan_code,
 
-    input clk,
-    input reset,
-    input ps2_clk,
-    input ps2_data,
-    output reg [7:0] key_code
+    input               clk,
+    input               reset,
+    input               ps2_clk,
+    input               ps2_data,
+    output reg [7:0]    key_code
     );
 
     // WARNING: wider filter means greater resilience to key noise, but it also results in lower senitivity (cannot handle bursts of input)
@@ -58,11 +58,11 @@ module keyboard(
 
     always @(posedge clk) begin
         if (reset) begin
-            ps2_clk_filter <= 0;
-            ps2_clk_val <= 1'b0;
+            ps2_clk_filter  <= 0;
+            ps2_clk_val     <= 1'b0;
         end else begin
-            ps2_clk_filter <= ps2_clk_filter_next;
-            ps2_clk_val <= ps2_clk_val_next;
+            ps2_clk_filter  <= ps2_clk_filter_next;
+            ps2_clk_val     <= ps2_clk_val_next;
         end
     end
 
@@ -78,13 +78,13 @@ module keyboard(
 
     always @(posedge clk) begin
         if (reset) begin
-            state <= IDLE;
-            num <= 4'b0;
-            rx_buffer <= 11'b0;
+            state       <= IDLE;
+            num         <= 4'b0;
+            rx_buffer   <= 11'b0;
         end else begin
-            state <= next_state;
-            num <= num_next;
-            rx_buffer <= rx_buffer_next;
+            state       <= next_state;
+            num         <= num_next;
+            rx_buffer   <= rx_buffer_next;
         end
     end
 
@@ -124,15 +124,15 @@ module keyboard(
     reg caps;
     always @(posedge clk) begin
         if (reset) begin
-            scan_code <= 8'b0;
-            scan_code_prev <= 8'b0;
-            break_now <= 1'b0;
-            caps <= 1'b0;
+            scan_code       <= 8'b0;
+            scan_code_prev  <= 8'b0;
+            break_now       <= 1'b0;
+            caps            <= 1'b0;
         end else if (done) begin
-            scan_code <= ((rx_buffer[8:1] == scan_code_prev) & break_now) ? `NONE_SCAN : rx_buffer[8:1];
-            scan_code_prev <= scan_code;
-            break_now <= (rx_buffer[8:1] == `BREAK_SCAN);
-            caps <= ((rx_buffer[8:1] == `CAPS_SCAN) & break_now) ? ~caps : caps;
+            scan_code       <= ((rx_buffer[8:1] == scan_code_prev) & break_now) ? `NONE_SCAN : rx_buffer[8:1];
+            scan_code_prev  <= scan_code;
+            break_now       <= (rx_buffer[8:1] == `BREAK_SCAN);
+            caps            <= ((rx_buffer[8:1] == `CAPS_SCAN) & break_now) ? ~caps : caps;
         end
     end
     assign debug_shift = caps;

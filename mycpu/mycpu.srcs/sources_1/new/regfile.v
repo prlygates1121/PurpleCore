@@ -23,23 +23,23 @@
 
 module regfile(
     `ifdef DEBUG
-        output [31:0] t0,
-        output [31:0] t1,
-        output [31:0] t2,
-        output [31:0] t3,
+        output [31:0]   t0,
+        output [31:0]   t1,
+        output [31:0]   t2,
+        output [31:0]   t3,
     `endif
-    input clk,
-    input reset,
-    input write_en,
-    input write_en_mul,
-    input [4:0] rs1,
-    input [4:0] rs2,
-    input [4:0] dest,
-    input [4:0] dest_mul,
-    input  [31:0] write_data,
-    input  [31:0] write_data_mul,
-    output [31:0] rs1_data,
-    output [31:0] rs2_data
+    input               clk,
+    input               reset,
+    input               write_en,
+    input               write_en_mul,
+    input [4:0]         rs1,
+    input [4:0]         rs2,
+    input [4:0]         dest,
+    input [4:0]         dest_mul,
+    input  [31:0]       write_data,
+    input  [31:0]       write_data_mul,
+    output [31:0]       rs1_data,
+    output [31:0]       rs2_data
     );
 
     reg [31:0] registers [31:0];

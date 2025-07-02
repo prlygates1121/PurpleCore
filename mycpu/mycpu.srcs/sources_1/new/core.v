@@ -22,35 +22,32 @@
 
 
 module core(
-    `ifdef DEBUG
-        input clk_100,
-    `endif
-    input clk,
-    input reset,
+    input           clk,
+    input           reset,
 
-    input [7:0] sws_l,
-    input [7:0] sws_r,
+    input [7:0]     sws_l,
+    input [7:0]     sws_r,
 
-    input [4:0] bts_state,
+    input [4:0]     bts_state,
 
-    output [31:0] seg_display_hex,
+    output [31:0]   seg_display_hex,
 
-    output [7:0] leds_l,
-    output [7:0] leds_r,
+    output [7:0]    leds_l,
+    output [7:0]    leds_r,
 
-    input clk_pixel,
-    input [31:0] vga_addr,
-    output [31:0] vga_data,
+    input           clk_pixel,
+    input [31:0]    vga_addr,
+    output [31:0]   vga_data,
 
-    input [7:0] key_code,
+    input [7:0]     key_code,
 
-    input [7:0] uart_rx_data,
-    output [7:0] uart_tx_data,
-    output uart_read,
-    output uart_write,
-    input uart_rx_ready,
-    input uart_tx_ready,
-    output [31:0] uart_ctrl
+    input [7:0]     uart_rx_data,
+    output [7:0]    uart_tx_data,
+    output          uart_read,
+    output          uart_write,
+    input           uart_rx_ready,
+    input           uart_tx_ready,
+    output [31:0]   uart_ctrl
     );
 
     `ifdef DEBUG
@@ -60,218 +57,218 @@ module core(
         wire [31:0] t3;
     `endif
 
-    wire [14:0] rd_queue;
+    wire [14:0]     rd_queue;
 
-    wire inst_access_fault;
+    wire            inst_access_fault;
 
-    wire [31:0] IF_out_pc, IF_out_pc_plus_4, IF_out_inst;
-    wire [31:0] ID_in_pc, ID_in_pc_plus_4, ID_in_inst;
-    wire IF_ID_reset;
-    wire ID_in_branch_predict;
-    wire [1:0] ID_out_store_width;
-    wire [2:0] ID_out_load_width;
+    wire [31:0]     IF_out_pc, IF_out_pc_plus_4, IF_out_inst;
+    wire [31:0]     ID_in_pc, ID_in_pc_plus_4, ID_in_inst;
+    wire            IF_ID_reset;
+    wire            ID_in_branch_predict;
+    wire [1:0]      ID_out_store_width;
+    wire [2:0]      ID_out_load_width;
 
-    wire [3:0] ID_out_alu_op_sel;
-    wire [3:0] ID_out_alu_mul_op_sel;
-    wire ID_out_alu_src1_sel;
-    wire ID_out_alu_src2_sel;
-    wire ID_out_reg_w_en;
-    wire ID_out_reg_w_en_mul;
-    wire [2:0] ID_out_reg_w_data_sel;
-    wire ID_out_load_un;
-    wire [31:0] ID_out_imm;
-    wire ID_out_br_un;
-    wire [31:0] ID_out_rs1_data;
-    wire [31:0] ID_out_rs2_data;
-    wire [4:0] ID_out_rs1;
-    wire [4:0] ID_out_rs2;
-    wire [4:0] ID_out_rd;
-    wire [4:0] ID_out_rd_mul;
-    wire [31:0] ID_out_pc;
-    wire [31:0] ID_out_pc_plus_4;
-    wire [31:0] ID_out_inst;
-    wire ID_out_jal;
-    wire ID_out_jalr;
-    wire [2:0] ID_out_branch_type;
-    wire ID_out_branch_predict;
-    wire ID_out_ecall;
-    wire ID_out_mret;
-    wire [11:0] ID_out_csr_addr;
-    wire [2:0] ID_out_csr_op;
-    wire [31:0] ID_out_csr_r_data;
-    wire [31:0] ID_out_mtvec;
-    wire [31:0] ID_out_mepc;
-    wire [31:0] ID_out_mboot;
-    wire ID_out_calc_slow;
+    wire [3:0]      ID_out_alu_op_sel;
+    wire [3:0]      ID_out_alu_mul_op_sel;
+    wire            ID_out_alu_src1_sel;
+    wire            ID_out_alu_src2_sel;
+    wire            ID_out_reg_w_en;
+    wire            ID_out_reg_w_en_mul;
+    wire [2:0]      ID_out_reg_w_data_sel;
+    wire            ID_out_load_un;
+    wire [31:0]     ID_out_imm;
+    wire            ID_out_br_un;
+    wire [31:0]     ID_out_rs1_data;
+    wire [31:0]     ID_out_rs2_data;
+    wire [4:0]      ID_out_rs1;
+    wire [4:0]      ID_out_rs2;
+    wire [4:0]      ID_out_rd;
+    wire [4:0]      ID_out_rd_mul;
+    wire [31:0]     ID_out_pc;
+    wire [31:0]     ID_out_pc_plus_4;
+    wire [31:0]     ID_out_inst;
+    wire            ID_out_jal;
+    wire            ID_out_jalr;
+    wire [2:0]      ID_out_branch_type;
+    wire            ID_out_branch_predict;
+    wire            ID_out_ecall;
+    wire            ID_out_mret;
+    wire [11:0]     ID_out_csr_addr;
+    wire [2:0]      ID_out_csr_op;
+    wire [31:0]     ID_out_csr_r_data;
+    wire [31:0]     ID_out_mtvec;
+    wire [31:0]     ID_out_mepc;
+    wire [31:0]     ID_out_mboot;
+    wire            ID_out_calc_slow;
 
-    wire [3:0] EX_in_alu_op_sel;
-    wire [3:0] EX_in_alu_mul_op_sel;
-    wire EX_in_alu_src1_sel;
-    wire EX_in_alu_src2_sel;
-    wire EX_in_reg_w_en;
-    wire EX_in_reg_w_en_mul;
-    wire [2:0] EX_in_reg_w_data_sel;
-    wire [1:0] EX_in_store_width;
-    wire [2:0] EX_in_load_width;
-    wire EX_in_load_un;
-    wire [31:0] EX_in_imm;
-    wire EX_in_br_un;
-    wire [31:0] EX_in_rs1_data;
-    wire [31:0] EX_in_rs2_data;
-    wire [4:0] EX_in_rs1;
-    wire [4:0] EX_in_rs2;
-    wire [4:0] EX_in_rd;
-    wire [4:0] EX_in_rd_mul;
-    wire [31:0] EX_in_pc;
-    wire [31:0] EX_in_pc_plus_4;
-    wire EX_in_jal;
-    wire EX_in_jalr;
-    wire [2:0] EX_in_branch_type;
-    wire EX_in_branch_predict;
-    wire [31:0] EX_in_inst;
-    wire EX_in_ecall;
-    wire EX_in_mret;
-    wire [31:0] EX_out_trap_dest;
-    wire [11:0] EX_in_csr_addr;
-    wire [2:0]  EX_in_csr_op;
-    wire [31:0] EX_in_csr_r_data;
-    wire [31:0] EX_in_mtvec;
-    wire [31:0] EX_in_mepc;
-    wire [31:0] EX_in_mboot;
-    wire EX_in_calc_slow;
-    wire ID_EX_reset;
+    wire [3:0]      EX_in_alu_op_sel;
+    wire [3:0]      EX_in_alu_mul_op_sel;
+    wire            EX_in_alu_src1_sel;
+    wire            EX_in_alu_src2_sel;
+    wire            EX_in_reg_w_en;
+    wire            EX_in_reg_w_en_mul;
+    wire [2:0]      EX_in_reg_w_data_sel;
+    wire [1:0]      EX_in_store_width;
+    wire [2:0]      EX_in_load_width;
+    wire            EX_in_load_un;
+    wire [31:0]     EX_in_imm;
+    wire            EX_in_br_un;
+    wire [31:0]     EX_in_rs1_data;
+    wire [31:0]     EX_in_rs2_data;
+    wire [4:0]      EX_in_rs1;
+    wire [4:0]      EX_in_rs2;
+    wire [4:0]      EX_in_rd;
+    wire [4:0]      EX_in_rd_mul;
+    wire [31:0]     EX_in_pc;
+    wire [31:0]     EX_in_pc_plus_4;
+    wire            EX_in_jal;
+    wire            EX_in_jalr;
+    wire [2:0]      EX_in_branch_type;
+    wire            EX_in_branch_predict;
+    wire [31:0]     EX_in_inst;
+    wire            EX_in_ecall;
+    wire            EX_in_mret;
+    wire [31:0]     EX_out_trap_dest;
+    wire [11:0]     EX_in_csr_addr;
+    wire [2:0]      EX_in_csr_op;
+    wire [31:0]     EX_in_csr_r_data;
+    wire [31:0]     EX_in_mtvec;
+    wire [31:0]     EX_in_mepc;
+    wire [31:0]     EX_in_mboot;
+    wire            EX_in_calc_slow;
+    wire            ID_EX_reset;
 
-    wire [31:0] EX_out_alu_result;
-    wire EX_out_pc_sel;
-    wire EX_out_reg_w_en;
-    wire [2:0] EX_out_reg_w_data_sel;
-    wire [1:0] EX_out_store_width;
-    wire [2:0] EX_out_load_width;
-    wire EX_out_load_un;
-    wire [31:0] EX_out_pc_plus_4;
-    wire [4:0] EX_out_rd;
-    wire [31:0] EX_out_rs2_data;
-    wire [4:0] EX_out_rs1, EX_out_rs2;
-    wire [31:0] EX_out_pc;
-    wire EX_out_branch_predict;
-    wire EX_out_jal;
-    wire EX_out_jalr;
-    wire [2:0] EX_out_branch_type;
-    wire EX_out_ecall;
-    wire EX_out_mret;
-    wire [11:0] EX_out_csr_addr;
-    wire [31:0] EX_out_csr_w_data;
-    wire [31:0] EX_out_csr_r_data;
-    wire [2:0] EX_out_csr_op;
-    wire EX_out_csr_w_en;
-    wire [31:0] EX_out_w_mstatus;
-    wire [31:0] EX_out_w_mepc;
-    wire [31:0] EX_out_w_mcause;
-    wire EX_out_excp;
-    wire [31:0] EX_out_alu_mul_result;
-    wire [4:0] EX_out_rd_mul;
-    wire EX_out_reg_w_en_mul;
+    wire [31:0]     EX_out_alu_result;
+    wire            EX_out_pc_sel;
+    wire            EX_out_reg_w_en;
+    wire [2:0]      EX_out_reg_w_data_sel;
+    wire [1:0]      EX_out_store_width;
+    wire [2:0]      EX_out_load_width;
+    wire            EX_out_load_un;
+    wire [31:0]     EX_out_pc_plus_4;
+    wire [4:0]      EX_out_rd;
+    wire [31:0]     EX_out_rs2_data;
+    wire [4:0]      EX_out_rs1, EX_out_rs2;
+    wire [31:0]     EX_out_pc;
+    wire            EX_out_branch_predict;
+    wire            EX_out_jal;
+    wire            EX_out_jalr;
+    wire [2:0]      EX_out_branch_type;
+    wire            EX_out_ecall;
+    wire            EX_out_mret;
+    wire [11:0]     EX_out_csr_addr;
+    wire [31:0]     EX_out_csr_w_data;
+    wire [31:0]     EX_out_csr_r_data;
+    wire [2:0]      EX_out_csr_op;
+    wire            EX_out_csr_w_en;
+    wire [31:0]     EX_out_w_mstatus;
+    wire [31:0]     EX_out_w_mepc;
+    wire [31:0]     EX_out_w_mcause;
+    wire            EX_out_excp;
+    wire [31:0]     EX_out_alu_mul_result;
+    wire [4:0]      EX_out_rd_mul;
+    wire            EX_out_reg_w_en_mul;
 
-    wire [31:0] MEM_reg_w_data_forwarded;
-    wire [31:0] MEM_reg_w_data_mul_forwarded;
-    wire [31:0] WB_reg_w_data_forwarded;
-    wire [31:0] WB_reg_w_data_mul_forwarded;
-    wire [2:0] forward_rs1_sel;
-    wire [2:0] forward_rs2_sel;
-    wire [31:0] MEM_csr_w_data_forwarded;
-    wire [31:0] WB_csr_w_data_forwarded;
-    wire [1:0] forward_csr_sel;
+    wire [31:0]     MEM_reg_w_data_forwarded;
+    wire [31:0]     MEM_reg_w_data_mul_forwarded;
+    wire [31:0]     WB_reg_w_data_forwarded;
+    wire [31:0]     WB_reg_w_data_mul_forwarded;
+    wire [2:0]      forward_rs1_sel;
+    wire [2:0]      forward_rs2_sel;
+    wire [31:0]     MEM_csr_w_data_forwarded;
+    wire [31:0]     WB_csr_w_data_forwarded;
+    wire [1:0]      forward_csr_sel;
 
-    wire [31:0] MEM_in_alu_result;
-    wire MEM_in_reg_w_en;
-    wire [2:0] MEM_in_reg_w_data_sel;
-    wire [1:0] MEM_in_store_width;
-    wire [2:0] MEM_in_load_width;
-    wire MEM_in_load_un;
-    wire [31:0] MEM_in_pc_plus_4;
-    wire [4:0] MEM_in_rd;
-    wire [31:0] MEM_in_rs2_data;
-    wire [11:0] MEM_in_csr_addr;
-    wire [31:0] MEM_in_csr_w_data;
-    wire [31:0] MEM_in_csr_r_data;
-    wire MEM_in_csr_w_en;
-    wire [31:0] MEM_in_w_mstatus;
-    wire [31:0] MEM_in_w_mepc;
-    wire [31:0] MEM_in_w_mcause;
-    wire [31:0] MEM_in_alu_mul_result;
-    wire [4:0] MEM_in_rd_mul;
-    wire MEM_in_reg_w_en_mul;
+    wire [31:0]     MEM_in_alu_result;
+    wire            MEM_in_reg_w_en;
+    wire [2:0]      MEM_in_reg_w_data_sel;
+    wire [1:0]      MEM_in_store_width;
+    wire [2:0]      MEM_in_load_width;
+    wire            MEM_in_load_un;
+    wire [31:0]     MEM_in_pc_plus_4;
+    wire [4:0]      MEM_in_rd;
+    wire [31:0]     MEM_in_rs2_data;
+    wire [11:0]     MEM_in_csr_addr;
+    wire [31:0]     MEM_in_csr_w_data;
+    wire [31:0]     MEM_in_csr_r_data;
+    wire            MEM_in_csr_w_en;
+    wire [31:0]     MEM_in_w_mstatus;
+    wire [31:0]     MEM_in_w_mepc;
+    wire [31:0]     MEM_in_w_mcause;
+    wire [31:0]     MEM_in_alu_mul_result;
+    wire [4:0]      MEM_in_rd_mul;
+    wire            MEM_in_reg_w_en_mul;
 
-    wire [31:0] MEM_out_alu_result;
-    wire MEM_out_reg_w_en;
-    wire [2:0] MEM_out_reg_w_data_sel;
-    wire [31:0] MEM_out_reg_w_data;
-    wire [31:0] MEM_out_reg_w_data_mul;
-    wire [31:0] MEM_out_pc_plus_4;
-    wire [4:0] MEM_out_rd;
-    wire [31:0] MEM_out_dmem_data;
-    wire [11:0] MEM_out_csr_addr;
-    wire [31:0] MEM_out_csr_w_data;
-    wire [31:0] MEM_out_csr_r_data;
-    wire MEM_out_csr_w_en;
-    wire [31:0] MEM_out_w_mstatus;
-    wire [31:0] MEM_out_w_mepc;
-    wire [31:0] MEM_out_w_mcause;
-    wire [31:0] MEM_out_alu_mul_result;
-    wire [4:0] MEM_out_rd_mul;
-    wire MEM_out_reg_w_en_mul;
+    wire [31:0]     MEM_out_alu_result;
+    wire            MEM_out_reg_w_en;
+    wire [2:0]      MEM_out_reg_w_data_sel;
+    wire [31:0]     MEM_out_reg_w_data;
+    wire [31:0]     MEM_out_reg_w_data_mul;
+    wire [31:0]     MEM_out_pc_plus_4;
+    wire [4:0]      MEM_out_rd;
+    wire [31:0]     MEM_out_dmem_data;
+    wire [11:0]     MEM_out_csr_addr;
+    wire [31:0]     MEM_out_csr_w_data;
+    wire [31:0]     MEM_out_csr_r_data;
+    wire            MEM_out_csr_w_en;
+    wire [31:0]     MEM_out_w_mstatus;
+    wire [31:0]     MEM_out_w_mepc;
+    wire [31:0]     MEM_out_w_mcause;
+    wire [31:0]     MEM_out_alu_mul_result;
+    wire [4:0]      MEM_out_rd_mul;
+    wire            MEM_out_reg_w_en_mul;
 
-    wire [31:0] WB_in_alu_result;
-    wire WB_in_reg_w_en;
-    wire [2:0] WB_in_reg_w_data_sel;
-    wire [31:0] WB_in_pc_plus_4;
-    wire [4:0] WB_in_rd;
-    wire [31:0] WB_in_dmem_data;
-    wire [11:0] WB_in_csr_addr;
-    wire [31:0] WB_in_csr_w_data;
-    wire [31:0] WB_in_csr_r_data;
-    wire WB_in_csr_w_en;
-    wire [31:0] WB_in_w_mstatus;
-    wire [31:0] WB_in_w_mepc;
-    wire [31:0] WB_in_w_mcause;
-    wire [31:0] WB_in_alu_mul_result;
-    wire [4:0] WB_in_rd_mul;
-    wire WB_in_reg_w_en_mul;
+    wire [31:0]     WB_in_alu_result;
+    wire            WB_in_reg_w_en;
+    wire [2:0]      WB_in_reg_w_data_sel;
+    wire [31:0]     WB_in_pc_plus_4;
+    wire [4:0]      WB_in_rd;
+    wire [31:0]     WB_in_dmem_data;
+    wire [11:0]     WB_in_csr_addr;
+    wire [31:0]     WB_in_csr_w_data;
+    wire [31:0]     WB_in_csr_r_data;
+    wire            WB_in_csr_w_en;
+    wire [31:0]     WB_in_w_mstatus;
+    wire [31:0]     WB_in_w_mepc;
+    wire [31:0]     WB_in_w_mcause;
+    wire [31:0]     WB_in_alu_mul_result;
+    wire [4:0]      WB_in_rd_mul;
+    wire            WB_in_reg_w_en_mul;
 
-    wire WB_out_reg_w_en;
-    wire [31:0] WB_out_reg_w_data;
-    wire [4:0] WB_out_rd;
-    wire [11:0] WB_out_csr_addr;
-    wire [31:0] WB_out_csr_w_data;
-    wire WB_out_csr_w_en;
-    wire [31:0] WB_out_w_mstatus;
-    wire [31:0] WB_out_w_mepc;
-    wire [31:0] WB_out_w_mcause;
-    wire [31:0] WB_out_reg_w_data_mul;
-    wire [4:0] WB_out_rd_mul;
-    wire WB_out_reg_w_en_mul;
+    wire            WB_out_reg_w_en;
+    wire [31:0]     WB_out_reg_w_data;
+    wire [4:0]      WB_out_rd;
+    wire [11:0]     WB_out_csr_addr;
+    wire [31:0]     WB_out_csr_w_data;
+    wire            WB_out_csr_w_en;
+    wire [31:0]     WB_out_w_mstatus;
+    wire [31:0]     WB_out_w_mepc;
+    wire [31:0]     WB_out_w_mcause;
+    wire [31:0]     WB_out_reg_w_data_mul;
+    wire [4:0]      WB_out_rd_mul;
+    wire            WB_out_reg_w_en_mul;
 
     // branch_prediction_unit
-    wire branch_predict;
-    wire [31:0] branch_target;
-    wire EX_false_target;
-    wire EX_false_direction;
-    wire EX_branch_flush;
+    wire            branch_predict;
+    wire [31:0]     branch_target;
+    wire            EX_false_target;
+    wire            EX_false_direction;
+    wire            EX_branch_flush;
 
     // hazard_unit
-    wire load_stall, load_flush;
-    wire calc_stall, calc_flush;
-    wire write_disorder;
+    wire            load_stall, load_flush;
+    wire            calc_stall, calc_flush;
+    wire            write_disorder;
 
     // Memory
-    wire [3:0] wea = 4'b0;
-    wire [31:0] I_addr;
-    wire [31:0] I_store_data = 32'b0;
-    wire [31:0] I_load_data;
-    wire [31:0] D_addr, D_store_data, D_load_data;
-    wire [1:0] D_store_width;
-    wire [2:0] D_load_width;
-    wire D_load_un;
+    wire [3:0]      wea = 4'b0;
+    wire [31:0]     I_addr;
+    wire [31:0]     I_store_data = 32'b0;
+    wire [31:0]     I_load_data;
+    wire [31:0]     D_addr, D_store_data, D_load_data;
+    wire [1:0]      D_store_width;
+    wire [2:0]      D_load_width;
+    wire            D_load_un;
 
     IF if_0 (
         .clk                        (clk),

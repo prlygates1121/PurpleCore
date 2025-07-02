@@ -21,11 +21,11 @@
 
 
 module alu_mul(
-    input clk,
-    input [31:0] src1,
-    input [31:0] src2,
-    input [3:0] op_sel,
-    output reg [31:0] result
+    input               clk,
+    input [31:0]        src1,
+    input [31:0]        src2,
+    input [3:0]         op_sel,
+    output reg [31:0]   result
     );
 
     wire [63:0] product_ss;

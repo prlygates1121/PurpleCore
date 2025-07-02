@@ -22,20 +22,20 @@
 
 
 module uart(
-    input clk,
-    input reset,
+    input           clk,
+    input           reset,
 
-    input read,
-    input rx_in,
-    output [7:0] rx_out,
-    output reg rx_ready,
+    input           read,
+    input           rx_in,
+    output [7:0]    rx_out,
+    output reg      rx_ready,
 
-    input write,
-    input [7:0] tx_in,
-    output tx_out,
-    output reg tx_ready,
+    input           write,
+    input [7:0]     tx_in,
+    output          tx_out,
+    output reg      tx_ready,
 
-    input [31:0] ctrl
+    input [31:0]    ctrl
     );
 
     reg rx_en, tx_en;

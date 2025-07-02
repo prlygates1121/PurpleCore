@@ -21,13 +21,13 @@
 
 
 module uart_rx(
-    input clk,
-    input reset,
-    input uart_en,
-    input rx_in,
-    output [7:0] rx_out,
-    output reg done,
-    output [1:0] rx_state
+    input           clk,
+    input           reset,
+    input           uart_en,
+    input           rx_in,
+    output [7:0]    rx_out,
+    output reg      done,
+    output [1:0]    rx_state
     );
 
     localparam [1:0] IDLE = 2'b00, DATA = 2'b01, WAIT = 2'b10, STOP = 2'b11;

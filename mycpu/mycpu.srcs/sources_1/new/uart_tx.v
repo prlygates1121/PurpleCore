@@ -21,13 +21,13 @@
 
 
 module uart_tx(
-    input clk,
-    input reset,
-    input uart_en,
+    input       clk,
+    input       reset,
+    input       uart_en,
     input [7:0] tx_in,
-    input tx_new,
-    output tx_out,
-    output reg done
+    input       tx_new,
+    output      tx_out,
+    output reg  done
     );
 
     localparam [1:0] IDLE = 2'b00, START = 2'b01, DATA = 2'b10, STOP = 2'b11;

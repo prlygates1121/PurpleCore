@@ -21,46 +21,46 @@
 
 
 module top(
-    input clk_100,
-    input reset_n,
+    input           clk_100,
+    input           reset_n,
 
-    input uart_rx_in,
-    output uart_tx_out,
+    input           uart_rx_in,
+    output          uart_tx_out,
 
-    input [7:0] sws_l,
-    input [7:0] sws_r,
+    input [7:0]     sws_l,
+    input [7:0]     sws_r,
 
-    input [4:0] bts,
+    input [4:0]     bts,
 
-    output [7:0] leds_l,
-    output [7:0] leds_r,
+    output [7:0]    leds_l,
+    output [7:0]    leds_r,
     
-    output [3:0] vga_r,
-    output [3:0] vga_g,
-    output [3:0] vga_b,
-    output vga_h_sync,
-    output vga_v_sync,
+    output [3:0]    vga_r,
+    output [3:0]    vga_g,
+    output [3:0]    vga_b,
+    output          vga_h_sync,
+    output          vga_v_sync,
 
-    output [7:0] tube_ena,
-    output [7:0] left_tube_content,
-    output [7:0] right_tube_content,
+    output [7:0]    tube_ena,
+    output [7:0]    left_tube_content,
+    output [7:0]    right_tube_content,
 
-    input ps2_clk,
-    input ps2_data
+    input           ps2_clk,
+    input           ps2_data
 
     );
     
     wire locked_main, locked_pixel;
     wire locked = locked_main & locked_pixel;
 
-    wire [4:0] bts_state;
+    wire [4:0]  bts_state;
     wire [31:0] seg_display_hex;
     wire [31:0] vga_addr, vga_data;
-    wire [7:0] key_code;
-    wire [7:0] uart_rx_data;
-    wire [7:0] uart_tx_data;
-    wire uart_read, uart_write;
-    wire uart_rx_ready, uart_tx_ready;
+    wire [7:0]  key_code;
+    wire [7:0]  uart_rx_data;
+    wire [7:0]  uart_tx_data;
+    wire        uart_read, uart_write;
+    wire        uart_rx_ready, uart_tx_ready;
     wire [31:0] uart_ctrl;
 
     wire clk_main;                    // generates clk_main from clk_100

@@ -21,33 +21,33 @@
 
 
 module csr(
-    input clk,
-    input reset,
-    input csr_w_en,
-    input [31:0] csr_w_data,
-    input [11:0] csr_w_addr,
-    input [11:0] csr_r_addr,
-    output reg [31:0] csr_r_data,
+    input               clk,
+    input               reset,
+    input               csr_w_en,
+    input [31:0]        csr_w_data,
+    input [11:0]        csr_w_addr,
+    input [11:0]        csr_r_addr,
+    output reg [31:0]   csr_r_data,
 
-    input [31:0] w_mstatus,
-    input [31:0] w_mie,
-    input [31:0] w_mtvec,
-    input [31:0] w_mepc,
-    input [31:0] w_mscratch,
-    input [31:0] w_mcause,
-    input [31:0] w_mtval,
-    input [31:0] w_mip,
-    input [31:0] w_mboot,
+    input [31:0]        w_mstatus,
+    input [31:0]        w_mie,
+    input [31:0]        w_mtvec,
+    input [31:0]        w_mepc,
+    input [31:0]        w_mscratch,
+    input [31:0]        w_mcause,
+    input [31:0]        w_mtval,
+    input [31:0]        w_mip,
+    input [31:0]        w_mboot,
 
-    output [31:0] r_mstatus,
-    output [31:0] r_mie,
-    output [31:0] r_mtvec,
-    output [31:0] r_mscratch,
-    output [31:0] r_mepc,
-    output [31:0] r_mcause,
-    output [31:0] r_mtval,
-    output [31:0] r_mip,
-    output [31:0] r_mboot
+    output [31:0]       r_mstatus,
+    output [31:0]       r_mie,
+    output [31:0]       r_mtvec,
+    output [31:0]       r_mscratch,
+    output [31:0]       r_mepc,
+    output [31:0]       r_mcause,
+    output [31:0]       r_mtval,
+    output [31:0]       r_mip,
+    output [31:0]       r_mboot
     );
 
     reg [31:0] mstatus;

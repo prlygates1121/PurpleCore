@@ -22,15 +22,15 @@
 
 
 module vga_top(
-    input clk,
-    input reset,
-    output reg [3:0] r,
-    output reg [3:0] g,
-    output reg [3:0] b,
-    output h_sync,
-    output v_sync,
-    output reg [31:0] vga_addr,         // used to fetch pixel data from memory
-    input [31:0] vga_data               // pixel data from memory
+    input               clk,
+    input               reset,
+    output reg [3:0]    r,
+    output reg [3:0]    g,
+    output reg [3:0]    b,
+    output              h_sync,
+    output              v_sync,
+    output reg [31:0]   vga_addr,         // used to fetch pixel data from memory
+    input [31:0]        vga_data               // pixel data from memory
     );
 
     reg [9:0] x, y;

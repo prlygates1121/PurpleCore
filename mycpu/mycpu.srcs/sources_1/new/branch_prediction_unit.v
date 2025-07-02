@@ -22,24 +22,24 @@
 
 
 module branch_prediction_unit(
-    input clk,
-    input reset,
-    input stall,
+    input           clk,
+    input           reset,
+    input           stall,
     
-    input [31:0] IF_pc,
-    input [31:0] IF_inst,
-    input [31:0] EX_pc,
-    input [31:0] EX_alu_result,
-    input EX_jal,
-    input EX_jalr,
-    input [2:0] EX_branch_type,
-    input EX_pc_sel,
+    input [31:0]    IF_pc,
+    input [31:0]    IF_inst,
+    input [31:0]    EX_pc,
+    input [31:0]    EX_alu_result,
+    input           EX_jal,
+    input           EX_jalr,
+    input [2:0]     EX_branch_type,
+    input           EX_pc_sel,
 
-    output branch_predict,
-    output [31:0] branch_target,
-    output EX_false_target,
-    output EX_false_direction,
-    output EX_branch_flush
+    output          branch_predict,
+    output [31:0]   branch_target,
+    output          EX_false_target,
+    output          EX_false_direction,
+    output          EX_branch_flush
     );
     integer i;
 
@@ -139,19 +139,19 @@ module branch_prediction_unit(
 
     always @(posedge clk) begin
         if (reset) begin
-            ID_call <= 1'b0;  
-            EX_call <= 1'b0;
-            ID_return <= 1'b0;    
-            EX_return <= 1'b0;
-            ID_RAS_out <= 32'h0;      
-            EX_RAS_out <= 32'h0;
+            ID_call     <= 1'b0;  
+            EX_call     <= 1'b0;
+            ID_return   <= 1'b0;    
+            EX_return   <= 1'b0;
+            ID_RAS_out  <= 32'h0;      
+            EX_RAS_out  <= 32'h0;
         end else begin
-            ID_call <= IF_call;
-            EX_call <= ID_call;
-            ID_return <= IF_return;
-            EX_return <= ID_return;
-            ID_RAS_out <= RAS_out;
-            EX_RAS_out <= ID_RAS_out;
+            ID_call     <= IF_call;
+            EX_call     <= ID_call;
+            ID_return   <= IF_return;
+            EX_return   <= ID_return;
+            ID_RAS_out  <= RAS_out;
+            EX_RAS_out  <= ID_RAS_out;
         end
     end
 
@@ -276,20 +276,17 @@ module branch_prediction_unit(
         end
     end
     
-    assign branch_predict = (IF_jal | IF_jalr) ? 1'b1 : 
-                                          IF_B ? (prediction_table[IF_prediction_index] >= WEAK_TAKEN) : 
-                                                 1'b0;
+    assign branch_predict       = (IF_jal | IF_jalr) ? 1'b1 : 
+                                                IF_B ? (prediction_table[IF_prediction_index] >= WEAK_TAKEN) : 
+                                                       1'b0;
 
-    assign branch_target = IF_return ? RAS_out : 
-                                       branch_target_buffer[IF_pc[2+:PREDICTOR_DEPTH_LOG]];
+    assign branch_target        = IF_return ? RAS_out : branch_target_buffer[IF_pc[2+:PREDICTOR_DEPTH_LOG]];
 
-    assign EX_false_direction = EX_is_branch_inst ? (EX_branch_predict != EX_pc_sel) : 
-                                                     1'b0;
+    assign EX_false_direction   = EX_is_branch_inst ? (EX_branch_predict != EX_pc_sel) : 1'b0;
 
-    assign EX_false_target = (EX_is_branch_inst & EX_branch_predict) ? (ID_return ? (EX_RAS_out != EX_alu_result) : 
-                                                                                          (branch_target_prev_2 != EX_alu_result)) : 
-                                                                             1'b0;
+    assign EX_false_target      = EX_is_branch_inst & EX_branch_predict & (ID_return ? (EX_RAS_out != EX_alu_result) : 
+                                                                                       (branch_target_prev_2 != EX_alu_result));
                                                                              
-    assign EX_branch_flush = EX_false_direction | (EX_false_target & EX_branch_predict);  
+    assign EX_branch_flush      = EX_false_direction | (EX_false_target & EX_branch_predict);  
 
 endmodule

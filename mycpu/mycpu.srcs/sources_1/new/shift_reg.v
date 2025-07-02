@@ -24,10 +24,10 @@ module shift_reg #(
     parameter BIT_WIDTH = 32,
     parameter DEPTH = 8
 )(
-    input clk,
-    input reset,
-    input [BIT_WIDTH-1:0] data_in,
-    output [BIT_WIDTH-1:0] data_out
+    input                   clk,
+    input                   reset,
+    input [BIT_WIDTH-1:0]   data_in,
+    output [BIT_WIDTH-1:0]  data_out
 );
     reg [BIT_WIDTH-1:0] shift_reg [DEPTH-1:0];
 

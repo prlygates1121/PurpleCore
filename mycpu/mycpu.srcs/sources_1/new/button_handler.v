@@ -22,12 +22,12 @@
 
 
 module button_handler(
-    input clk,
-    input reset,
-    input bt_raw,
-    output reg bt_state,
-    output bt_pressed,
-    output bt_released
+    input       clk,
+    input       reset,
+    input       bt_raw,
+    output reg  bt_state,
+    output      bt_pressed,
+    output      bt_released
     );
 
     // timeout in ns
@@ -58,7 +58,7 @@ module button_handler(
         end
     end
 
-    assign bt_pressed = counter_max_out & (bt_state == 1'b0);
-    assign bt_released = counter_max_out & (bt_state == 1'b1);
+    assign bt_pressed   = counter_max_out & (bt_state == 1'b0);
+    assign bt_released  = counter_max_out & (bt_state == 1'b1);
 
 endmodule

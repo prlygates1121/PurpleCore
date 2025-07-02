@@ -22,71 +22,71 @@
 
 
 module control_logic(
-    input [31:0] inst,
+    input [31:0]    inst,
 
-    output [3:0] alu_op_sel,
-    output alu_src1_sel,
-    output alu_src2_sel,
-    output reg_w_en,
-    output [2:0] reg_w_data_sel,
-    output [1:0] store_width,
-    output [2:0] load_width,
-    output load_un,
-    output [2:0] imm_sel,
-    output br_un,
-    output jal,
-    output jalr,
-    output [2:0] branch_type,
-    output [4:0] rs1,
-    output [4:0] rs2,
-    output [4:0] rd,
-    output [24:0] imm,
-    output ecall,
-    output mret,
-    output [11:0] csr_addr,
-    output [2:0] csr_op
+    output [3:0]    alu_op_sel,
+    output          alu_src1_sel,
+    output          alu_src2_sel,
+    output          reg_w_en,
+    output [2:0]    reg_w_data_sel,
+    output [1:0]    store_width,
+    output [2:0]    load_width,
+    output          load_un,
+    output [2:0]    imm_sel,
+    output          br_un,
+    output          jal,
+    output          jalr,
+    output [2:0]    branch_type,
+    output [4:0]    rs1,
+    output [4:0]    rs2,
+    output [4:0]    rd,
+    output [24:0]   imm,
+    output          ecall,
+    output          mret,
+    output [11:0]   csr_addr,
+    output [2:0]    csr_op
     );
 
-    wire [6:0] opcode = inst[6:0];
-    wire [2:0] funct3 = inst[14:12];
-    wire [6:0] funct7 = inst[31:25];
+    wire [6:0] opcode   = inst[6:0];
+    wire [2:0] funct3   = inst[14:12];
+    wire [6:0] funct7   = inst[31:25];
 
-    wire csr        = opcode == 7'b1110011 & funct3 != `NO_CSR;
+    wire csr            = opcode == 7'b1110011 & funct3 != `NO_CSR;
     // ecall: write mtvec to pc and write pc to mepc
-    wire I_ecall    = opcode == 7'b1110011 & inst[31:20] == 12'h0;
-    wire I_ebreak   = opcode == 7'b1110011 & inst[31:20] == 12'h1;
+    wire I_ecall        = opcode == 7'b1110011 & inst[31:20] == 12'h0;
+    wire I_ebreak       = opcode == 7'b1110011 & inst[31:20] == 12'h1;
     // mret: write mepc to pc
-    wire I_mret     = opcode == 7'b1110011 & inst[31:20] == 12'b001100000010;
+    wire I_mret         = opcode == 7'b1110011 & inst[31:20] == 12'b001100000010;
 
-    wire I_load     = opcode == 7'b0000011;
-    wire I_jalr     = opcode == 7'b1100111 & funct3 == 3'h0;
-    wire I_arith    = opcode == 7'b0010011;
-    wire I_shift    = opcode == 7'b0010011 & (funct3 == 3'h1 | funct3 == 3'h5);
+    wire I_load         = opcode == 7'b0000011;
+    wire I_jalr         = opcode == 7'b1100111 & funct3 == 3'h0;
+    wire I_arith        = opcode == 7'b0010011;
+    wire I_shift        = opcode == 7'b0010011 & (funct3 == 3'h1 | funct3 == 3'h5);
 
-    wire R =    opcode == 7'b0110011;
-    wire I =    opcode == 7'b0010011 | 
-                opcode == 7'b0000011 | 
-                opcode == 7'b1100111 | 
-                opcode == 7'b1110011;
-    wire S =    opcode == 7'b0100011;
-    wire B =    opcode == 7'b1100011;
-    wire U =    opcode == 7'b0110111 | opcode == 7'b0010111;
-    wire J =    opcode == 7'b1101111;
+    wire R              = opcode == 7'b0110011;
+    wire I              = opcode == 7'b0010011 | 
+                          opcode == 7'b0000011 | 
+                          opcode == 7'b1100111 | 
+                          opcode == 7'b1110011;
+    wire S              = opcode == 7'b0100011;
+    wire B              = opcode == 7'b1100011;
+    wire U              = opcode == 7'b0110111 | opcode == 7'b0010111;
+    wire J              = opcode == 7'b1101111;
 
-    wire U_auipc = U & (opcode == 7'b0010111);
+    wire U_auipc        = U & (opcode == 7'b0010111);
 
-    assign imm_sel = I_shift ? `IMM_I_SHIFT :
-                           I ? `IMM_I :
-                           S ? `IMM_S :
-                           B ? `IMM_B :
-                           U ? `IMM_U :
-                           J ? `IMM_J :
-                           `NO_IMM;
+    assign imm_sel      = I_shift ? `IMM_I_SHIFT :
+                                I ? `IMM_I :
+                                S ? `IMM_S :
+                                B ? `IMM_B :
+                                U ? `IMM_U :
+                                J ? `IMM_J :
+                                `NO_IMM;
 
-    assign br_un = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
+    assign br_un        = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
     
     // ecall and mret do not trigger reg_w_en, unlike other CSR instructions
-    assign reg_w_en = R | U | J | I_load | I_jalr | I_arith | csr;
+    assign reg_w_en     = R | U | J | I_load | I_jalr | I_arith | csr;
 
     assign reg_w_data_sel = (J | I_jalr)      ? `REG_W_DATA_PC :        // PC + 4
                             (I_load)          ? `REG_W_DATA_MEM :       // Memory
@@ -94,50 +94,50 @@ module control_logic(
                             csr               ? `REG_W_DATA_CSR :       // CSR
                             `NO_REG_W_DATA;
 
-    assign alu_op_sel = (R & funct3 == 3'h0 & funct7 == 7'h20)          ? `SUB :     // sub
-                        (R & funct3 == 3'h4 & funct7 == 7'h00 |                      // xor
-                         I_arith & funct3 == 3'h4)                      ? `XOR :     // xori
-                        (R & funct3 == 3'h6 & funct7 == 7'h00 |                      // or
-                         I_arith & funct3 == 3'h6)                      ? `OR :      // ori
-                        (R & funct3 == 3'h7 & funct7 == 7'h00 |                      // and
-                         I_arith & funct3 == 3'h7)                      ? `AND :     // andi
-                        (R & funct3 == 3'h1 & funct7 == 7'h00 |                      // sll
-                         I_arith & funct3 == 3'h1 & funct7 == 7'h00)    ? `SLL :     // slli
-                        (R & funct3 == 3'h5 & funct7 == 7'h00 |                      // srl
-                         I_arith & funct3 == 3'h5 & funct7 == 7'h00)    ? `SRL :     // srli
-                        (R & funct3 == 3'h5 & funct7 == 7'h20 |                      // sra
-                         I_arith & funct3 == 3'h5 & funct7 == 7'h20)    ? `SRA :     // srai
-                        (R & funct3 == 3'h2 & funct7 == 7'h00 |                      // slt
-                         I_arith & funct3 == 3'h2)                      ? `SLT :     // slti
-                        (R & funct3 == 3'h3 & funct7 == 7'h00 |                      // sltu
-                         I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
-                        (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
-                        (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh
-                        (R & funct3 == 3'h2 & funct7 == 7'h01)          ? `MULSU:    // mulsu
-                        (R & funct3 == 3'h3 & funct7 == 7'h01)          ? `MULU :    // mulu
-                        (opcode == 7'b0110111)                          ? `BSEL :    // lui
-                        `ADD;
+    assign alu_op_sel   = (R & funct3 == 3'h0 & funct7 == 7'h20)          ? `SUB :     // sub
+                          (R & funct3 == 3'h4 & funct7 == 7'h00 |                      // xor
+                           I_arith & funct3 == 3'h4)                      ? `XOR :     // xori
+                          (R & funct3 == 3'h6 & funct7 == 7'h00 |                      // or
+                           I_arith & funct3 == 3'h6)                      ? `OR :      // ori
+                          (R & funct3 == 3'h7 & funct7 == 7'h00 |                      // and
+                           I_arith & funct3 == 3'h7)                      ? `AND :     // andi
+                          (R & funct3 == 3'h1 & funct7 == 7'h00 |                      // sll
+                           I_arith & funct3 == 3'h1 & funct7 == 7'h00)    ? `SLL :     // slli
+                          (R & funct3 == 3'h5 & funct7 == 7'h00 |                      // srl
+                           I_arith & funct3 == 3'h5 & funct7 == 7'h00)    ? `SRL :     // srli
+                          (R & funct3 == 3'h5 & funct7 == 7'h20 |                      // sra
+                           I_arith & funct3 == 3'h5 & funct7 == 7'h20)    ? `SRA :     // srai
+                          (R & funct3 == 3'h2 & funct7 == 7'h00 |                      // slt
+                           I_arith & funct3 == 3'h2)                      ? `SLT :     // slti
+                          (R & funct3 == 3'h3 & funct7 == 7'h00 |                      // sltu
+                           I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
+                          (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
+                          (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh
+                          (R & funct3 == 3'h2 & funct7 == 7'h01)          ? `MULSU:    // mulsu
+                          (R & funct3 == 3'h3 & funct7 == 7'h01)          ? `MULU :    // mulu
+                          (opcode == 7'b0110111)                          ? `BSEL :    // lui
+                          `ADD;
 
-    assign store_width = S ? funct3[1:0] : `NO_STORE;
-    assign load_width = I_load ? funct3 : `NO_LOAD;
-    assign load_un = (load_width == `LOAD_BYTE_UN | load_width == `LOAD_HALF_UN);
+    assign store_width  = S ? funct3[1:0] : `NO_STORE;
+    assign load_width   = I_load ? funct3 : `NO_LOAD;
+    assign load_un      = (load_width == `LOAD_BYTE_UN | load_width == `LOAD_HALF_UN);
 
     assign alu_src1_sel = R | I | S;
     assign alu_src2_sel = R;
 
-    assign jal = J;
-    assign jalr = I_jalr;
-    assign branch_type = B ? funct3 : `NO_BRANCH;
+    assign jal          = J;
+    assign jalr         = I_jalr;
+    assign branch_type  = B ? funct3 : `NO_BRANCH;
 
-    assign rs1 = (J | U) ? 5'h0 : inst[19:15];
-    assign rs2 = (R | S | B) ? inst[24:20] : 5'h0;
-    assign rd = (S | B) ? 5'h0 : inst[11:7];
-    assign imm = inst[31:7];
+    assign rs1          = (J | U) ? 5'h0 : inst[19:15];
+    assign rs2          = (R | S | B) ? inst[24:20] : 5'h0;
+    assign rd           = (S | B) ? 5'h0 : inst[11:7];
+    assign imm          = inst[31:7];
 
-    assign ecall = I_ecall;
-    assign mret = I_mret;
+    assign ecall        = I_ecall;
+    assign mret         = I_mret;
 
-    assign csr_op = csr ? funct3 : 3'h0;
-    assign csr_addr = csr ? inst[31:20] : 12'h0;
+    assign csr_op       = csr ? funct3 : 3'h0;
+    assign csr_addr     = csr ? inst[31:20] : 12'h0;
 
 endmodule

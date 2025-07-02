@@ -25,16 +25,16 @@ module ring #(
     parameter BIT_WIDTH = 32,
     parameter DEPTH = 8
 )(
-    input clk,
-    input reset,
-    input [1:0] op,
-    input [BIT_WIDTH-1:0] data_in,
-    output [BIT_WIDTH-1:0] data_out
+    input                   clk,
+    input                   reset,
+    input [1:0]             op,
+    input [BIT_WIDTH-1:0]   data_in,
+    output [BIT_WIDTH-1:0]  data_out
 );
 
     reg [BIT_WIDTH-1:0] ring_buffer [DEPTH-1:0];
-    reg [31:0] ring_pointer;
-    wire [31:0] ring_pointer_top;
+    reg [31:0]          ring_pointer;
+    wire [31:0]         ring_pointer_top;
 
     integer i = 0;
     always @(posedge clk) begin
@@ -77,5 +77,5 @@ module ring #(
         end
     end
     assign ring_pointer_top = ring_pointer == 32'h0 ? DEPTH - 1 : ring_pointer - 1;
-    assign data_out = ring_buffer[ring_pointer_top];
+    assign data_out         = ring_buffer[ring_pointer_top];
 endmodule

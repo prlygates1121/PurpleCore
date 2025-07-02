@@ -23,71 +23,71 @@
 
 module ID(
     `ifdef DEBUG
-        output [31:0] t0,
-        output [31:0] t1,
-        output [31:0] t2,
-        output [31:0] t3,
+        output [31:0]   t0,
+        output [31:0]   t1,
+        output [31:0]   t2,
+        output [31:0]   t3,
     `endif
-    input clk,
-    input reset,
-    input stall,
-    input write_disorder,
+    input               clk,
+    input               reset,
+    input               stall,
+    input               write_disorder,
     
-    input [31:0] IF_pc,
-    input [31:0] IF_pc_plus_4,
-    input [31:0] IF_inst,
-    input IF_branch_predict,
-    input [31:0] WB_reg_w_data,
-    input [31:0] WB_reg_w_data_mul,
-    input WB_reg_w_en,
-    input WB_reg_w_en_mul,
-    input [4:0] WB_rd,
-    input [4:0] WB_rd_mul,
-    input [11:0] WB_csr_addr,
-    input WB_csr_w_en,
-    input [31:0] WB_csr_w_data,
-    input [31:0] WB_w_mstatus,
-    input [31:0] WB_w_mepc,
-    input [31:0] WB_w_mcause,
+    input [31:0]        IF_pc,
+    input [31:0]        IF_pc_plus_4,
+    input [31:0]        IF_inst,
+    input               IF_branch_predict,
+    input [31:0]        WB_reg_w_data,
+    input [31:0]        WB_reg_w_data_mul,
+    input               WB_reg_w_en,
+    input               WB_reg_w_en_mul,
+    input [4:0]         WB_rd,
+    input [4:0]         WB_rd_mul,
+    input [11:0]        WB_csr_addr,
+    input               WB_csr_w_en,
+    input [31:0]        WB_csr_w_data,
+    input [31:0]        WB_w_mstatus,
+    input [31:0]        WB_w_mepc,
+    input [31:0]        WB_w_mcause,
 
-    output [3:0] ID_alu_op_sel,
-    output [3:0] ID_alu_mul_op_sel,
-    output ID_alu_src1_sel,
-    output ID_alu_src2_sel,
-    output ID_reg_w_en,
-    output ID_reg_w_en_mul,
-    output [2:0] ID_reg_w_data_sel,
-    output [1:0] ID_store_width,
-    output [2:0] ID_load_width,
-    output ID_load_un,
-    output [31:0] ID_imm,
-    output ID_br_un,
-    output [31:0] ID_rs1_data,
-    output [31:0] ID_rs2_data,
-    output [4:0] ID_rs1,
-    output [4:0] ID_rs2,
-    output [4:0] ID_rd,
-    output [4:0] ID_rd_mul,
-    output [31:0] ID_pc,
-    output [31:0] ID_pc_plus_4,
-    output ID_jal,
-    output ID_jalr,
-    output [2:0] ID_branch_type,
-    output ID_branch_predict,
-    output [31:0] ID_inst,
-    output ID_ecall,
-    output ID_mret,
+    output [3:0]        ID_alu_op_sel,
+    output [3:0]        ID_alu_mul_op_sel,
+    output              ID_alu_src1_sel,
+    output              ID_alu_src2_sel,
+    output              ID_reg_w_en,
+    output              ID_reg_w_en_mul,
+    output [2:0]        ID_reg_w_data_sel,
+    output [1:0]        ID_store_width,
+    output [2:0]        ID_load_width,
+    output              ID_load_un,
+    output [31:0]       ID_imm,
+    output              ID_br_un,
+    output [31:0]       ID_rs1_data,
+    output [31:0]       ID_rs2_data,
+    output [4:0]        ID_rs1,
+    output [4:0]        ID_rs2,
+    output [4:0]        ID_rd,
+    output [4:0]        ID_rd_mul,
+    output [31:0]       ID_pc,
+    output [31:0]       ID_pc_plus_4,
+    output              ID_jal,
+    output              ID_jalr,
+    output [2:0]        ID_branch_type,
+    output              ID_branch_predict,
+    output [31:0]       ID_inst,
+    output              ID_ecall,
+    output              ID_mret,
 
-    output [11:0] ID_csr_addr,
-    output [2:0] ID_csr_op,
-    output [31:0] ID_csr_r_data,
+    output [11:0]       ID_csr_addr,
+    output [2:0]        ID_csr_op,
+    output [31:0]       ID_csr_r_data,
 
-    output [31:0] ID_mtvec,
-    output [31:0] ID_mepc,
-    output [31:0] ID_mboot,
+    output [31:0]       ID_mtvec,
+    output [31:0]       ID_mepc,
+    output [31:0]       ID_mboot,
 
-    output ID_calc_slow,
-    output reg [14:0] rd_queue
+    output              ID_calc_slow,
+    output reg [14:0]   rd_queue
 
     );
 
@@ -116,9 +116,9 @@ module ID(
     wire [31:0] csr_r_data;
 
     assign ID_calc_slow = alu_op_sel == `MUL    |
-                       alu_op_sel == `MULH   |
-                       alu_op_sel == `MULSU  |
-                       alu_op_sel == `MULU;
+                          alu_op_sel == `MULH   |
+                          alu_op_sel == `MULSU  |
+                          alu_op_sel == `MULU;
 
     always @(posedge clk) begin
         if (reset) begin
@@ -220,28 +220,28 @@ module ID(
         .r_mboot        (ID_mboot)
     );
 
-    assign ID_alu_op_sel = ID_calc_slow ? `ADD : alu_op_sel;
-    assign ID_alu_mul_op_sel = ID_calc_slow ? alu_op_sel : `ADD;
-    assign ID_alu_src1_sel = alu_src1_sel;
-    assign ID_alu_src2_sel = alu_src2_sel;
-    assign ID_reg_w_en = ID_calc_slow ? 1'b0 : reg_w_en;
-    assign ID_reg_w_en_mul = ID_calc_slow ? reg_w_en : 1'b0;
-    assign ID_reg_w_data_sel = reg_w_data_sel;
-    assign ID_store_width = D_store_width;
-    assign ID_load_width = D_load_width;
-    assign ID_load_un = D_load_un;
-    assign ID_imm = imm;
-    assign ID_br_un = br_un;
-    assign ID_rs1 = rs1;
-    assign ID_rs2 = rs2;
-    assign ID_rd = ID_calc_slow ? 5'b0 : rd;
-    assign ID_rd_mul = ID_calc_slow ? rd : 5'b0;
-    assign ID_pc = IF_pc;
-    assign ID_pc_plus_4 = IF_pc_plus_4;
-    assign ID_branch_predict = IF_branch_predict;
-    assign ID_inst = IF_inst;
-    assign ID_csr_addr = csr_addr;
-    assign ID_csr_op = csr_op;
-    assign ID_csr_r_data = csr_r_data;
+    assign ID_alu_op_sel        = ID_calc_slow ? `ADD : alu_op_sel;
+    assign ID_alu_mul_op_sel    = ID_calc_slow ? alu_op_sel : `ADD;
+    assign ID_alu_src1_sel      = alu_src1_sel;
+    assign ID_alu_src2_sel      = alu_src2_sel;
+    assign ID_reg_w_en          = ID_calc_slow ? 1'b0 : reg_w_en;
+    assign ID_reg_w_en_mul      = ID_calc_slow ? reg_w_en : 1'b0;
+    assign ID_reg_w_data_sel    = reg_w_data_sel;
+    assign ID_store_width       = D_store_width;
+    assign ID_load_width        = D_load_width;
+    assign ID_load_un           = D_load_un;
+    assign ID_imm               = imm;
+    assign ID_br_un             = br_un;
+    assign ID_rs1               = rs1;
+    assign ID_rs2               = rs2;
+    assign ID_rd                = ID_calc_slow ? 5'b0 : rd;
+    assign ID_rd_mul            = ID_calc_slow ? rd : 5'b0;
+    assign ID_pc                = IF_pc;
+    assign ID_pc_plus_4         = IF_pc_plus_4;
+    assign ID_branch_predict    = IF_branch_predict;
+    assign ID_inst              = IF_inst;
+    assign ID_csr_addr          = csr_addr;
+    assign ID_csr_op            = csr_op;
+    assign ID_csr_r_data        = csr_r_data;
 
 endmodule

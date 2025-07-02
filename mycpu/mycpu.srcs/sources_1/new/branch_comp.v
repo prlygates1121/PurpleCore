@@ -21,11 +21,11 @@
 
 
 module branch_comp(
-    input [31:0] rs1_data,
-    input [31:0] rs2_data,
-    input br_un,
-    output br_eq,
-    output br_lt
+    input [31:0]    rs1_data,
+    input [31:0]    rs2_data,
+    input           br_un,
+    output          br_eq,
+    output          br_lt
     );
     assign br_eq = rs1_data == rs2_data;
     assign br_lt = br_un ? (rs1_data < rs2_data) : ($signed(rs1_data) < $signed(rs2_data));

@@ -22,32 +22,32 @@
 
 
 module IF (
-    input clk,
-    input reset,
-    input stall,
-    input inst_access_fault,
+    input           clk,
+    input           reset,
+    input           stall,
+    input           inst_access_fault,
 
-    input [31:0] EX_trap_dest,
+    input [31:0]    EX_trap_dest,
     
-    input EX_excp,
-    input EX_mret,
-    input EX_pc_sel,
-    input EX_false_direction,
-    input EX_false_target,
-    input [31:0] EX_alu_result,
-    input [31:0] EX_pc_plus_4,
-    input EX_branch_predict,
+    input           EX_excp,
+    input           EX_mret,
+    input           EX_pc_sel,
+    input           EX_false_direction,
+    input           EX_false_target,
+    input [31:0]    EX_alu_result,
+    input [31:0]    EX_pc_plus_4,
+    input           EX_branch_predict,
 
     // interface with memory
-    output [31:0] I_addr,       // address to read from memory
-    input [31:0] I_load_data,   // data read from memory
+    output [31:0]   I_addr,       // address to read from memory
+    input [31:0]    I_load_data,   // data read from memory
 
-    output [31:0] IF_pc,
-    output [31:0] IF_pc_plus_4,
-    output [31:0] IF_inst,
+    output [31:0]   IF_pc,
+    output [31:0]   IF_pc_plus_4,
+    output [31:0]   IF_inst,
 
-    input branch_predict,
-    input [31:0] branch_target
+    input           branch_predict,
+    input [31:0]    branch_target
 
     );
 
@@ -61,7 +61,10 @@ module IF (
                           branch_predict ? branch_target :
                           (pc + 4);
 `else 
-    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest : EX_pc_sel ? EX_alu_result : stall ? pc : (pc + 4);
+    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest : 
+                          EX_pc_sel ? EX_alu_result : 
+                          stall ? pc : 
+                          (pc + 4);
 `endif
 
     always @(posedge clk) begin
@@ -82,8 +85,8 @@ module IF (
         end
     end
 
-    assign IF_pc = pc;
+    assign IF_pc        = pc;
     assign IF_pc_plus_4 = pc + 4;
-    assign IF_inst = (reset) ? `NOP : I_load_data;
-    assign I_addr = reset ? pc : pc_next;
+    assign IF_inst      = (reset) ? `NOP : I_load_data;
+    assign I_addr       = reset ? pc : pc_next;
 endmodule

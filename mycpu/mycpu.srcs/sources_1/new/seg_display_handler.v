@@ -46,13 +46,13 @@ module seg_display_handler(
     wire display_ena = counter == COUNTER_MAX - 1;
 
     seg_display seg_display_0(
-        .clk(clk),
-        .reset(reset),
-        .display_ena(display_ena),
-        .hex_digits(hex_digits),
-        .tube_ena(tube_ena),
-        .left_tube_content(left_tube_content),
-        .right_tube_content(right_tube_content)
+        .clk                    (clk),
+        .reset                  (reset),
+        .display_ena            (display_ena),
+        .hex_digits             (hex_digits),
+        .tube_ena               (tube_ena),
+        .left_tube_content      (left_tube_content),
+        .right_tube_content     (right_tube_content)
     );
 
 

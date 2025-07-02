@@ -24,20 +24,20 @@
 
 module my_blk_mem(
     // Port A
-    input clka,                    // Clock for port A
-    input ena,                     // Enable for port A
-    input [3:0] wea,               // Write enable for port A (byte-wise)
-    input [13:0] addra,            // Address for port A
-    input [31:0] dina,             // Data input for port A
-    output reg [31:0] douta,       // Data output for port A
+    input               clka,
+    input               ena,
+    input [3:0]         wea,
+    input [13:0]        addra,
+    input [31:0]        dina,
+    output reg [31:0]   douta,
     
     // Port B
-    input clkb,                    // Clock for port B
-    input enb,                     // Enable for port B
-    input [3:0] web,               // Write enable for port B (byte-wise)
-    input [13:0] addrb,            // Address for port B
-    input [31:0] dinb,             // Data input for port B
-    output reg [31:0] doutb        // Data output for port B
+    input               clkb,
+    input               enb,
+    input [3:0]         web,
+    input [13:0]        addrb,
+    input [31:0]        dinb,
+    output reg [31:0]   doutb
 );
 
     // Memory array
