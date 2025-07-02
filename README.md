@@ -6,9 +6,9 @@ PurpleCore is the course project of **CS202** **Computer Organization** (Spring 
 
 ## Features & TODO:
 - [x] 5-stage pipelined
-    - [ ] multi-cycle EX
+    - [x] multi-cycle multiplication
+    - [ ] multi-cycle division
 - [x] speculative execution
-
     - [x] branch predictor (two-level adaptive, global)
     - [x] return address stack
 - [x] runs bare-metal C programs
@@ -17,7 +17,6 @@ PurpleCore is the course project of **CS202** **Computer Organization** (Spring 
     - [x] exceptions
     - [ ] interrupts
 - [x] I/O (hardware controller and C library support)
-
     - [x] UART
     - [x] VGA
     - [x] PS/2 keyboard
@@ -29,29 +28,29 @@ Check [this](docs/doc.pdf) out for documentation.
 
 ## Directory Tree
 
-- `mycpu\mycpu.srcs\`
+- **Verilog sources:** 
 
-    - `sources_1\new\`: 
+    [`mycpu/mycpu.srcs/sources_1/new/`](mycpu/mycpu.srcs/sources_1/new/)
 
-        Verilog source files
+- **Verilog testbenches:** 
 
-    - `sim_1\new\`: 
+    [`mycpu/mycpu.srcs/sim_1/new/`](mycpu/mycpu.srcs/sim_1/new/)
 
-        Verilog testbenches
+- **The constraint:** 
 
-    - `constrs_1\new\`: 
+    [`mycpu/mycpu.srcs/constrs_1/new/`](mycpu/mycpu.srcs/constrs_1/new/)
 
-        the constraint file
+- **C programs and scripts to build them:** 
 
-- `program\`
+    [`program/`](program/)
 
-    C programs and scripts to build them
+- **Assembly tests:**
 
-- `test\`
+    [`test/`](test/)
 
-    Assembly tests
-
-- `coe_gen\`: a python script that generates `.coe` file out of ASCII instructions
+- **Bootloader & `.coe` file generator**
+	
+	[`coe_gen/`](coe_gen/)
 
 ## How To Use
 First, prepare the following:
