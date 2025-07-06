@@ -27,6 +27,7 @@ module EX(
 
     input [3:0]         ID_alu_op_sel,
     input [2:0]         ID_alu_mul_op_sel,
+    input [2:0]         ID_alu_div_op_sel,
     input               ID_alu_src1_sel,
     input               ID_alu_src2_sel,
     input [31:0]        ID_imm,
@@ -38,6 +39,7 @@ module EX(
     input [4:0]         ID_rs2,
     input [4:0]         ID_rd,
     input [4:0]         ID_rd_mul,
+    input [4:0]         ID_rd_div,
 
     input [1:0]         ID_store_width,
     input [2:0]         ID_load_width,
@@ -45,6 +47,7 @@ module EX(
 
     input               ID_reg_w_en,
     input               ID_reg_w_en_mul,
+    input               ID_reg_w_en_div,
     input [2:0]         ID_reg_w_data_sel,
 
     input [31:0]        ID_pc,
@@ -58,8 +61,10 @@ module EX(
 
     input [31:0]        MEM_reg_w_data_forwarded,
     input [31:0]        MEM_reg_w_data_mul_forwarded,
+    input [31:0]        MEM_reg_w_data_div_forwarded,
     input [31:0]        WB_reg_w_data_forwarded,
     input [31:0]        WB_reg_w_data_mul_forwarded,
+    input [31:0]        WB_reg_w_data_div_forwarded,
     input [2:0]         forward_rs1_sel,
     input [2:0]         forward_rs2_sel,
 
@@ -75,6 +80,7 @@ module EX(
     input [31:0]        ID_mboot,
 
     input [4:0]         rd_queue_mul_out,
+    input [4:0]         rd_queue_div_out,
 
     input               ID_reset,
 
@@ -120,6 +126,7 @@ module EX(
     output [4:0]        EX_rd_mul,
 
     output [31:0]       EX_alu_div_result,
+    output              EX_reg_w_en_div,
     output [4:0]        EX_rd_div
 
     );
@@ -265,6 +272,7 @@ module EX(
 
     assign EX_reg_w_en          = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : ID_reg_w_en;
     assign EX_reg_w_en_mul      = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : (rd_queue_mul_out != 5'b0);
+    assign EX_reg_w_en_div      = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : (rd_queue_div_out != 5'b0);
     assign EX_reg_w_data_sel    = ID_reg_w_data_sel;
     assign EX_store_width       = excp_code == `STORE_ACCESS_FAULT ? `NO_STORE : ID_store_width;
     assign EX_load_width        = excp_code == `LOAD_ACCESS_FAULT ? `NO_LOAD : ID_load_width;
@@ -272,6 +280,7 @@ module EX(
     assign EX_pc_plus_4         = ID_pc_plus_4;
     assign EX_rd                = ID_rd;
     assign EX_rd_mul            = rd_queue_mul_out;
+    assign EX_rd_div            = rd_queue_div_out;
     assign EX_rs2_data          = fwd_rs2_data;
     assign EX_rs1               = ID_rs1;
     assign EX_rs2               = ID_rs2;

@@ -26,10 +26,12 @@ module ID_EX(
 
     input [3:0]         ID_alu_op_sel,
     input [2:0]         ID_alu_mul_op_sel,
+    input [2:0]         ID_alu_div_op_sel,
     input               ID_alu_src1_sel,
     input               ID_alu_src2_sel,
     input               ID_reg_w_en,
     input               ID_reg_w_en_mul,
+    input               ID_reg_w_en_div,
     input [2:0]         ID_reg_w_data_sel,
     input [1:0]         ID_store_width,
     input [2:0]         ID_load_width,
@@ -42,6 +44,7 @@ module ID_EX(
     input [4:0]         ID_rs2,
     input [4:0]         ID_rd,
     input [4:0]         ID_rd_mul,
+    input [4:0]         ID_rd_div,
     input [31:0]        ID_pc,
     input [31:0]        ID_pc_plus_4,
     input               ID_jal,
@@ -61,10 +64,12 @@ module ID_EX(
 
     output reg [3:0]    EX_alu_op_sel,
     output reg [4:0]    EX_alu_mul_op_sel,
+    output reg [4:0]    EX_alu_div_op_sel,
     output reg          EX_alu_src1_sel,
     output reg          EX_alu_src2_sel,
     output reg          EX_reg_w_en,
     output reg          EX_reg_w_en_mul,
+    output reg          EX_reg_w_en_div,
     output reg [2:0]    EX_reg_w_data_sel,
     output reg [1:0]    EX_store_width,
     output reg [2:0]    EX_load_width,
@@ -77,6 +82,7 @@ module ID_EX(
     output reg [4:0]    EX_rs2,
     output reg [4:0]    EX_rd,
     output reg [4:0]    EX_rd_mul,
+    output reg [4:0]    EX_rd_div,
     output reg [31:0]   EX_pc,
     output reg [31:0]   EX_pc_plus_4,
     output reg          EX_jal,
@@ -100,10 +106,12 @@ module ID_EX(
         if (reset) begin
             EX_alu_op_sel       <= 4'h0;
             EX_alu_mul_op_sel   <= 3'h0;
+            EX_alu_div_op_sel   <= 3'h0;
             EX_alu_src1_sel     <= 1'b0;
             EX_alu_src2_sel     <= 1'b0;
             EX_reg_w_en         <= 1'b0;
             EX_reg_w_en_mul     <= 1'b0;
+            EX_reg_w_en_div     <= 1'b0;
             EX_reg_w_data_sel   <= 3'h0;
             EX_store_width      <= 2'h3;
             EX_load_width       <= 3'h3;
@@ -116,6 +124,7 @@ module ID_EX(
             EX_rs2              <= 5'h0;
             EX_rd               <= 5'h0;
             EX_rd_mul           <= 5'h0;
+            EX_rd_div           <= 5'h0;
             `ifdef SIMULATION
                 `ifdef LOAD_AT_0X200
                     EX_pc <= 32'h200;
@@ -141,10 +150,12 @@ module ID_EX(
         end else begin
             EX_alu_op_sel       <= ID_alu_op_sel;
             EX_alu_mul_op_sel   <= ID_alu_mul_op_sel;
+            EX_alu_div_op_sel   <= ID_alu_div_op_sel;
             EX_alu_src1_sel     <= ID_alu_src1_sel;
             EX_alu_src2_sel     <= ID_alu_src2_sel;
             EX_reg_w_en         <= ID_reg_w_en;
             EX_reg_w_en_mul     <= ID_reg_w_en_mul;
+            EX_reg_w_en_div     <= ID_reg_w_en_div;
             EX_reg_w_data_sel   <= ID_reg_w_data_sel;
             EX_store_width      <= ID_store_width;
             EX_load_width       <= ID_load_width;
@@ -157,6 +168,7 @@ module ID_EX(
             EX_rs2              <= ID_rs2;
             EX_rd               <= ID_rd;
             EX_rd_mul           <= ID_rd_mul;
+            EX_rd_div           <= ID_rd_div;
             EX_pc               <= ID_pc;
             EX_pc_plus_4        <= ID_pc_plus_4;
             EX_jal              <= ID_jal;

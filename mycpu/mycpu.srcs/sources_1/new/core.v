@@ -58,6 +58,7 @@ module core(
     `endif
 
     wire [`RD_QUEUE_MUL_SIZE*5-1:0]     rd_queue_mul;
+    wire [`RD_QUEUE_DIV_SIZE*5-1:0]     rd_queue_div;
 
     wire            inst_access_fault;
 
@@ -70,10 +71,12 @@ module core(
 
     wire [3:0]      ID_out_alu_op_sel;
     wire [2:0]      ID_out_alu_mul_op_sel;
+    wire [2:0]      ID_out_alu_div_op_sel;
     wire            ID_out_alu_src1_sel;
     wire            ID_out_alu_src2_sel;
     wire            ID_out_reg_w_en;
     wire            ID_out_reg_w_en_mul;
+    wire            ID_out_reg_w_en_div;
     wire [2:0]      ID_out_reg_w_data_sel;
     wire            ID_out_load_un;
     wire [31:0]     ID_out_imm;
@@ -84,6 +87,7 @@ module core(
     wire [4:0]      ID_out_rs2;
     wire [4:0]      ID_out_rd;
     wire [4:0]      ID_out_rd_mul;
+    wire [4:0]      ID_out_rd_div;
     wire [31:0]     ID_out_pc;
     wire [31:0]     ID_out_pc_plus_4;
     wire [31:0]     ID_out_inst;
@@ -102,10 +106,12 @@ module core(
 
     wire [3:0]      EX_in_alu_op_sel;
     wire [2:0]      EX_in_alu_mul_op_sel;
+    wire [2:0]      EX_in_alu_div_op_sel;
     wire            EX_in_alu_src1_sel;
     wire            EX_in_alu_src2_sel;
     wire            EX_in_reg_w_en;
     wire            EX_in_reg_w_en_mul;
+    wire            EX_in_reg_w_en_div;
     wire [2:0]      EX_in_reg_w_data_sel;
     wire [1:0]      EX_in_store_width;
     wire [2:0]      EX_in_load_width;
@@ -118,6 +124,7 @@ module core(
     wire [4:0]      EX_in_rs2;
     wire [4:0]      EX_in_rd;
     wire [4:0]      EX_in_rd_mul;
+    wire [4:0]      EX_in_rd_div;
     wire [31:0]     EX_in_pc;
     wire [31:0]     EX_in_pc_plus_4;
     wire            EX_in_jal;
@@ -166,11 +173,16 @@ module core(
     wire [31:0]     EX_out_alu_mul_result;
     wire [4:0]      EX_out_rd_mul;
     wire            EX_out_reg_w_en_mul;
+    wire [31:0]     EX_out_alu_div_result;
+    wire [4:0]      EX_out_rd_div;
+    wire            EX_out_reg_w_en_div;
 
     wire [31:0]     MEM_reg_w_data_forwarded;
     wire [31:0]     MEM_reg_w_data_mul_forwarded;
+    wire [31:0]     MEM_reg_w_data_div_forwarded;
     wire [31:0]     WB_reg_w_data_forwarded;
     wire [31:0]     WB_reg_w_data_mul_forwarded;
+    wire [31:0]     WB_reg_w_data_div_forwarded;
     wire [2:0]      forward_rs1_sel;
     wire [2:0]      forward_rs2_sel;
     wire [31:0]     MEM_csr_w_data_forwarded;
@@ -196,12 +208,16 @@ module core(
     wire [31:0]     MEM_in_alu_mul_result;
     wire [4:0]      MEM_in_rd_mul;
     wire            MEM_in_reg_w_en_mul;
+    wire [31:0]     MEM_in_alu_div_result;
+    wire [4:0]      MEM_in_rd_div;
+    wire            MEM_in_reg_w_en_div;
 
     wire [31:0]     MEM_out_alu_result;
     wire            MEM_out_reg_w_en;
     wire [2:0]      MEM_out_reg_w_data_sel;
     wire [31:0]     MEM_out_reg_w_data;
     wire [31:0]     MEM_out_reg_w_data_mul;
+    wire [31:0]     MEM_out_reg_w_data_div;
     wire [31:0]     MEM_out_pc_plus_4;
     wire [4:0]      MEM_out_rd;
     wire [31:0]     MEM_out_dmem_data;
@@ -215,6 +231,9 @@ module core(
     wire [31:0]     MEM_out_alu_mul_result;
     wire [4:0]      MEM_out_rd_mul;
     wire            MEM_out_reg_w_en_mul;
+    wire [31:0]     MEM_out_alu_div_result;
+    wire [4:0]      MEM_out_rd_div;
+    wire            MEM_out_reg_w_en_div;
 
     wire [31:0]     WB_in_alu_result;
     wire            WB_in_reg_w_en;
@@ -232,6 +251,9 @@ module core(
     wire [31:0]     WB_in_alu_mul_result;
     wire [4:0]      WB_in_rd_mul;
     wire            WB_in_reg_w_en_mul;
+    wire [31:0]     WB_in_alu_div_result;
+    wire [4:0]      WB_in_rd_div;
+    wire            WB_in_reg_w_en_div;
 
     wire            WB_out_reg_w_en;
     wire [31:0]     WB_out_reg_w_data;
@@ -245,6 +267,9 @@ module core(
     wire [31:0]     WB_out_reg_w_data_mul;
     wire [4:0]      WB_out_rd_mul;
     wire            WB_out_reg_w_en_mul;
+    wire [31:0]     WB_out_reg_w_data_div;
+    wire [4:0]      WB_out_rd_div;
+    wire            WB_out_reg_w_en_div;
 
     // branch_prediction_unit
     wire            branch_predict;
@@ -256,7 +281,8 @@ module core(
     // hazard_unit
     wire            load_stall, load_flush;
     wire            calc_stall, calc_flush;
-    wire [`RD_QUEUE_MUL_SIZE-1:0] rd_queue_mul_flush_sel;
+    wire [`RD_QUEUE_MUL_SIZE-2:0] rd_queue_mul_flush_sel;
+    wire [`RD_QUEUE_DIV_SIZE-2:0] rd_queue_div_flush_sel;
 
     // Memory
     wire [3:0]      wea = 4'b0;
@@ -323,16 +349,20 @@ module core(
         .reset                  (reset),
         .stall                  (calc_stall),
         .rd_queue_mul_flush_sel (rd_queue_mul_flush_sel),
+        .rd_queue_div_flush_sel (rd_queue_div_flush_sel),
         .IF_pc                  (ID_in_pc),
         .IF_pc_plus_4           (ID_in_pc_plus_4),
         .IF_inst                (ID_in_inst),
         .IF_branch_predict      (ID_in_branch_predict),
         .WB_reg_w_data          (WB_out_reg_w_data),
         .WB_reg_w_data_mul      (WB_out_reg_w_data_mul),
+        .WB_reg_w_data_div      (WB_out_reg_w_data_div),
         .WB_reg_w_en            (WB_out_reg_w_en),
         .WB_reg_w_en_mul        (WB_out_reg_w_en_mul),
+        .WB_reg_w_en_div        (WB_out_reg_w_en_div),
         .WB_rd                  (WB_out_rd),
         .WB_rd_mul              (WB_out_rd_mul),
+        .WB_rd_div              (WB_out_rd_div),
         .WB_csr_addr            (WB_out_csr_addr),
         .WB_csr_w_en            (WB_out_csr_w_en),
         .WB_csr_w_data          (WB_out_csr_w_data),
@@ -341,10 +371,12 @@ module core(
         .WB_w_mcause            (WB_out_w_mcause),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
         .ID_alu_mul_op_sel      (ID_out_alu_mul_op_sel),
+        .ID_alu_div_op_sel      (ID_out_alu_div_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
         .ID_reg_w_en            (ID_out_reg_w_en),
         .ID_reg_w_en_mul        (ID_out_reg_w_en_mul),
+        .ID_reg_w_en_div        (ID_out_reg_w_en_div),
         .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
         .ID_store_width         (ID_out_store_width),
         .ID_load_width          (ID_out_load_width),
@@ -357,6 +389,7 @@ module core(
         .ID_rs2                 (ID_out_rs2),
         .ID_rd                  (ID_out_rd),
         .ID_rd_mul              (ID_out_rd_mul),
+        .ID_rd_div              (ID_out_rd_div),
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
         .ID_jal                 (ID_out_jal),
@@ -372,7 +405,8 @@ module core(
         .ID_mtvec               (ID_out_mtvec),
         .ID_mepc                (ID_out_mepc),
         .ID_mboot               (ID_out_mboot),
-        .rd_queue_mul           (rd_queue_mul)
+        .rd_queue_mul           (rd_queue_mul),
+        .rd_queue_div           (rd_queue_div)
     );
 
     ID_EX id_ex_0 (
@@ -380,10 +414,12 @@ module core(
         .reset                  (reset | load_flush | calc_flush | EX_branch_flush | EX_out_excp | EX_out_mret),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
         .ID_alu_mul_op_sel      (ID_out_alu_mul_op_sel),
+        .ID_alu_div_op_sel      (ID_out_alu_div_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
         .ID_reg_w_en            (ID_out_reg_w_en),
         .ID_reg_w_en_mul        (ID_out_reg_w_en_mul),
+        .ID_reg_w_en_div        (ID_out_reg_w_en_div),
         .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
         .ID_store_width         (ID_out_store_width),
         .ID_load_width          (ID_out_load_width),
@@ -396,6 +432,7 @@ module core(
         .ID_rs2                 (ID_out_rs2),
         .ID_rd                  (ID_out_rd),
         .ID_rd_mul              (ID_out_rd_mul),
+        .ID_rd_div              (ID_out_rd_div),
         .ID_pc                  (ID_out_pc),
         .ID_pc_plus_4           (ID_out_pc_plus_4),
         .ID_jal                 (ID_out_jal),
@@ -415,10 +452,12 @@ module core(
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
         .EX_alu_mul_op_sel      (EX_in_alu_mul_op_sel),
+        .EX_alu_div_op_sel      (EX_in_alu_div_op_sel),
         .EX_alu_src1_sel        (EX_in_alu_src1_sel),
         .EX_alu_src2_sel        (EX_in_alu_src2_sel),
         .EX_reg_w_en            (EX_in_reg_w_en),
         .EX_reg_w_en_mul        (EX_in_reg_w_en_mul),
+        .EX_reg_w_en_div        (EX_in_reg_w_en_div),
         .EX_reg_w_data_sel      (EX_in_reg_w_data_sel),
         .EX_store_width         (EX_in_store_width),
         .EX_load_width          (EX_in_load_width),
@@ -431,6 +470,7 @@ module core(
         .EX_rs2                 (EX_in_rs2),
         .EX_rd                  (EX_in_rd),
         .EX_rd_mul              (EX_in_rd_mul),
+        .EX_rd_div              (EX_in_rd_div),
         .EX_pc                  (EX_in_pc),
         .EX_pc_plus_4           (EX_in_pc_plus_4),
         .EX_jal                 (EX_in_jal),
@@ -454,6 +494,7 @@ module core(
         .reset                      (reset),
         .ID_alu_op_sel              (EX_in_alu_op_sel),
         .ID_alu_mul_op_sel          (EX_in_alu_mul_op_sel),
+        .ID_alu_div_op_sel          (EX_in_alu_div_op_sel),
         .ID_alu_src1_sel            (EX_in_alu_src1_sel),
         .ID_alu_src2_sel            (EX_in_alu_src2_sel),
         .ID_imm                     (EX_in_imm),
@@ -464,11 +505,13 @@ module core(
         .ID_rs2                     (EX_in_rs2),
         .ID_rd                      (EX_in_rd),
         .ID_rd_mul                  (EX_in_rd_mul),
+        .ID_rd_div                  (EX_in_rd_div),
         .ID_store_width             (EX_in_store_width),
         .ID_load_width              (EX_in_load_width),
         .ID_load_un                 (EX_in_load_un),
         .ID_reg_w_en                (EX_in_reg_w_en),
         .ID_reg_w_en_mul            (EX_in_reg_w_en_mul),
+        .ID_reg_w_en_div            (EX_in_reg_w_en_div),
         .ID_reg_w_data_sel          (EX_in_reg_w_data_sel),
         .ID_pc                      (EX_in_pc),
         .ID_pc_plus_4               (EX_in_pc_plus_4),
@@ -487,13 +530,16 @@ module core(
         .ID_mboot                   (EX_in_mboot),
 
         .rd_queue_mul_out           (rd_queue_mul[0+:5]),
+        .rd_queue_div_out           (rd_queue_div[0+:5]),
 
         .ID_reset                   (ID_EX_reset),
 
         .MEM_reg_w_data_forwarded   (MEM_reg_w_data_forwarded),
         .MEM_reg_w_data_mul_forwarded(MEM_reg_w_data_mul_forwarded),
+        .MEM_reg_w_data_div_forwarded(MEM_reg_w_data_div_forwarded),
         .WB_reg_w_data_forwarded    (WB_reg_w_data_forwarded),
         .WB_reg_w_data_mul_forwarded(WB_reg_w_data_mul_forwarded),
+        .WB_reg_w_data_div_forwarded(WB_reg_w_data_div_forwarded),
         .forward_rs1_sel            (forward_rs1_sel),
         .forward_rs2_sel            (forward_rs2_sel),
 
@@ -503,9 +549,11 @@ module core(
 
         .EX_alu_result              (EX_out_alu_result),
         .EX_alu_mul_result          (EX_out_alu_mul_result),
+        .EX_alu_div_result          (EX_out_alu_div_result),
         .EX_pc_sel                  (EX_out_pc_sel),
         .EX_reg_w_en                (EX_out_reg_w_en),
         .EX_reg_w_en_mul            (EX_out_reg_w_en_mul),
+        .EX_reg_w_en_div            (EX_out_reg_w_en_div),
         .EX_reg_w_data_sel          (EX_out_reg_w_data_sel),
         .EX_store_width             (EX_out_store_width),
         .EX_load_width              (EX_out_load_width),
@@ -513,6 +561,7 @@ module core(
         .EX_pc_plus_4               (EX_out_pc_plus_4),
         .EX_rd                      (EX_out_rd),
         .EX_rd_mul                  (EX_out_rd_mul),
+        .EX_rd_div                  (EX_out_rd_div),
         .EX_rs2_data                (EX_out_rs2_data),
         .EX_rs1                     (EX_out_rs1),
         .EX_rs2                     (EX_out_rs2),
@@ -544,8 +593,10 @@ module core(
         .reset                   (reset),
         .EX_alu_result           (EX_out_alu_result),
         .EX_alu_mul_result       (EX_out_alu_mul_result),
+        .EX_alu_div_result       (EX_out_alu_div_result),
         .EX_reg_w_en             (EX_out_reg_w_en),
         .EX_reg_w_en_mul         (EX_out_reg_w_en_mul),
+        .EX_reg_w_en_div         (EX_out_reg_w_en_div),
         .EX_reg_w_data_sel       (EX_out_reg_w_data_sel),
         .EX_store_width          (EX_out_store_width),
         .EX_load_width           (EX_out_load_width),
@@ -553,6 +604,7 @@ module core(
         .EX_pc_plus_4            (EX_out_pc_plus_4),
         .EX_rd                   (EX_out_rd),
         .EX_rd_mul               (EX_out_rd_mul),
+        .EX_rd_div               (EX_out_rd_div),
         .EX_rs2_data             (EX_out_rs2_data),
         .EX_csr_addr             (EX_out_csr_addr),
         .EX_csr_w_data           (EX_out_csr_w_data),
@@ -563,8 +615,10 @@ module core(
         .EX_w_mcause             (EX_out_w_mcause),
         .MEM_alu_result          (MEM_in_alu_result),
         .MEM_alu_mul_result      (MEM_in_alu_mul_result),
+        .MEM_alu_div_result      (MEM_in_alu_div_result),
         .MEM_reg_w_en            (MEM_in_reg_w_en),
         .MEM_reg_w_en_mul        (MEM_in_reg_w_en_mul),
+        .MEM_reg_w_en_div        (MEM_in_reg_w_en_div),
         .MEM_reg_w_data_sel      (MEM_in_reg_w_data_sel),
         .MEM_store_width         (MEM_in_store_width),
         .MEM_load_width          (MEM_in_load_width),
@@ -572,6 +626,7 @@ module core(
         .MEM_pc_plus_4           (MEM_in_pc_plus_4),
         .MEM_rd                  (MEM_in_rd),
         .MEM_rd_mul              (MEM_in_rd_mul),
+        .MEM_rd_div              (MEM_in_rd_div),
         .MEM_rs2_data            (MEM_in_rs2_data),
         .MEM_csr_addr            (MEM_in_csr_addr),
         .MEM_csr_w_data          (MEM_in_csr_w_data),
@@ -585,8 +640,10 @@ module core(
     MEM mem_0 (
         .EX_alu_result           (MEM_in_alu_result),
         .EX_alu_mul_result       (MEM_in_alu_mul_result),
+        .EX_alu_div_result       (MEM_in_alu_div_result),
         .EX_reg_w_en             (MEM_in_reg_w_en),
         .EX_reg_w_en_mul         (MEM_in_reg_w_en_mul),
+        .EX_reg_w_en_div         (MEM_in_reg_w_en_div),
         .EX_reg_w_data_sel       (MEM_in_reg_w_data_sel),
         .EX_store_width          (MEM_in_store_width),
         .EX_load_width           (MEM_in_load_width),
@@ -594,6 +651,7 @@ module core(
         .EX_pc_plus_4            (MEM_in_pc_plus_4),
         .EX_rd                   (MEM_in_rd),
         .EX_rd_mul               (MEM_in_rd_mul),
+        .EX_rd_div               (MEM_in_rd_div),
         .EX_rs2_data             (MEM_in_rs2_data),
         .EX_csr_addr             (MEM_in_csr_addr),
         .EX_csr_w_data           (MEM_in_csr_w_data),
@@ -610,15 +668,19 @@ module core(
         .D_load_data             (D_load_data),
         .MEM_reg_w_en            (MEM_out_reg_w_en),
         .MEM_reg_w_en_mul        (MEM_out_reg_w_en_mul),
+        .MEM_reg_w_en_div        (MEM_out_reg_w_en_div),
         .MEM_reg_w_data_sel      (MEM_out_reg_w_data_sel),
         .MEM_reg_w_data          (MEM_out_reg_w_data),
         .MEM_reg_w_data_mul      (MEM_out_reg_w_data_mul),
+        .MEM_reg_w_data_div      (MEM_out_reg_w_data_div),
         .MEM_pc_plus_4           (MEM_out_pc_plus_4),
         .MEM_rd                  (MEM_out_rd),
         .MEM_rd_mul              (MEM_out_rd_mul),
+        .MEM_rd_div              (MEM_out_rd_div),
         .MEM_dmem_data           (MEM_out_dmem_data),
         .MEM_alu_result          (MEM_out_alu_result),
         .MEM_alu_mul_result      (MEM_out_alu_mul_result),
+        .MEM_alu_div_result      (MEM_out_alu_div_result),
         .MEM_csr_addr            (MEM_out_csr_addr),
         .MEM_csr_w_data          (MEM_out_csr_w_data),
         .MEM_csr_w_en            (MEM_out_csr_w_en),
@@ -633,13 +695,16 @@ module core(
         .reset                   (reset),
         .MEM_reg_w_en            (MEM_out_reg_w_en),
         .MEM_reg_w_en_mul        (MEM_out_reg_w_en_mul),
+        .MEM_reg_w_en_div        (MEM_out_reg_w_en_div),
         .MEM_reg_w_data_sel      (MEM_out_reg_w_data_sel),
         .MEM_pc_plus_4           (MEM_out_pc_plus_4),
         .MEM_rd                  (MEM_out_rd),
         .MEM_rd_mul              (MEM_out_rd_mul),
+        .MEM_rd_div              (MEM_out_rd_div),
         .MEM_dmem_data           (MEM_out_dmem_data),
         .MEM_alu_result          (MEM_out_alu_result),
         .MEM_alu_mul_result      (MEM_out_alu_mul_result),
+        .MEM_alu_div_result      (MEM_out_alu_div_result),
         .MEM_csr_addr            (MEM_out_csr_addr),
         .MEM_csr_w_data          (MEM_out_csr_w_data),
         .MEM_csr_w_en            (MEM_out_csr_w_en),
@@ -649,13 +714,16 @@ module core(
         .MEM_w_mcause            (MEM_out_w_mcause),
         .WB_reg_w_en             (WB_in_reg_w_en),
         .WB_reg_w_en_mul         (WB_in_reg_w_en_mul),
+        .WB_reg_w_en_div         (WB_in_reg_w_en_div),
         .WB_reg_w_data_sel       (WB_in_reg_w_data_sel),
         .WB_pc_plus_4            (WB_in_pc_plus_4),
         .WB_rd                   (WB_in_rd),
         .WB_rd_mul               (WB_in_rd_mul),
+        .WB_rd_div               (WB_in_rd_div),
         .WB_dmem_data            (WB_in_dmem_data),
         .WB_alu_result           (WB_in_alu_result),
         .WB_alu_mul_result       (WB_in_alu_mul_result),
+        .WB_alu_div_result       (WB_in_alu_div_result),
         .WB_csr_addr             (WB_in_csr_addr),
         .WB_csr_w_data           (WB_in_csr_w_data),
         .WB_csr_w_en             (WB_in_csr_w_en),
@@ -668,13 +736,16 @@ module core(
     WB wb_0 (
         .MEM_reg_w_en            (WB_in_reg_w_en),
         .MEM_reg_w_en_mul        (WB_in_reg_w_en_mul),
+        .MEM_reg_w_en_div        (WB_in_reg_w_en_div),
         .MEM_reg_w_data_sel      (WB_in_reg_w_data_sel),
         .MEM_pc_plus_4           (WB_in_pc_plus_4),
         .MEM_rd                  (WB_in_rd),
         .MEM_rd_mul              (WB_in_rd_mul),
+        .MEM_rd_div              (WB_in_rd_div),
         .MEM_dmem_data           (WB_in_dmem_data),
         .MEM_alu_result          (WB_in_alu_result),
         .MEM_alu_mul_result      (WB_in_alu_mul_result),
+        .MEM_alu_div_result      (WB_in_alu_div_result),
         .MEM_csr_addr            (WB_in_csr_addr),
         .MEM_csr_w_data          (WB_in_csr_w_data),
         .MEM_csr_w_en            (WB_in_csr_w_en),
@@ -684,10 +755,13 @@ module core(
         .MEM_w_mcause            (WB_in_w_mcause),
         .WB_reg_w_en             (WB_out_reg_w_en),
         .WB_reg_w_en_mul         (WB_out_reg_w_en_mul),
+        .WB_reg_w_en_div         (WB_out_reg_w_en_div),
         .WB_reg_w_data           (WB_out_reg_w_data),
         .WB_reg_w_data_mul       (WB_out_reg_w_data_mul),
+        .WB_reg_w_data_div       (WB_out_reg_w_data_div),
         .WB_rd                   (WB_out_rd),
         .WB_rd_mul               (WB_out_rd_mul),
+        .WB_rd_div               (WB_out_rd_div),
         .WB_csr_addr             (WB_out_csr_addr),
         .WB_csr_w_data           (WB_out_csr_w_data),
         .WB_csr_w_en             (WB_out_csr_w_en),
@@ -699,16 +773,22 @@ module core(
     hazard_unit hazard_unit_0 (
         .MEM_rd                      (MEM_out_rd),
         .MEM_rd_mul                  (MEM_out_rd_mul),
+        .MEM_rd_div                  (MEM_out_rd_div),
         .MEM_reg_w_en                (MEM_out_reg_w_en),
         .MEM_reg_w_en_mul            (MEM_out_reg_w_en_mul),
+        .MEM_reg_w_en_div            (MEM_out_reg_w_en_div),
         .MEM_reg_w_data              (MEM_out_reg_w_data),
         .MEM_reg_w_data_mul          (MEM_out_reg_w_data_mul),
+        .MEM_reg_w_data_div          (MEM_out_reg_w_data_div),
         .WB_rd                       (WB_out_rd),
         .WB_rd_mul                   (WB_out_rd_mul),
+        .WB_rd_div                   (WB_out_rd_div),
         .WB_reg_w_en                 (WB_out_reg_w_en),
         .WB_reg_w_en_mul             (WB_out_reg_w_en_mul),
+        .WB_reg_w_en_div             (WB_out_reg_w_en_div),
         .WB_reg_w_data               (WB_out_reg_w_data),
         .WB_reg_w_data_mul           (WB_out_reg_w_data_mul),
+        .WB_reg_w_data_div           (WB_out_reg_w_data_div),
         .EX_rs1                      (EX_out_rs1),
         .EX_rs2                      (EX_out_rs2),
         .EX_ecall                    (EX_out_ecall), 
@@ -722,6 +802,7 @@ module core(
         .MEM_csr_w_data              (MEM_out_csr_w_data),
         .WB_csr_w_data               (WB_out_csr_w_data),
         .rd_queue_mul                (rd_queue_mul),
+        .rd_queue_div                (rd_queue_div),
         .ID_reg_w_en                 (ID_out_reg_w_en),
         .ID_rd                       (ID_out_rd),
 
@@ -730,8 +811,10 @@ module core(
         .forward_csr_sel             (forward_csr_sel),
         .MEM_reg_w_data_forwarded    (MEM_reg_w_data_forwarded),
         .MEM_reg_w_data_mul_forwarded(MEM_reg_w_data_mul_forwarded),
+        .MEM_reg_w_data_div_forwarded(MEM_reg_w_data_div_forwarded),
         .WB_reg_w_data_forwarded     (WB_reg_w_data_forwarded),
         .WB_reg_w_data_mul_forwarded (WB_reg_w_data_mul_forwarded),
+        .WB_reg_w_data_div_forwarded (WB_reg_w_data_div_forwarded),
         .forward_rs1_sel             (forward_rs1_sel),
         .forward_rs2_sel             (forward_rs2_sel),
         .ID_rs1                      (ID_out_rs1),
@@ -742,7 +825,8 @@ module core(
         .load_flush                  (load_flush),
         .calc_stall                  (calc_stall),
         .calc_flush                  (calc_flush),
-        .rd_queue_mul_flush_sel      (rd_queue_mul_flush_sel)
+        .rd_queue_mul_flush_sel      (rd_queue_mul_flush_sel),
+        .rd_queue_div_flush_sel      (rd_queue_div_flush_sel)
     );
 
 `ifdef BRANCH_PREDICT_ENA

@@ -166,6 +166,7 @@
 
 // rd_queues
 `define RD_QUEUE_MUL_SIZE       3
+`define RD_QUEUE_DIV_SIZE       37
 
 // VGA parameters
 

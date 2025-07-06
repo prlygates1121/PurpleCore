@@ -22,19 +22,25 @@
 
 
 module hazard_unit(
-    input [4:0]     MEM_rd,         
+    input [4:0]     MEM_rd,
     input [4:0]     MEM_rd_mul,
+    input [4:0]     MEM_rd_div,
     input [31:0]    MEM_reg_w_data,
     input [31:0]    MEM_reg_w_data_mul,
+    input [31:0]    MEM_reg_w_data_div,
     input           MEM_reg_w_en,
     input           MEM_reg_w_en_mul,
+    input           MEM_reg_w_en_div,
 
-    input [4:0]     WB_rd,     
-    input [4:0]     WB_rd_mul,     
-    input [31:0]    WB_reg_w_data, 
+    input [4:0]     WB_rd,
+    input [4:0]     WB_rd_mul,
+    input [4:0]     WB_rd_div,
+    input [31:0]    WB_reg_w_data,
     input [31:0]    WB_reg_w_data_mul,
+    input [31:0]    WB_reg_w_data_div,
     input           WB_reg_w_en,
     input           WB_reg_w_en_mul,
+    input           WB_reg_w_en_div,
 
     input [2:0]     EX_csr_op,
     input [4:0]     EX_rs1,
@@ -54,8 +60,10 @@ module hazard_unit(
 
     output [31:0]   MEM_reg_w_data_forwarded,
     output [31:0]   MEM_reg_w_data_mul_forwarded,
-    output [31:0]   WB_reg_w_data_forwarded, 
+    output [31:0]   MEM_reg_w_data_div_forwarded,
+    output [31:0]   WB_reg_w_data_forwarded,
     output [31:0]   WB_reg_w_data_mul_forwarded,
+    output [31:0]   WB_reg_w_data_div_forwarded,
     output [31:0]   MEM_csr_w_data_forwarded,
     output [31:0]   WB_csr_w_data_forwarded,
     output [2:0]    forward_rs1_sel,
@@ -65,9 +73,10 @@ module hazard_unit(
     input [4:0]     ID_rs1,
     input [4:0]     ID_rs2,
     input [4:0]     EX_rd, 
-    input           EX_load,     
+    input           EX_load,
 
     input [`RD_QUEUE_MUL_SIZE*5-1:0] rd_queue_mul,
+    input [`RD_QUEUE_DIV_SIZE*5-1:0] rd_queue_div,
 
     input           ID_reg_w_en,
     input [4:0]     ID_rd,
@@ -78,7 +87,8 @@ module hazard_unit(
     output reg      calc_stall,
     output          calc_flush,
 
-    output reg [`RD_QUEUE_MUL_SIZE-3:0] rd_queue_mul_flush_sel
+    output reg [`RD_QUEUE_MUL_SIZE-2:0] rd_queue_mul_flush_sel,
+    output reg [`RD_QUEUE_DIV_SIZE-2:0] rd_queue_div_flush_sel
 
     );
 
@@ -140,7 +150,7 @@ module hazard_unit(
     // so, if write_disorder is true, we need to cancel the register write of the previous multicycle instruction, and write the current instruction's result instead
     integer i;
     always @(*) begin
-        for (i = 0; i <= `RD_QUEUE_MUL_SIZE-3; i = i + 1) begin
+        for (i = 0; i <= `RD_QUEUE_MUL_SIZE-2; i = i + 1) begin
             rd_queue_mul_flush_sel[i] = ID_reg_w_en & (ID_rd == rd_queue_mul[(`RD_QUEUE_MUL_SIZE-1-i)*5+:5]) & (ID_rd != 5'b0);
         end
     end

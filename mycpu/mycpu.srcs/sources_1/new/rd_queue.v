@@ -25,7 +25,7 @@ module rd_queue #(
 )(
     input                   clk,
     input                   reset,
-    input [SIZE-3:0]        flush_sel,
+    input [SIZE-2:0]        flush_sel,
     input [4:0]             rd_in,
     output reg [SIZE*5-1:0] rd_queue
 );
@@ -35,10 +35,9 @@ module rd_queue #(
             rd_queue <= 0;
         end else begin
             rd_queue[(SIZE-1)*5+:5] <= rd_in;
-            for (i = 0; i <= SIZE-3; i = i + 1) begin
+            for (i = 0; i <= SIZE-2; i = i + 1) begin
                 rd_queue[(SIZE-1-i-1)*5+:5] <= flush_sel[i] ? 5'b0 : rd_queue[(SIZE-1-i)*5+:5];
             end
-            rd_queue[0+:5] <= rd_queue[5+:5];
         end
     end
 endmodule

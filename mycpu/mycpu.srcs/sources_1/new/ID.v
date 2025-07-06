@@ -32,6 +32,7 @@ module ID(
     input               reset,
     input               stall,
     input [`RD_QUEUE_MUL_SIZE-1:0] rd_queue_mul_flush_sel,
+    input [`RD_QUEUE_DIV_SIZE-1:0] rd_queue_div_flush_sel,
     
     input [31:0]        IF_pc,
     input [31:0]        IF_pc_plus_4,
@@ -39,10 +40,13 @@ module ID(
     input               IF_branch_predict,
     input [31:0]        WB_reg_w_data,
     input [31:0]        WB_reg_w_data_mul,
+    input [31:0]        WB_reg_w_data_div,
     input               WB_reg_w_en,
     input               WB_reg_w_en_mul,
+    input               WB_reg_w_en_div,
     input [4:0]         WB_rd,
     input [4:0]         WB_rd_mul,
+    input [4:0]         WB_rd_div,
     input [11:0]        WB_csr_addr,
     input               WB_csr_w_en,
     input [31:0]        WB_csr_w_data,
@@ -57,6 +61,7 @@ module ID(
     output              ID_alu_src2_sel,
     output              ID_reg_w_en,
     output              ID_reg_w_en_mul,
+    output              ID_reg_w_en_div,
     output [2:0]        ID_reg_w_data_sel,
     output [1:0]        ID_store_width,
     output [2:0]        ID_load_width,
@@ -69,6 +74,7 @@ module ID(
     output [4:0]        ID_rs2,
     output [4:0]        ID_rd,
     output [4:0]        ID_rd_mul,
+    output [4:0]        ID_rd_div,
     output [31:0]       ID_pc,
     output [31:0]       ID_pc_plus_4,
     output              ID_jal,
@@ -87,7 +93,8 @@ module ID(
     output [31:0]       ID_mepc,
     output [31:0]       ID_mboot,
 
-    output [`RD_QUEUE_MUL_SIZE*5-1:0] rd_queue_mul
+    output [`RD_QUEUE_MUL_SIZE*5-1:0] rd_queue_mul,
+    output [`RD_QUEUE_DIV_SIZE*5-1:0] rd_queue_div
 
     );
 
@@ -125,6 +132,16 @@ module ID(
         .flush_sel          (rd_queue_mul_flush_sel),
         .rd_in              (ID_rd_mul),
         .rd_queue           (rd_queue_mul)
+    );
+
+    rd_queue #(
+        .SIZE               (`RD_QUEUE_DIV_SIZE)
+    ) rd_queue_div_0 (
+        .clk                (clk),
+        .reset              (reset),
+        .flush_sel          (rd_queue_div_flush_sel),
+        .rd_in              (ID_rd_div),
+        .rd_queue           (rd_queue_div)
     );
 
     control_logic ctrl_logic_0(
@@ -178,12 +195,15 @@ module ID(
         .reset          (reset),
         .write_en       (WB_reg_w_en),
         .write_en_mul   (WB_reg_w_en_mul),
+        .write_en_div   (WB_reg_w_en_div),
         .rs1            (rs1),
         .rs2            (rs2),
         .dest           (WB_rd),
         .dest_mul       (WB_rd_mul),
+        .dest_div       (WB_rd_div),
         .write_data     (WB_reg_w_data),
         .write_data_mul (WB_reg_w_data_mul),
+        .write_data_div (WB_reg_w_data_div),
 
         .rs1_data       (ID_rs1_data),
         .rs2_data       (ID_rs2_data)
