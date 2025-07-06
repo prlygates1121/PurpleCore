@@ -25,6 +25,10 @@ module control_logic(
     input [31:0]    inst,
 
     output [3:0]    alu_op_sel,
+    output [2:0]    alu_mul_op_sel,
+    output [2:0]    alu_div_op_sel,
+    output          mul,
+    output          div,
     output          alu_src1_sel,
     output          alu_src2_sel,
     output          reg_w_en,
@@ -40,6 +44,8 @@ module control_logic(
     output [4:0]    rs1,
     output [4:0]    rs2,
     output [4:0]    rd,
+    output [4:0]    rd_mul,
+    output [4:0]    rd_div,
     output [24:0]   imm,
     output          ecall,
     output          mret,
@@ -86,7 +92,7 @@ module control_logic(
     assign br_un        = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
     
     // ecall and mret do not trigger reg_w_en, unlike other CSR instructions
-    assign reg_w_en     = R | U | J | I_load | I_jalr | I_arith | csr;
+    assign reg_w_en     = (R | U | J | I_load | I_jalr | I_arith | csr) & (~mul & ~div);
 
     assign reg_w_data_sel = (J | I_jalr)      ? `REG_W_DATA_PC :        // PC + 4
                             (I_load)          ? `REG_W_DATA_MEM :       // Memory
@@ -94,30 +100,42 @@ module control_logic(
                             csr               ? `REG_W_DATA_CSR :       // CSR
                             `NO_REG_W_DATA;
 
-    assign alu_op_sel   = (R & funct3 == 3'h0 & funct7 == 7'h20)          ? `SUB :     // sub
-                          (R & funct3 == 3'h4 & funct7 == 7'h00 |                      // xor
-                           I_arith & funct3 == 3'h4)                      ? `XOR :     // xori
-                          (R & funct3 == 3'h6 & funct7 == 7'h00 |                      // or
-                           I_arith & funct3 == 3'h6)                      ? `OR :      // ori
-                          (R & funct3 == 3'h7 & funct7 == 7'h00 |                      // and
-                           I_arith & funct3 == 3'h7)                      ? `AND :     // andi
-                          (R & funct3 == 3'h1 & funct7 == 7'h00 |                      // sll
-                           I_arith & funct3 == 3'h1 & funct7 == 7'h00)    ? `SLL :     // slli
-                          (R & funct3 == 3'h5 & funct7 == 7'h00 |                      // srl
-                           I_arith & funct3 == 3'h5 & funct7 == 7'h00)    ? `SRL :     // srli
-                          (R & funct3 == 3'h5 & funct7 == 7'h20 |                      // sra
-                           I_arith & funct3 == 3'h5 & funct7 == 7'h20)    ? `SRA :     // srai
-                          (R & funct3 == 3'h2 & funct7 == 7'h00 |                      // slt
-                           I_arith & funct3 == 3'h2)                      ? `SLT :     // slti
-                          (R & funct3 == 3'h3 & funct7 == 7'h00 |                      // sltu
-                           I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
-                          (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
-                          (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh
-                          (R & funct3 == 3'h2 & funct7 == 7'h01)          ? `MULSU:    // mulsu
-                          (R & funct3 == 3'h3 & funct7 == 7'h01)          ? `MULU :    // mulu
-                          (opcode == 7'b0110111)                          ? `BSEL :    // lui
-                          `ADD;
+    assign alu_op_sel =     (R & funct3 == 3'h0 & funct7 == 7'h00 |
+                             I_arith & funct3 == 3'h0 |
+                             I_load | S | B | J | I_jalr | U_auipc)         ? `ADD :     // add, addi, lw, sw, beq, jal, auipc
+                            (R & funct3 == 3'h0 & funct7 == 7'h20)          ? `SUB :     // sub
+                            (R & funct3 == 3'h4 & funct7 == 7'h00 |                      // xor
+                             I_arith & funct3 == 3'h4)                      ? `XOR :     // xori
+                            (R & funct3 == 3'h6 & funct7 == 7'h00 |                      // or
+                             I_arith & funct3 == 3'h6)                      ? `OR :      // ori
+                            (R & funct3 == 3'h7 & funct7 == 7'h00 |                      // and
+                             I_arith & funct3 == 3'h7)                      ? `AND :     // andi
+                            (R & funct3 == 3'h1 & funct7 == 7'h00 |                      // sll
+                             I_arith & funct3 == 3'h1 & funct7 == 7'h00)    ? `SLL :     // slli
+                            (R & funct3 == 3'h5 & funct7 == 7'h00 |                      // srl
+                             I_arith & funct3 == 3'h5 & funct7 == 7'h00)    ? `SRL :     // srli
+                            (R & funct3 == 3'h5 & funct7 == 7'h20 |                      // sra
+                             I_arith & funct3 == 3'h5 & funct7 == 7'h20)    ? `SRA :     // srai
+                            (R & funct3 == 3'h2 & funct7 == 7'h00 |                      // slt
+                             I_arith & funct3 == 3'h2)                      ? `SLT :     // slti
+                            (R & funct3 == 3'h3 & funct7 == 7'h00 |                      // sltu
+                             I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
+                            (opcode == 7'b0110111)                          ? `BSEL :    // lui
+                            `ALU_NOP;
+    assign alu_mul_op_sel = (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
+                            (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh
+                            (R & funct3 == 3'h2 & funct7 == 7'h01)          ? `MULSU:    // mulsu
+                            (R & funct3 == 3'h3 & funct7 == 7'h01)          ? `MULU :    // mulu
+                            `ALU_NOP;
+    assign alu_div_op_sel = (R & funct3 == 3'h4 & funct7 == 7'h01)          ? `DIV :     // div
+                            (R & funct3 == 3'h5 & funct7 == 7'h01)          ? `DIVU :    // divu
+                            (R & funct3 == 3'h6 & funct7 == 7'h01)          ? `REM :     // rem
+                            (R & funct3 == 3'h7 & funct7 == 7'h01)          ? `REMU :    // remu
+                            `ALU_NOP;
 
+    assign mul            = alu_mul_op_sel != `ALU_NOP;
+    assign div            = alu_div_op_sel != `ALU_NOP;
+                          
     assign store_width  = S ? funct3[1:0] : `NO_STORE;
     assign load_width   = I_load ? funct3 : `NO_LOAD;
     assign load_un      = (load_width == `LOAD_BYTE_UN | load_width == `LOAD_HALF_UN);
@@ -131,7 +149,9 @@ module control_logic(
 
     assign rs1          = (J | U) ? 5'h0 : inst[19:15];
     assign rs2          = (R | S | B) ? inst[24:20] : 5'h0;
-    assign rd           = (S | B) ? 5'h0 : inst[11:7];
+    assign rd           = (S | B | mul | div) ? 5'h0 : inst[11:7];
+    assign rd_mul       = mul ? inst[11:7] : 5'h0;
+    assign rd_div       = div ? inst[11:7] : 5'h0;
     assign imm          = inst[31:7];
 
     assign ecall        = I_ecall;

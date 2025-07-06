@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 06/18/2025 10:03:07 PM
+// Create Date: 07/03/2025 10:43:51 PM
 // Design Name: 
-// Module Name: alu_mul
+// Module Name: alu_div
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module alu_mul(
+module alu_div(
     input               clk,
     input [31:0]        src1,
     input [31:0]        src2,
@@ -28,38 +28,26 @@ module alu_mul(
     output reg [31:0]   result
     );
 
-    wire [63:0] product_ss;
-    wire [31:0] product_hsu, product_huu;
+    wire [31:0] quotient_s, remainder_s;
+    wire [31:0] quotient_u, remainder_u;
 
     always @(*) begin
         case (op_sel)
-            `MUL:       result = product_ss[31:0];
-            `MULH:      result = product_ss[63:32];
-            `MULSU:     result = product_hsu;
-            `MULU:      result = product_huu;
+            `DIV:       result = quotient_s;
+            `DIVU:      result = quotient_u;
+            `REM:       result = remainder_s;
+            `REMU:      result = remainder_u;
             default:    result = 32'h0;
         endcase
     end
 
-    mult_s_s mult_s_s_0(
-        .CLK(clk),
-        .A(src1),
-        .B(src2),
-        .P(product_ss)
-    );
-
-    mult_s_u mult_s_u_0(
-        .CLK(clk),
-        .A(src1),
-        .B(src2),
-        .P(product_hsu)
-    );
-
-    mult_u_u mult_u_u_0(
-        .CLK(clk),
-        .A(src1),
-        .B(src2),
-        .P(product_huu)
+    div_s div_s_0 (
+        .aclk                           (clk),
+        .s_axis_divisor_tvalid          (1'b1),
+        .s_axis_divisor_tdata           (src2),
+        .s_axis_dividend_tvalid         (1'b1),
+        .s_axis_dividend_tdata          (src1),
+        .m_axis_dout_tdata              ({quotient_s, remainder_s})
     );
 
 endmodule

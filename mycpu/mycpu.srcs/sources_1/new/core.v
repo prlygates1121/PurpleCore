@@ -57,7 +57,7 @@ module core(
         wire [31:0] t3;
     `endif
 
-    wire [14:0]     rd_queue;
+    wire [`RD_QUEUE_MUL_SIZE*5-1:0]     rd_queue_mul;
 
     wire            inst_access_fault;
 
@@ -69,7 +69,7 @@ module core(
     wire [2:0]      ID_out_load_width;
 
     wire [3:0]      ID_out_alu_op_sel;
-    wire [3:0]      ID_out_alu_mul_op_sel;
+    wire [2:0]      ID_out_alu_mul_op_sel;
     wire            ID_out_alu_src1_sel;
     wire            ID_out_alu_src2_sel;
     wire            ID_out_reg_w_en;
@@ -99,10 +99,9 @@ module core(
     wire [31:0]     ID_out_mtvec;
     wire [31:0]     ID_out_mepc;
     wire [31:0]     ID_out_mboot;
-    wire            ID_out_calc_slow;
 
     wire [3:0]      EX_in_alu_op_sel;
-    wire [3:0]      EX_in_alu_mul_op_sel;
+    wire [2:0]      EX_in_alu_mul_op_sel;
     wire            EX_in_alu_src1_sel;
     wire            EX_in_alu_src2_sel;
     wire            EX_in_reg_w_en;
@@ -135,7 +134,6 @@ module core(
     wire [31:0]     EX_in_mtvec;
     wire [31:0]     EX_in_mepc;
     wire [31:0]     EX_in_mboot;
-    wire            EX_in_calc_slow;
     wire            ID_EX_reset;
 
     wire [31:0]     EX_out_alu_result;
@@ -258,7 +256,7 @@ module core(
     // hazard_unit
     wire            load_stall, load_flush;
     wire            calc_stall, calc_flush;
-    wire            write_disorder;
+    wire [`RD_QUEUE_MUL_SIZE-1:0] rd_queue_mul_flush_sel;
 
     // Memory
     wire [3:0]      wea = 4'b0;
@@ -324,7 +322,7 @@ module core(
         .clk                    (clk),
         .reset                  (reset),
         .stall                  (calc_stall),
-        .write_disorder         (write_disorder),
+        .rd_queue_mul_flush_sel (rd_queue_mul_flush_sel),
         .IF_pc                  (ID_in_pc),
         .IF_pc_plus_4           (ID_in_pc_plus_4),
         .IF_inst                (ID_in_inst),
@@ -374,8 +372,7 @@ module core(
         .ID_mtvec               (ID_out_mtvec),
         .ID_mepc                (ID_out_mepc),
         .ID_mboot               (ID_out_mboot),
-        .ID_calc_slow           (ID_out_calc_slow),
-        .rd_queue               (rd_queue)
+        .rd_queue_mul           (rd_queue_mul)
     );
 
     ID_EX id_ex_0 (
@@ -414,7 +411,6 @@ module core(
         .ID_mtvec               (ID_out_mtvec),
         .ID_mepc                (ID_out_mepc),
         .ID_mboot               (ID_out_mboot),
-        .ID_calc_slow           (ID_out_calc_slow),
         .ID_reset               (IF_ID_reset),
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
@@ -450,14 +446,12 @@ module core(
         .EX_mtvec               (EX_in_mtvec),
         .EX_mepc                (EX_in_mepc),
         .EX_mboot               (EX_in_mboot),
-        .EX_calc_slow           (EX_in_calc_slow),
         .EX_reset               (ID_EX_reset)
     );
 
     EX ex_0 (
         .clk                        (clk),
         .reset                      (reset),
-        .write_disorder             (write_disorder),
         .ID_alu_op_sel              (EX_in_alu_op_sel),
         .ID_alu_mul_op_sel          (EX_in_alu_mul_op_sel),
         .ID_alu_src1_sel            (EX_in_alu_src1_sel),
@@ -492,7 +486,7 @@ module core(
         .ID_mepc                    (EX_in_mepc),
         .ID_mboot                   (EX_in_mboot),
 
-        .ID_calc_slow               (EX_in_calc_slow),
+        .rd_queue_mul_out           (rd_queue_mul[0+:5]),
 
         .ID_reset                   (ID_EX_reset),
 
@@ -727,7 +721,7 @@ module core(
         .WB_csr_addr                 (WB_out_csr_addr),
         .MEM_csr_w_data              (MEM_out_csr_w_data),
         .WB_csr_w_data               (WB_out_csr_w_data),
-        .rd_queue                    (rd_queue),
+        .rd_queue_mul                (rd_queue_mul),
         .ID_reg_w_en                 (ID_out_reg_w_en),
         .ID_rd                       (ID_out_rd),
 
@@ -748,7 +742,7 @@ module core(
         .load_flush                  (load_flush),
         .calc_stall                  (calc_stall),
         .calc_flush                  (calc_flush),
-        .write_disorder              (write_disorder)
+        .rd_queue_mul_flush_sel      (rd_queue_mul_flush_sel)
     );
 
 `ifdef BRANCH_PREDICT_ENA

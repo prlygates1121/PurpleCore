@@ -31,7 +31,7 @@ module ID(
     input               clk,
     input               reset,
     input               stall,
-    input               write_disorder,
+    input [`RD_QUEUE_MUL_SIZE-1:0] rd_queue_mul_flush_sel,
     
     input [31:0]        IF_pc,
     input [31:0]        IF_pc_plus_4,
@@ -51,7 +51,8 @@ module ID(
     input [31:0]        WB_w_mcause,
 
     output [3:0]        ID_alu_op_sel,
-    output [3:0]        ID_alu_mul_op_sel,
+    output [2:0]        ID_alu_mul_op_sel,
+    output [2:0]        ID_alu_div_op_sel,
     output              ID_alu_src1_sel,
     output              ID_alu_src2_sel,
     output              ID_reg_w_en,
@@ -86,58 +87,54 @@ module ID(
     output [31:0]       ID_mepc,
     output [31:0]       ID_mboot,
 
-    output              ID_calc_slow,
-    output reg [14:0]   rd_queue
+    output [`RD_QUEUE_MUL_SIZE*5-1:0] rd_queue_mul
 
     );
 
     // Instruction Decode
-    wire [6:0] opcode;
-    wire [6:0] funct7;
-    wire [2:0] funct3;
-    wire [4:0] rs1, rs2, rd;
+    wire [6:0]  opcode;
+    wire [6:0]  funct7;
+    wire [2:0]  funct3;
+    wire [4:0]  rs1, rs2, rd;
     wire [24:0] imm_raw;
 
     // Immediate Generator
     wire [31:0] imm;
 
     // Control Logic
-    wire [3:0] alu_op_sel;
-    wire alu_src1_sel, alu_src2_sel;
-    wire [2:0] reg_w_data_sel;
-    wire reg_w_en;
-    wire [1:0] D_store_width;
-    wire [2:0] D_load_width;
-    wire D_load_un;
-    wire [2:0] imm_sel;
-    wire br_un;
+    wire [3:0]  alu_op_sel;
+    wire        alu_src1_sel, alu_src2_sel;
+    wire [2:0]  reg_w_data_sel;
+    wire        reg_w_en;
+    wire        mul, div;
+
+    wire [1:0]  D_store_width;
+    wire [2:0]  D_load_width;
+    wire        D_load_un;
+    wire [2:0]  imm_sel;
+    wire        br_un;
     wire [11:0] csr_addr;
-    wire [2:0] csr_op;
+    wire [2:0]  csr_op;
     wire [31:0] csr_r_data;
 
-    assign ID_calc_slow = alu_op_sel == `MUL    |
-                          alu_op_sel == `MULH   |
-                          alu_op_sel == `MULSU  |
-                          alu_op_sel == `MULU;
-
-    always @(posedge clk) begin
-        if (reset) begin
-            rd_queue <= 15'h0;
-        end else if (ID_calc_slow & ~stall) begin
-            rd_queue[14:10] <= rd;
-            rd_queue[9:5] <= write_disorder ? 5'b0 : rd_queue[14:10];
-            rd_queue[4:0] <= rd_queue[9:5];
-        end else begin
-            rd_queue[14:0] <= 5'b0;
-            rd_queue[9:5] <= write_disorder ? 5'b0 : rd_queue[14:10];
-            rd_queue[4:0] <= rd_queue[9:5];
-        end 
-    end
+    rd_queue #(
+        .SIZE               (`RD_QUEUE_MUL_SIZE)
+    ) rd_queue_mul_0 (
+        .clk                (clk),
+        .reset              (reset),
+        .flush_sel          (rd_queue_mul_flush_sel),
+        .rd_in              (ID_rd_mul),
+        .rd_queue           (rd_queue_mul)
+    );
 
     control_logic ctrl_logic_0(
         .inst               (IF_inst),
 
         .alu_op_sel         (alu_op_sel),
+        .alu_mul_op_sel     (ID_alu_mul_op_sel),
+        .alu_div_op_sel     (ID_alu_div_op_sel),
+        .mul                (mul),
+        .div                (div),
         .alu_src1_sel       (alu_src1_sel),
         .alu_src2_sel       (alu_src2_sel),
         .reg_w_en           (reg_w_en),
@@ -153,6 +150,8 @@ module ID(
         .rs1                (rs1),
         .rs2                (rs2),
         .rd                 (rd),
+        .rd_mul             (ID_rd_mul),
+        .rd_div             (ID_rd_div),
         .imm                (imm_raw),
         .ecall              (ID_ecall),
         .mret               (ID_mret),
@@ -220,12 +219,12 @@ module ID(
         .r_mboot        (ID_mboot)
     );
 
-    assign ID_alu_op_sel        = ID_calc_slow ? `ADD : alu_op_sel;
-    assign ID_alu_mul_op_sel    = ID_calc_slow ? alu_op_sel : `ADD;
+    assign ID_alu_op_sel        = alu_op_sel;
     assign ID_alu_src1_sel      = alu_src1_sel;
     assign ID_alu_src2_sel      = alu_src2_sel;
-    assign ID_reg_w_en          = ID_calc_slow ? 1'b0 : reg_w_en;
-    assign ID_reg_w_en_mul      = ID_calc_slow ? reg_w_en : 1'b0;
+    assign ID_reg_w_en          = reg_w_en;
+    assign ID_reg_w_en_mul      = mul;
+    assign ID_reg_w_en_div      = div;
     assign ID_reg_w_data_sel    = reg_w_data_sel;
     assign ID_store_width       = D_store_width;
     assign ID_load_width        = D_load_width;
@@ -234,8 +233,7 @@ module ID(
     assign ID_br_un             = br_un;
     assign ID_rs1               = rs1;
     assign ID_rs2               = rs2;
-    assign ID_rd                = ID_calc_slow ? 5'b0 : rd;
-    assign ID_rd_mul            = ID_calc_slow ? rd : 5'b0;
+    assign ID_rd                = rd;
     assign ID_pc                = IF_pc;
     assign ID_pc_plus_4         = IF_pc_plus_4;
     assign ID_branch_predict    = IF_branch_predict;

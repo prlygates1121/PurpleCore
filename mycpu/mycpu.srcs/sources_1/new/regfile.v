@@ -64,7 +64,7 @@ module regfile(
                 registers[dest] <= write_data;
             end
             // mul write is blocked when both write ports write to the same register
-            if (write_en_mul & |dest_mul & !(write_en & dest_mul == dest)) begin
+            if (|dest_mul & !(write_en & dest_mul == dest)) begin
                 registers[dest_mul] <= write_data_mul;
             end
         end

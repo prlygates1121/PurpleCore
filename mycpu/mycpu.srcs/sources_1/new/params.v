@@ -44,22 +44,32 @@
 // Instruction parameters
 `define NOP                     32'h00000013
 
-// alu_sel [3:0]
-`define ADD                     4'd0
-`define SUB                     4'd1
-`define XOR                     4'd2
-`define OR                      4'd3
-`define AND                     4'd4
-`define SLL                     4'd5
-`define SRL                     4'd6
-`define SRA                     4'd7
-`define SLT                     4'd8
-`define SLTU                    4'd9
-`define MUL                     4'd10
-`define MULH                    4'd11
-`define MULSU                   4'd12
-`define MULU                    4'd13
-`define BSEL                    4'd14
+`define ALU_NOP                 0
+
+// alu_op_sel [3:0]
+`define ADD                     4'd1
+`define SUB                     4'd2
+`define XOR                     4'd3
+`define OR                      4'd4
+`define AND                     4'd5
+`define SLL                     4'd6
+`define SRL                     4'd7
+`define SRA                     4'd8
+`define SLT                     4'd9
+`define SLTU                    4'd10
+`define BSEL                    4'd11
+
+// alu_mul_op_sel [2:0]
+`define MUL                     3'd1
+`define MULH                    3'd2
+`define MULSU                   3'd3
+`define MULU                    3'd4
+
+// alu_div_op_sel [2:0]
+`define DIV                     3'd1
+`define DIVU                    3'd2
+`define REM                     3'd3
+`define REMU                    3'd4
 
 // imm_sel [2:0]
 `define IMM_I_SHIFT             3'h0
@@ -153,6 +163,9 @@
 `define MSTATUS_MIE             32'h0000_0008
 
 `define CSR_NO_WRITE            32'hFFFFFFFF
+
+// rd_queues
+`define RD_QUEUE_MUL_SIZE       3
 
 // VGA parameters
 

@@ -25,7 +25,7 @@ module ID_EX(
     input               reset,
 
     input [3:0]         ID_alu_op_sel,
-    input [3:0]         ID_alu_mul_op_sel,
+    input [2:0]         ID_alu_mul_op_sel,
     input               ID_alu_src1_sel,
     input               ID_alu_src2_sel,
     input               ID_reg_w_en,
@@ -57,11 +57,10 @@ module ID_EX(
     input [31:0]        ID_mtvec,
     input [31:0]        ID_mepc,
     input [31:0]        ID_mboot,
-    input               ID_calc_slow,
     input               ID_reset,
 
     output reg [3:0]    EX_alu_op_sel,
-    output reg [3:0]    EX_alu_mul_op_sel,
+    output reg [4:0]    EX_alu_mul_op_sel,
     output reg          EX_alu_src1_sel,
     output reg          EX_alu_src2_sel,
     output reg          EX_reg_w_en,
@@ -93,7 +92,6 @@ module ID_EX(
     output reg [31:0]   EX_mtvec,
     output reg [31:0]   EX_mepc,
     output reg [31:0]   EX_mboot,
-    output reg          EX_calc_slow,
     output reg          EX_reset
 
     );
@@ -101,7 +99,7 @@ module ID_EX(
     always @(posedge clk) begin
         if (reset) begin
             EX_alu_op_sel       <= 4'h0;
-            EX_alu_mul_op_sel   <= 4'h0;
+            EX_alu_mul_op_sel   <= 3'h0;
             EX_alu_src1_sel     <= 1'b0;
             EX_alu_src2_sel     <= 1'b0;
             EX_reg_w_en         <= 1'b0;
@@ -140,7 +138,6 @@ module ID_EX(
             EX_csr_r_data       <= 32'h0;
             EX_mtvec            <= 32'h0;
             EX_mepc             <= 32'h0;
-            EX_calc_slow        <= 1'b0;
         end else begin
             EX_alu_op_sel       <= ID_alu_op_sel;
             EX_alu_mul_op_sel   <= ID_alu_mul_op_sel;
@@ -174,7 +171,6 @@ module ID_EX(
             EX_csr_r_data       <= ID_csr_r_data;
             EX_mtvec            <= ID_mtvec;
             EX_mepc             <= ID_mepc;
-            EX_calc_slow        <= ID_calc_slow;
         end
         EX_mboot                <= ID_mboot;
         EX_reset                <= reset | ID_reset;
