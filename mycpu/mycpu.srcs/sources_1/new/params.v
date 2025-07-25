@@ -7,23 +7,13 @@
 `endif
 
 `define VGA
-`define BRANCH_PREDICT_ENA
+// `define BRANCH_PREDICT_ENA
 
-`define S_BOOTLOADER            32'h0000_0000
-`define S_TEXT                  32'h0000_0200
-`define S_DATA                  32'h0000_9000
+`define S_BOOTLOADER            32'h8000_0000
+`define S_TEXT                  32'h8000_0200
+`define S_DATA                  32'h8000_9000
 
-`define ADDR_SP_START           32'h0000_B000
-`define ADDR_MMIO_BASE          32'h8000_0000
-`define ADDR_MMIO_SYS_INFO      32'h0000_0000
-`define ADDR_MMIO_ASCII         32'h0010_0000
-`define ADDR_MMIO_LED           32'h0020_0000
-`define ADDR_MMIO_SW            32'h0030_0000
-`define ADDR_MMIO_VGA           32'h0040_0000
-`define ADDR_MMIO_KEYBOARD      32'h0050_0000
-`define ADDR_MMIO_BUTTON        32'h0060_0000
-`define ADDR_MMIO_SEG_DISPLAY   32'h0070_0000
-`define ADDR_MMIO_UART          32'h0080_0000
+`define ADDR_SP_START           32'h8000_B000
 
 // Exception codes
 `define INST_ACCESS_FAULT       31'd1

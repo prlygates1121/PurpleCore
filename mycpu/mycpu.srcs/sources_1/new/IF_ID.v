@@ -41,12 +41,12 @@ module IF_ID(
         if (reset) begin
             `ifdef SIMULATION
                 `ifdef LOAD_AT_0X200
-                    ID_pc <= 32'h200;
+                    ID_pc <= `S_TEXT;
                 `else
-                    ID_pc <= 32'h0;
+                    ID_pc <= `S_BOOTLOADER;
                 `endif
             `else
-                ID_pc <= 32'h0;
+                ID_pc <= `S_BOOTLOADER;
             `endif
             ID_pc_plus_4        <= 32'b0;
             ID_inst             <= `NOP;

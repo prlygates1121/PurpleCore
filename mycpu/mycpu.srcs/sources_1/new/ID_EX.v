@@ -127,12 +127,12 @@ module ID_EX(
             EX_rd_div           <= 5'h0;
             `ifdef SIMULATION
                 `ifdef LOAD_AT_0X200
-                    EX_pc <= 32'h200;
+                    EX_pc <= `S_TEXT;
                 `else
-                    EX_pc <= 32'h0;
+                    EX_pc <= `S_BOOTLOADER;
                 `endif
             `else
-                EX_pc <= 32'h0;
+                EX_pc <= `S_BOOTLOADER;
             `endif
             EX_pc_plus_4        <= 32'h0;
             EX_jal              <= 1'b0;

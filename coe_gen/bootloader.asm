@@ -1,14 +1,14 @@
 .text
 
 main:
-    li s0, 0x80800000   # UART address
-    li s1, 0x00000200   # start of the loaded program
+    li s0, 0x00800000   # UART address
+    li s1, 0x80000200   # start of the loaded program
     li s4, 0x400        # timeout value to indicate the end of reception
     li s5, 0            # timeout counter
     li s6, 0            # becomes 1 once the first byte is received
-    li s7, 0x80200000   # LED address
+    li s7, 0x00200000   # LED address
     li s8, 0            # becomes 2 once the second byte is received
-    li s9, 0x80700000   # segment display address
+    li s9, 0x00700000   # segment display address
     li s10, 0           # total instructions received
     li t1, 0
 
@@ -64,6 +64,6 @@ start:
 
     li t0, 0xFF
     sb t0, 0(s7)
-    li s1, 0x200
+    li s1, 0x80000200
     jalr x0, s1, 0
     

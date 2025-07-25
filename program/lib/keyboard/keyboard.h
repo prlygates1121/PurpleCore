@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define KEYBOARD_REG (*(volatile uint8_t*)0x80500000)
+#define KEYBOARD_REG (*(volatile uint8_t*)0x00500000)
 
 #define k_SPACE                   0
 #define k_EXCLAMATION             1

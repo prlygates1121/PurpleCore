@@ -71,12 +71,12 @@ module IF (
         if (reset) begin
             `ifdef SIMULATION
                 `ifdef LOAD_AT_0X200
-                    pc <= 32'h200;
+                    pc <= `S_TEXT;
                 `else
-                    pc <= 32'h0;
+                    pc <= `S_BOOTLOADER;
                 `endif
             `else
-                pc <= 32'h0;
+                pc <= `S_BOOTLOADER;
             `endif
         end else if (inst_access_fault) begin
             pc <= pc_next;

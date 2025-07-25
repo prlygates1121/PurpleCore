@@ -110,7 +110,6 @@ module memory(
     );
 `endif
 
-    localparam [10:0] SYS_INFO      = 11'd0;    // r_
     localparam [10:0] LED           = 11'd2;    // _w
     localparam [10:0] SW            = 11'd3;    // r_
     localparam [10:0] VGA           = 11'd4;    // rw
@@ -150,12 +149,11 @@ module memory(
     assign uart_write       = (io_sel == UART) & (uart_sel == UART_DATA_REG) & store;
 
     // io_en: the instruction is accessing memory mapped I/O
-    assign io_en            = D_addr_real[31];
+    assign io_en            = ~D_addr_real[31];
     // io_sel: select a type of I/O
     assign io_sel           = D_addr_real[30:20];
     // io_load_word: the data loaded from memory mapped I/O
-    assign io_load_word     = io_sel == SYS_INFO    ? 32'h0 :
-                              io_sel == SW          ? {16'h0, sws_l, sws_r} : 
+    assign io_load_word     = io_sel == SW          ? {16'h0, sws_l, sws_r} : 
                               io_sel == VGA         ? vga_load_word :
                               io_sel == KEYBOARD    ? {24'h0, key_code} :
                               io_sel == BUTTON      ? {27'h0, bts_state} :
