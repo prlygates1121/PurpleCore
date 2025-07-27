@@ -1,9 +1,7 @@
-# .data
-#     array: .space 50
+main:
+    # initialize sp
+    li sp, 0x8000B000;
 
-.text
-
-main:   
     # s0 = # of elements
     li s0, 15
 
@@ -70,7 +68,8 @@ main:
     mv a1, s0
     jal print_arr
 
-    ecall
+end:
+    j end
 
 # void swap() swaps two elements in the array
 # a0:   address of the array

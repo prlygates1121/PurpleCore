@@ -1,4 +1,6 @@
+#ifndef IGNORE_ENTRY
 ENTRY(_start)
+#endif
 
 __USER_STACK_SIZE = 0x1000;
 __TRAP_STACK_SIZE = 0x1000;
