@@ -31,8 +31,8 @@ module ID(
     input               clk,
     input               reset,
     input               stall,
-    input [`RD_QUEUE_MUL_SIZE-1:0] rd_queue_mul_flush_sel,
-    input [`RD_QUEUE_DIV_SIZE-1:0] rd_queue_div_flush_sel,
+    input [`RD_QUEUE_MUL_SIZE-2:0] rd_queue_mul_flush_sel,
+    input [`RD_QUEUE_DIV_SIZE-2:0] rd_queue_div_flush_sel,
     
     input [31:0]        IF_pc,
     input [31:0]        IF_pc_plus_4,
@@ -129,6 +129,7 @@ module ID(
     ) rd_queue_mul_0 (
         .clk                (clk),
         .reset              (reset),
+        .stall              (stall),
         .flush_sel          (rd_queue_mul_flush_sel),
         .rd_in              (ID_rd_mul),
         .rd_queue           (rd_queue_mul)
@@ -139,6 +140,7 @@ module ID(
     ) rd_queue_div_0 (
         .clk                (clk),
         .reset              (reset),
+        .stall              (stall),
         .flush_sel          (rd_queue_div_flush_sel),
         .rd_in              (ID_rd_div),
         .rd_queue           (rd_queue_div)

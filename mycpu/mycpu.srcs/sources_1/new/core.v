@@ -804,7 +804,9 @@ module core(
         .rd_queue_mul                (rd_queue_mul),
         .rd_queue_div                (rd_queue_div),
         .ID_reg_w_en                 (ID_out_reg_w_en),
+        .ID_reg_w_en_mul             (ID_out_reg_w_en_mul),
         .ID_rd                       (ID_out_rd),
+        .ID_rd_mul                   (ID_out_rd_mul),
 
         .MEM_csr_w_data_forwarded    (MEM_csr_w_data_forwarded),
         .WB_csr_w_data_forwarded     (WB_csr_w_data_forwarded),

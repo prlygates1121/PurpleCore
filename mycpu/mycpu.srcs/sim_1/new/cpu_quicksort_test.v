@@ -140,6 +140,12 @@ module cpu_quicksort_test(
         wire [4:0] WB_rd = top0.core_0.wb_0.WB_rd;
         wire [31:0] WB_reg_w_data = top0.core_0.wb_0.WB_reg_w_data;
 
+        wire [4:0] WB_rd_mul = top0.core_0.wb_0.WB_rd_mul;
+        wire [31:0] WB_reg_w_data_mul = top0.core_0.wb_0.WB_reg_w_data_mul;
+
+        wire [4:0] WB_rd_div = top0.core_0.wb_0.WB_rd_div;
+        wire [31:0] WB_reg_w_data_div = top0.core_0.wb_0.WB_reg_w_data_div;
+
         always @(posedge top0.clk_main) begin
             if (top0.core_0.reset == 0) begin
                 MEM_pc          <= EX_pc;
@@ -186,6 +192,14 @@ module cpu_quicksort_test(
                         $fdisplay(log_file, "x%-2d 0x%h",
                                     WB_rd,
                                     WB_reg_w_data);
+                    end else if (WB_rd_mul != 32'h0) begin
+                        $fdisplay(log_file, "x%-2d 0x%h",
+                                    WB_rd_mul,
+                                    WB_reg_w_data_mul);
+                    end else if (WB_rd_div != 32'h0) begin
+                        $fdisplay(log_file, "x%-2d 0x%h",
+                                    WB_rd_div,
+                                    WB_reg_w_data_div);
                     end else begin
                         $fdisplay(log_file, "");
                     end

@@ -171,11 +171,15 @@ module EX(
                           (forward_rs1_sel == `FORWARD_PREV_PREV)       ? WB_reg_w_data_forwarded  :
                           (forward_rs1_sel == `FORWARD_PREV_MUL)        ? MEM_reg_w_data_mul_forwarded :
                           (forward_rs1_sel == `FORWARD_PREV_PREV_MUL)   ? WB_reg_w_data_mul_forwarded :
+                          (forward_rs1_sel == `FORWARD_PREV_DIV)        ? MEM_reg_w_data_div_forwarded :
+                          (forward_rs1_sel == `FORWARD_PREV_PREV_DIV)   ? WB_reg_w_data_div_forwarded :
                             ID_rs1_data;
     assign fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)            ? MEM_reg_w_data_forwarded :
                           (forward_rs2_sel == `FORWARD_PREV_PREV)       ? WB_reg_w_data_forwarded  :
                           (forward_rs2_sel == `FORWARD_PREV_MUL)        ? MEM_reg_w_data_mul_forwarded :
                           (forward_rs2_sel == `FORWARD_PREV_PREV_MUL)   ? WB_reg_w_data_mul_forwarded :
+                          (forward_rs2_sel == `FORWARD_PREV_DIV)        ? MEM_reg_w_data_div_forwarded :
+                          (forward_rs2_sel == `FORWARD_PREV_PREV_DIV)   ? WB_reg_w_data_div_forwarded :
                             ID_rs2_data;
     assign fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)            ? MEM_csr_w_data_forwarded : 
                           (forward_csr_sel == `FORWARD_PREV_PREV)       ? WB_csr_w_data_forwarded  : 
@@ -239,7 +243,7 @@ module EX(
 
     shift_reg #(
         .BIT_WIDTH      (3),
-        .DEPTH          (35)
+        .DEPTH          (`RD_QUEUE_DIV_SIZE-1)
     ) shift_reg_div_op_sel (
         .clk            (clk),
         .reset          (reset),
