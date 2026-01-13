@@ -26,8 +26,13 @@ int main() {
                 // uart_putc('\n');
                 if (key == k_BACKSPACE) {
                     if (x == 10) {
-                        x = 602;
-                        y -= 8;
+                        if (y >= 18) {
+                            x = 602;
+                            y -= 8;
+                        } else {
+                            x = 10;
+                            y = 10;
+                        }
                     } else {
                         x -= 8;
                     }
@@ -36,7 +41,12 @@ int main() {
                     vga_print_char(x, y, key + 0x20, 1, WHITE);
                     if (x > VGA_WIDTH_PIXELS - 40) {
                         x = 10;
-                        y += 8;
+                        if (y > VGA_HEIGHT_PIXELS - 16) {
+                            y = 10;
+                            vga_clear(BACKGROUND_COLOR);
+                        } else {
+                            y += 8;
+                        }
                     } else {
                         x += 8;
                     }

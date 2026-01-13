@@ -41,3 +41,4 @@ mycpu/vivado_pid25048.str
 /.vscode
 mycpu/vivado_pid29692.str
 mycpu/dfx_runtime.txt
+*.dcp

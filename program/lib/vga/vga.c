@@ -1,6 +1,26 @@
 #include "vga.h"
 
-const char font_88[128][8] = {
+/**
+ * 8x8 monochrome bitmap fonts for rendering
+ * Author: Daniel Hepper <daniel@hepper.net>
+ *
+ * License: Public Domain
+ *
+ * Based on:
+ * // Summary: font8x8.h
+ * // 8x8 monochrome bitmap fonts for rendering
+ * //
+ * // Author:
+ * //     Marcel Sondaar
+ * //     International Business Machines (public domain VGA fonts)
+ * //
+ * // License:
+ * //     Public Domain
+ *
+ * Fetched from: http://dimensionalrift.homelinux.net/combuster/mos3/?p=viewsource&file=/modules/gfx/font8_8.asm
+ **/
+
+const uint8_t font_88[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0000 (nul)
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0001
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0002
@@ -132,6 +152,7 @@ const char font_88[128][8] = {
 };
 
 void vga_clear(uint8_t color) {
+    color &= 0x0F;
     volatile uint8_t *pointer = VGA_BASE_ADDR;
     while (pointer != VGA_BASE_ADDR + VGA_HEIGHT_PIXELS * VGA_WIDTH_BYTES) {
         *pointer = (color << 4) | (color & 0xF);
@@ -140,6 +161,10 @@ void vga_clear(uint8_t color) {
 }
 
 void vga_draw_point(uint32_t x, uint32_t y, uint8_t color) {
+    if (x >= VGA_WIDTH_PIXELS || y >= VGA_HEIGHT_PIXELS) {
+        return;
+    }
+    color &= 0x0F;
     volatile uint8_t *pointer = VGA_BASE_ADDR;
     pointer += VGA_WIDTH_BYTES * y + (x >> 1);
     if (x & 0x1) {
@@ -150,7 +175,7 @@ void vga_draw_point(uint32_t x, uint32_t y, uint8_t color) {
 }
 
 void vga_print_char(uint32_t x, uint32_t y, uint8_t char_code, uint8_t fill, uint8_t color) {
-    if (char_code >= 0x7E) {
+    if (char_code >= 0x80) {
         return;
     }
     uint8_t line;

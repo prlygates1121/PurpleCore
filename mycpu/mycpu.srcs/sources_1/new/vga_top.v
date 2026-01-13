@@ -36,8 +36,13 @@ module vga_top(
     reg [9:0] x, y;
     wire data_en;
 
-    assign h_sync   = ~((x >= `H_SYNC_START) & (x <= `H_SYNC_END));
-    assign v_sync   = ~((y >= `V_SYNC_START) & (y <= `V_SYNC_END));
+    // BRAM has READ_LATENCY=1, so pixel data corresponds to the previous cycle's
+    // address/offset. Delay sync/data_en and pixel offset by 1 cycle to align.
+    reg h_sync_d, v_sync_d, data_en_d;
+    reg [2:0] vga_addr_offset_d;
+
+    assign h_sync   = h_sync_d;
+    assign v_sync   = v_sync_d;
     assign data_en  = (x <= `H_ACTIVE_END) & (y <= `V_ACTIVE_END);
 
     // Update cursor coordinate
@@ -59,24 +64,40 @@ module vga_top(
         if (reset) begin
             vga_addr <= 32'h0040_0000;  // VGA memory base address
             vga_addr_offset <= 3'b0;
+            vga_addr_offset_d <= 3'b0;
+            h_sync_d <= 1'b1;
+            v_sync_d <= 1'b1;
+            data_en_d <= 1'b0;
         end else if (data_en) begin
             if (vga_addr_offset == 3'b111) begin
-                vga_addr <= (vga_addr == 32'h0042_57FC) ? 32'h0040_0000 : vga_addr + 4; //A002_57FC
+                vga_addr <= (vga_addr == 32'h0040_0008) ? 32'h0040_0000 : vga_addr + 4; //A002_57FC
                 vga_addr_offset <= 3'b0;
             end else begin
                 vga_addr_offset <= vga_addr_offset + 1;
             end
+
+            // Delay control signals and offset by 1 cycle (align with vga_data)
+            vga_addr_offset_d <= vga_addr_offset;
+            h_sync_d <= ~((x >= `H_SYNC_START) & (x <= `H_SYNC_END));
+            v_sync_d <= ~((y >= `V_SYNC_START) & (y <= `V_SYNC_END));
+            data_en_d <= data_en;
+        end else begin
+            // Even during blanking, keep sync aligned and maintain 1-cycle delay.
+            vga_addr_offset_d <= vga_addr_offset;
+            h_sync_d <= ~((x >= `H_SYNC_START) & (x <= `H_SYNC_END));
+            v_sync_d <= ~((y >= `V_SYNC_START) & (y <= `V_SYNC_END));
+            data_en_d <= data_en;
         end
     end
 
     // VGA data decoder
-    wire [3:0] vga_data_pixel = vga_addr_offset == 3'b000 ? vga_data[3:0] :
-                                vga_addr_offset == 3'b001 ? vga_data[7:4] :
-                                vga_addr_offset == 3'b010 ? vga_data[11:8] :
-                                vga_addr_offset == 3'b011 ? vga_data[15:12] :
-                                vga_addr_offset == 3'b100 ? vga_data[19:16] :
-                                vga_addr_offset == 3'b101 ? vga_data[23:20] :
-                                vga_addr_offset == 3'b110 ? vga_data[27:24] : vga_data[31:28]; // Default to last pixel
+    wire [3:0] vga_data_pixel = vga_addr_offset_d == 3'b000 ? vga_data[3:0] :
+                                vga_addr_offset_d == 3'b001 ? vga_data[7:4] :
+                                vga_addr_offset_d == 3'b010 ? vga_data[11:8] :
+                                vga_addr_offset_d == 3'b011 ? vga_data[15:12] :
+                                vga_addr_offset_d == 3'b100 ? vga_data[19:16] :
+                                vga_addr_offset_d == 3'b101 ? vga_data[23:20] :
+                                vga_addr_offset_d == 3'b110 ? vga_data[27:24] : vga_data[31:28]; // Default to last pixel
                                 
     wire [11:0] vga_data_pixel_decoded = vga_data_pixel == `BLACK_CODE ? `BLACK_VALUE :
                                          vga_data_pixel == `WHITE_CODE ? `WHITE_VALUE :
@@ -99,7 +120,7 @@ module vga_top(
     always @(posedge clk) begin
         if (reset) begin
             {r, g, b} <= 12'h0;
-        end else if (~data_en) begin
+        end else if (~data_en_d) begin
             {r, g, b} <= 12'h0;
         end else begin
             {r, g, b} <= vga_data_pixel_decoded;
