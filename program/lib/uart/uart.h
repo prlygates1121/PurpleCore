@@ -1,7 +1,7 @@
 #include <stdint.h>
-#define UART_DATA_REG       (*(volatile unsigned char*)0x80800000)
-#define UART_STATUS_REG     (*(volatile unsigned char*)0x80800004)
-#define UART_CONTROL_REG    (*(volatile uint32_t*)0x80800008)
+#define UART_DATA_REG       (*(volatile unsigned char*)0x00800000)
+#define UART_STATUS_REG     (*(volatile unsigned char*)0x00800004)
+#define UART_CONTROL_REG    (*(volatile uint32_t*)0x00800008)
 
 #define CLK_MAIN_FREQ 40000000
 
