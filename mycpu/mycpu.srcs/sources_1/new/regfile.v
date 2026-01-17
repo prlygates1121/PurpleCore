@@ -31,16 +31,10 @@ module regfile(
     input               clk,
     input               reset,
     input               write_en,
-    input               write_en_mul,
-    input               write_en_div,
     input   [4:0]       rs1,
     input   [4:0]       rs2,
     input   [4:0]       dest,
-    input   [4:0]       dest_mul,
-    input   [4:0]       dest_div,
     input   [31:0]      write_data,
-    input   [31:0]      write_data_mul,
-    input   [31:0]      write_data_div,
     output  [31:0]      rs1_data,
     output  [31:0]      rs2_data
     );
@@ -65,10 +59,6 @@ module regfile(
         end else begin 
             if (write_en & |dest) begin
                 registers[dest] <= write_data;
-            end
-            // mul write is blocked when both write ports write to the same register
-            if (|dest_mul & !(write_en & dest_mul == dest)) begin
-                registers[dest_mul] <= write_data_mul;
             end
         end
     end

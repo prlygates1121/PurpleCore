@@ -23,24 +23,12 @@
 
 module hazard_unit(
     input [4:0]     MEM_rd,
-    input [4:0]     MEM_rd_mul,
-    input [4:0]     MEM_rd_div,
     input [31:0]    MEM_reg_w_data,
-    input [31:0]    MEM_reg_w_data_mul,
-    input [31:0]    MEM_reg_w_data_div,
     input           MEM_reg_w_en,
-    input           MEM_reg_w_en_mul,
-    input           MEM_reg_w_en_div,
 
     input [4:0]     WB_rd,
-    input [4:0]     WB_rd_mul,
-    input [4:0]     WB_rd_div,
     input [31:0]    WB_reg_w_data,
-    input [31:0]    WB_reg_w_data_mul,
-    input [31:0]    WB_reg_w_data_div,
     input           WB_reg_w_en,
-    input           WB_reg_w_en_mul,
-    input           WB_reg_w_en_div,
 
     input [2:0]     EX_csr_op,
     input [4:0]     EX_rs1,
@@ -59,11 +47,7 @@ module hazard_unit(
     input           WB_csr_w_en,
 
     output [31:0]   MEM_reg_w_data_forwarded,
-    output [31:0]   MEM_reg_w_data_mul_forwarded,
-    output [31:0]   MEM_reg_w_data_div_forwarded,
     output [31:0]   WB_reg_w_data_forwarded,
-    output [31:0]   WB_reg_w_data_mul_forwarded,
-    output [31:0]   WB_reg_w_data_div_forwarded,
     output [31:0]   MEM_csr_w_data_forwarded,
     output [31:0]   WB_csr_w_data_forwarded,
     output [2:0]    forward_rs1_sel,
@@ -75,9 +59,6 @@ module hazard_unit(
     input [4:0]     EX_rd, 
     input           EX_load,
 
-    input [`RD_QUEUE_MUL_SIZE*5-1:0] rd_queue_mul,
-    input [`RD_QUEUE_DIV_SIZE*5-1:0] rd_queue_div,
-
     input           ID_reg_w_en,
     input [4:0]     ID_rd,
 
@@ -85,29 +66,20 @@ module hazard_unit(
     output          load_flush,
 
     output reg      calc_stall,
-    output          calc_flush,
-
-    output reg [`RD_QUEUE_MUL_SIZE-2:0] rd_queue_mul_flush_sel,
-    output reg [`RD_QUEUE_DIV_SIZE-2:0] rd_queue_div_flush_sel
+    output          calc_flush
 
     );
 
     assign MEM_reg_w_data_forwarded     = MEM_reg_w_data;
-    assign MEM_reg_w_data_mul_forwarded = MEM_reg_w_data_mul;
     assign WB_reg_w_data_forwarded      = WB_reg_w_data;
-    assign WB_reg_w_data_mul_forwarded  = WB_reg_w_data_mul;
 
     // when to forward? when the same register (MEM_rd == EX_rs1) is previously written to (MEM_reg_w_en) and currently read (EX_rs1 != 5'b0)
     assign forward_rs1_sel              = (MEM_reg_w_en      & (EX_rs1 != 5'b0) & (MEM_rd == EX_rs1))        ? `FORWARD_PREV :
                                           (WB_reg_w_en       & (EX_rs1 != 5'b0) & (WB_rd  == EX_rs1))        ? `FORWARD_PREV_PREV : 
-                                          (MEM_reg_w_en_mul  & (EX_rs1 != 5'b0) & (MEM_rd_mul == EX_rs1))    ? `FORWARD_PREV_MUL :
-                                          (WB_reg_w_en_mul   & (EX_rs1 != 5'b0) & (WB_rd_mul == EX_rs1))     ? `FORWARD_PREV_PREV_MUL :
                                                                                                                `FORWARD_NONE;
 
     assign forward_rs2_sel              = (MEM_reg_w_en      & (EX_rs2 != 5'b0) & (MEM_rd == EX_rs2))        ? `FORWARD_PREV :
                                           (WB_reg_w_en       & (EX_rs2 != 5'b0) & (WB_rd  == EX_rs2))        ? `FORWARD_PREV_PREV : 
-                                          (MEM_reg_w_en_mul  & (EX_rs2 != 5'b0) & (MEM_rd_mul == EX_rs2))    ? `FORWARD_PREV_MUL :
-                                          (WB_reg_w_en_mul   & (EX_rs2 != 5'b0) & (WB_rd_mul == EX_rs2))     ? `FORWARD_PREV_PREV_MUL :
                                                                                                                `FORWARD_NONE;
 
     assign MEM_csr_w_data_forwarded     = MEM_csr_w_data;
@@ -127,31 +99,6 @@ module hazard_unit(
     assign load_stall                   = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
     assign load_flush                   = load_stall;
 
-    // rd_queue_mul stores the numbers of the last 3 rd register that were written to by a multicycle instruction (e.g. mul)
-    // if ID_rs1 or ID_rs2 is not 0 and matches either the most recent rd (rd_queue_mul[14:10]) or the second most recent rd (rd_queue_mul[9:5]),
-    // then, calc_stall / calc_flush are sent to IF and IF_ID to stall the fetching of instructions
-    integer j;
-    reg [`RD_QUEUE_MUL_SIZE-2:0] rs1_mul_dependence, rs2_mul_dependence;
-    always @(*) begin
-        for (j = 0; j <= `RD_QUEUE_MUL_SIZE-2; j = j + 1) begin
-            rs1_mul_dependence[j] = rd_queue_mul[(`RD_QUEUE_MUL_SIZE-1-j)*5+:5] == ID_rs1;
-            rs2_mul_dependence[j] = rd_queue_mul[(`RD_QUEUE_MUL_SIZE-1-j)*5+:5] == ID_rs2;
-        end
-        calc_stall = (ID_rs1 != 5'b0 & |rs1_mul_dependence) | (ID_rs2 != 5'b0 & |rs2_mul_dependence);
-    end
-    // assign calc_stall                   = (ID_rs1 != 5'b0 & (rd_queue_mul[9:5]   == ID_rs1 |
-    //                                                          rd_queue_mul[14:10] == ID_rs1)) |
-    //                                       (ID_rs2 != 5'b0 & (rd_queue_mul[9:5]   == ID_rs2 |
-    //                                                          rd_queue_mul[14:10] == ID_rs2));
     assign calc_flush                   = calc_stall;
 
-    // write_disorder is used to indicate that the current instruction is trying to write to a register that is currently being written to by a previous multicycle instruction
-    // note that the previous multicycle instruction is fetched before the current instruction, but it writes to the register after the current instruction
-    // so, if write_disorder is true, we need to cancel the register write of the previous multicycle instruction, and write the current instruction's result instead
-    integer i;
-    always @(*) begin
-        for (i = 0; i <= `RD_QUEUE_MUL_SIZE-2; i = i + 1) begin
-            rd_queue_mul_flush_sel[i] = ID_reg_w_en & (ID_rd == rd_queue_mul[(`RD_QUEUE_MUL_SIZE-1-i)*5+:5]) & (ID_rd != 5'b0);
-        end
-    end
 endmodule

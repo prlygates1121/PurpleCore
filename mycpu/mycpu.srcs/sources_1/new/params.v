@@ -49,18 +49,6 @@
 `define SLTU                    4'd10
 `define BSEL                    4'd11
 
-// alu_mul_op_sel [2:0]
-`define MUL                     3'd1
-`define MULH                    3'd2
-`define MULSU                   3'd3
-`define MULU                    3'd4
-
-// alu_div_op_sel [2:0]
-`define DIV                     3'd1
-`define DIVU                    3'd2
-`define REM                     3'd3
-`define REMU                    3'd4
-
 // imm_sel [2:0]
 `define IMM_I_SHIFT             3'h0
 `define IMM_I                   3'h1
@@ -111,8 +99,6 @@
 // forward_sel [1:0]
 `define FORWARD_PREV            3'd1
 `define FORWARD_PREV_PREV       3'd2
-`define FORWARD_PREV_MUL        3'd3
-`define FORWARD_PREV_PREV_MUL   3'd4
 `define FORWARD_NONE            3'd0
 
 // ring buffer operation [1:0]
@@ -153,10 +139,6 @@
 `define MSTATUS_MIE             32'h0000_0008
 
 `define CSR_NO_WRITE            32'hFFFFFFFF
-
-// rd_queues
-`define RD_QUEUE_MUL_SIZE       3
-`define RD_QUEUE_DIV_SIZE       37
 
 // VGA parameters
 

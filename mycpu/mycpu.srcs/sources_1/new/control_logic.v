@@ -25,10 +25,6 @@ module control_logic(
     input [31:0]    inst,
 
     output [3:0]    alu_op_sel,
-    output [2:0]    alu_mul_op_sel,
-    output [2:0]    alu_div_op_sel,
-    output          mul,
-    output          div,
     output          alu_src1_sel,
     output          alu_src2_sel,
     output          reg_w_en,
@@ -44,8 +40,6 @@ module control_logic(
     output [4:0]    rs1,
     output [4:0]    rs2,
     output [4:0]    rd,
-    output [4:0]    rd_mul,
-    output [4:0]    rd_div,
     output [24:0]   imm,
     output          ecall,
     output          mret,
@@ -92,7 +86,7 @@ module control_logic(
     assign br_un        = B & (funct3 == 3'h6 | funct3 == 3'h7); // bltu, bgeu
     
     // ecall and mret do not trigger reg_w_en, unlike other CSR instructions
-    assign reg_w_en     = (R | U | J | I_load | I_jalr | I_arith | csr) & (~mul & ~div);
+    assign reg_w_en     = (R | U | J | I_load | I_jalr | I_arith | csr);
 
     assign reg_w_data_sel = (J | I_jalr)      ? `REG_W_DATA_PC :        // PC + 4
                             (I_load)          ? `REG_W_DATA_MEM :       // Memory
@@ -122,19 +116,6 @@ module control_logic(
                              I_arith & funct3 == 3'h3)                      ? `SLTU :    // sltiu
                             (opcode == 7'b0110111)                          ? `BSEL :    // lui
                             `ALU_NOP;
-    assign alu_mul_op_sel = (R & funct3 == 3'h0 & funct7 == 7'h01)          ? `MUL :     // mul
-                            (R & funct3 == 3'h1 & funct7 == 7'h01)          ? `MULH :    // mulh
-                            (R & funct3 == 3'h2 & funct7 == 7'h01)          ? `MULSU:    // mulsu
-                            (R & funct3 == 3'h3 & funct7 == 7'h01)          ? `MULU :    // mulu
-                            `ALU_NOP;
-    assign alu_div_op_sel = (R & funct3 == 3'h4 & funct7 == 7'h01)          ? `DIV :     // div
-                            (R & funct3 == 3'h5 & funct7 == 7'h01)          ? `DIVU :    // divu
-                            (R & funct3 == 3'h6 & funct7 == 7'h01)          ? `REM :     // rem
-                            (R & funct3 == 3'h7 & funct7 == 7'h01)          ? `REMU :    // remu
-                            `ALU_NOP;
-
-    assign mul            = alu_mul_op_sel != `ALU_NOP;
-    assign div            = alu_div_op_sel != `ALU_NOP;
                           
     assign store_width  = S ? funct3[1:0] : `NO_STORE;
     assign load_width   = I_load ? funct3 : `NO_LOAD;
@@ -149,9 +130,7 @@ module control_logic(
 
     assign rs1          = (J | U) ? 5'h0 : inst[19:15];
     assign rs2          = (R | S | B) ? inst[24:20] : 5'h0;
-    assign rd           = (S | B | mul | div) ? 5'h0 : inst[11:7];
-    assign rd_mul       = mul ? inst[11:7] : 5'h0;
-    assign rd_div       = div ? inst[11:7] : 5'h0;
+    assign rd           = (S | B) ? 5'h0 : inst[11:7];
     assign imm          = inst[31:7];
 
     assign ecall        = I_ecall;

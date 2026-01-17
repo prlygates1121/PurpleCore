@@ -31,22 +31,14 @@ module ID(
     input               clk,
     input               reset,
     input               stall,
-    input [`RD_QUEUE_MUL_SIZE-1:0] rd_queue_mul_flush_sel,
-    input [`RD_QUEUE_DIV_SIZE-1:0] rd_queue_div_flush_sel,
     
     input [31:0]        IF_pc,
     input [31:0]        IF_pc_plus_4,
     input [31:0]        IF_inst,
     input               IF_branch_predict,
     input [31:0]        WB_reg_w_data,
-    input [31:0]        WB_reg_w_data_mul,
-    input [31:0]        WB_reg_w_data_div,
     input               WB_reg_w_en,
-    input               WB_reg_w_en_mul,
-    input               WB_reg_w_en_div,
     input [4:0]         WB_rd,
-    input [4:0]         WB_rd_mul,
-    input [4:0]         WB_rd_div,
     input [11:0]        WB_csr_addr,
     input               WB_csr_w_en,
     input [31:0]        WB_csr_w_data,
@@ -55,13 +47,9 @@ module ID(
     input [31:0]        WB_w_mcause,
 
     output [3:0]        ID_alu_op_sel,
-    output [2:0]        ID_alu_mul_op_sel,
-    output [2:0]        ID_alu_div_op_sel,
     output              ID_alu_src1_sel,
     output              ID_alu_src2_sel,
     output              ID_reg_w_en,
-    output              ID_reg_w_en_mul,
-    output              ID_reg_w_en_div,
     output [2:0]        ID_reg_w_data_sel,
     output [1:0]        ID_store_width,
     output [2:0]        ID_load_width,
@@ -73,8 +61,6 @@ module ID(
     output [4:0]        ID_rs1,
     output [4:0]        ID_rs2,
     output [4:0]        ID_rd,
-    output [4:0]        ID_rd_mul,
-    output [4:0]        ID_rd_div,
     output [31:0]       ID_pc,
     output [31:0]       ID_pc_plus_4,
     output              ID_jal,
@@ -91,10 +77,8 @@ module ID(
 
     output [31:0]       ID_mtvec,
     output [31:0]       ID_mepc,
-    output [31:0]       ID_mboot,
+    output [31:0]       ID_mboot
 
-    output [`RD_QUEUE_MUL_SIZE*5-1:0] rd_queue_mul,
-    output [`RD_QUEUE_DIV_SIZE*5-1:0] rd_queue_div
 
     );
 
@@ -113,7 +97,6 @@ module ID(
     wire        alu_src1_sel, alu_src2_sel;
     wire [2:0]  reg_w_data_sel;
     wire        reg_w_en;
-    wire        mul, div;
 
     wire [1:0]  D_store_width;
     wire [2:0]  D_load_width;
@@ -124,34 +107,10 @@ module ID(
     wire [2:0]  csr_op;
     wire [31:0] csr_r_data;
 
-    rd_queue #(
-        .SIZE               (`RD_QUEUE_MUL_SIZE)
-    ) rd_queue_mul_0 (
-        .clk                (clk),
-        .reset              (reset),
-        .flush_sel          (rd_queue_mul_flush_sel),
-        .rd_in              (ID_rd_mul),
-        .rd_queue           (rd_queue_mul)
-    );
-
-    rd_queue #(
-        .SIZE               (`RD_QUEUE_DIV_SIZE)
-    ) rd_queue_div_0 (
-        .clk                (clk),
-        .reset              (reset),
-        .flush_sel          (rd_queue_div_flush_sel),
-        .rd_in              (ID_rd_div),
-        .rd_queue           (rd_queue_div)
-    );
-
     control_logic ctrl_logic_0(
         .inst               (IF_inst),
 
         .alu_op_sel         (alu_op_sel),
-        .alu_mul_op_sel     (ID_alu_mul_op_sel),
-        .alu_div_op_sel     (ID_alu_div_op_sel),
-        .mul                (mul),
-        .div                (div),
         .alu_src1_sel       (alu_src1_sel),
         .alu_src2_sel       (alu_src2_sel),
         .reg_w_en           (reg_w_en),
@@ -167,8 +126,6 @@ module ID(
         .rs1                (rs1),
         .rs2                (rs2),
         .rd                 (rd),
-        .rd_mul             (ID_rd_mul),
-        .rd_div             (ID_rd_div),
         .imm                (imm_raw),
         .ecall              (ID_ecall),
         .mret               (ID_mret),
@@ -194,16 +151,10 @@ module ID(
         .clk            (clk),
         .reset          (reset),
         .write_en       (WB_reg_w_en),
-        .write_en_mul   (WB_reg_w_en_mul),
-        .write_en_div   (WB_reg_w_en_div),
         .rs1            (rs1),
         .rs2            (rs2),
         .dest           (WB_rd),
-        .dest_mul       (WB_rd_mul),
-        .dest_div       (WB_rd_div),
         .write_data     (WB_reg_w_data),
-        .write_data_mul (WB_reg_w_data_mul),
-        .write_data_div (WB_reg_w_data_div),
 
         .rs1_data       (ID_rs1_data),
         .rs2_data       (ID_rs2_data)
@@ -243,8 +194,6 @@ module ID(
     assign ID_alu_src1_sel      = alu_src1_sel;
     assign ID_alu_src2_sel      = alu_src2_sel;
     assign ID_reg_w_en          = reg_w_en;
-    assign ID_reg_w_en_mul      = mul;
-    assign ID_reg_w_en_div      = div;
     assign ID_reg_w_data_sel    = reg_w_data_sel;
     assign ID_store_width       = D_store_width;
     assign ID_load_width        = D_load_width;

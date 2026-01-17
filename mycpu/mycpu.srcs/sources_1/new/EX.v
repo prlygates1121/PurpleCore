@@ -26,8 +26,6 @@ module EX(
     input               reset,
 
     input [3:0]         ID_alu_op_sel,
-    input [2:0]         ID_alu_mul_op_sel,
-    input [2:0]         ID_alu_div_op_sel,
     input               ID_alu_src1_sel,
     input               ID_alu_src2_sel,
     input [31:0]        ID_imm,
@@ -38,16 +36,12 @@ module EX(
     input [4:0]         ID_rs1,
     input [4:0]         ID_rs2,
     input [4:0]         ID_rd,
-    input [4:0]         ID_rd_mul,
-    input [4:0]         ID_rd_div,
 
     input [1:0]         ID_store_width,
     input [2:0]         ID_load_width,
     input               ID_load_un,
 
     input               ID_reg_w_en,
-    input               ID_reg_w_en_mul,
-    input               ID_reg_w_en_div,
     input [2:0]         ID_reg_w_data_sel,
 
     input [31:0]        ID_pc,
@@ -60,11 +54,7 @@ module EX(
     input               ID_mret,
 
     input [31:0]        MEM_reg_w_data_forwarded,
-    input [31:0]        MEM_reg_w_data_mul_forwarded,
-    input [31:0]        MEM_reg_w_data_div_forwarded,
     input [31:0]        WB_reg_w_data_forwarded,
-    input [31:0]        WB_reg_w_data_mul_forwarded,
-    input [31:0]        WB_reg_w_data_div_forwarded,
     input [2:0]         forward_rs1_sel,
     input [2:0]         forward_rs2_sel,
 
@@ -78,9 +68,6 @@ module EX(
     input [31:0]        ID_mtvec,
     input [31:0]        ID_mepc,
     input [31:0]        ID_mboot,
-
-    input [4:0]         rd_queue_mul_out,
-    input [4:0]         rd_queue_div_out,
 
     input               ID_reset,
 
@@ -119,15 +106,7 @@ module EX(
     output [31:0]       EX_w_mcause,
 
     output              EX_excp,
-    output              inst_access_fault,
-
-    output [31:0]       EX_alu_mul_result,
-    output              EX_reg_w_en_mul,
-    output [4:0]        EX_rd_mul,
-
-    output [31:0]       EX_alu_div_result,
-    output              EX_reg_w_en_div,
-    output [4:0]        EX_rd_div
+    output              inst_access_fault
 
     );
 
@@ -138,9 +117,6 @@ module EX(
     wire [31:0] alu_src2;
     reg [30:0] excp_code;
     wire EX_br_eq, EX_br_lt;
-
-    wire [2:0] alu_mul_op_sel;
-    wire [4:0] alu_div_op_sel;
 
     always @(*) begin
         excp_code = `NO_EXCP;
@@ -169,13 +145,9 @@ module EX(
 
     assign fwd_rs1_data = (forward_rs1_sel == `FORWARD_PREV)            ? MEM_reg_w_data_forwarded :
                           (forward_rs1_sel == `FORWARD_PREV_PREV)       ? WB_reg_w_data_forwarded  :
-                          (forward_rs1_sel == `FORWARD_PREV_MUL)        ? MEM_reg_w_data_mul_forwarded :
-                          (forward_rs1_sel == `FORWARD_PREV_PREV_MUL)   ? WB_reg_w_data_mul_forwarded :
                             ID_rs1_data;
     assign fwd_rs2_data = (forward_rs2_sel == `FORWARD_PREV)            ? MEM_reg_w_data_forwarded :
                           (forward_rs2_sel == `FORWARD_PREV_PREV)       ? WB_reg_w_data_forwarded  :
-                          (forward_rs2_sel == `FORWARD_PREV_MUL)        ? MEM_reg_w_data_mul_forwarded :
-                          (forward_rs2_sel == `FORWARD_PREV_PREV_MUL)   ? WB_reg_w_data_mul_forwarded :
                             ID_rs2_data;
     assign fwd_csr_data = (forward_csr_sel == `FORWARD_PREV)            ? MEM_csr_w_data_forwarded : 
                           (forward_csr_sel == `FORWARD_PREV_PREV)       ? WB_csr_w_data_forwarded  : 
@@ -211,42 +183,6 @@ module EX(
         .result(EX_alu_result)
     );
 
-    alu_mul alu_mul_0 (
-        .clk(clk),
-        .src1(alu_src1),
-        .src2(alu_src2),
-        .op_sel(alu_mul_op_sel),
-        .result(EX_alu_mul_result)
-    );
-
-    alu_div alu_div_0 (
-        .clk(clk),
-        .src1(alu_src1),
-        .src2(alu_src2),
-        .op_sel(alu_div_op_sel),
-        .result(EX_alu_div_result)
-    );
-
-    shift_reg #(
-        .BIT_WIDTH      (3),
-        .DEPTH          (`RD_QUEUE_MUL_SIZE-1)
-    ) shift_reg_mul_op_sel (
-        .clk            (clk),
-        .reset          (reset),
-        .data_in        (ID_alu_mul_op_sel),
-        .data_out       (alu_mul_op_sel)
-    );
-
-    shift_reg #(
-        .BIT_WIDTH      (3),
-        .DEPTH          (35)
-    ) shift_reg_div_op_sel (
-        .clk            (clk),
-        .reset          (reset),
-        .data_in        (ID_alu_div_op_sel),
-        .data_out       (alu_div_op_sel)
-    );
-
     always @(*) begin
         case (ID_csr_op) 
             `CSRRW:     EX_csr_w_data = fwd_rs1_data;
@@ -271,16 +207,12 @@ module EX(
     end
 
     assign EX_reg_w_en          = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : ID_reg_w_en;
-    assign EX_reg_w_en_mul      = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : (rd_queue_mul_out != 5'b0);
-    assign EX_reg_w_en_div      = excp_code == `LOAD_ACCESS_FAULT ? 1'b0 : (rd_queue_div_out != 5'b0);
     assign EX_reg_w_data_sel    = ID_reg_w_data_sel;
     assign EX_store_width       = excp_code == `STORE_ACCESS_FAULT ? `NO_STORE : ID_store_width;
     assign EX_load_width        = excp_code == `LOAD_ACCESS_FAULT ? `NO_LOAD : ID_load_width;
     assign EX_load_un           = ID_load_un;
     assign EX_pc_plus_4         = ID_pc_plus_4;
     assign EX_rd                = ID_rd;
-    assign EX_rd_mul            = rd_queue_mul_out;
-    assign EX_rd_div            = rd_queue_div_out;
     assign EX_rs2_data          = fwd_rs2_data;
     assign EX_rs1               = ID_rs1;
     assign EX_rs2               = ID_rs2;
