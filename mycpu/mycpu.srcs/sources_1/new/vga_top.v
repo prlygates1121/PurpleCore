@@ -70,7 +70,7 @@ module vga_top(
             data_en_d <= 1'b0;
         end else if (data_en) begin
             if (vga_addr_offset == 3'b111) begin
-                vga_addr <= (vga_addr == 32'h0040_0008) ? 32'h0040_0000 : vga_addr + 4; //A002_57FC
+                vga_addr <= (vga_addr == 32'h0042_57FC) ? 32'h0040_0000 : vga_addr + 4; //A002_57FC
                 vga_addr_offset <= 3'b0;
             end else begin
                 vga_addr_offset <= vga_addr_offset + 1;
