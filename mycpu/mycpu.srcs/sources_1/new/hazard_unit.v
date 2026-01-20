@@ -63,10 +63,7 @@ module hazard_unit(
     input [4:0]     ID_rd,
 
     output          load_stall, 
-    output          load_flush,
-
-    output reg      calc_stall,
-    output          calc_flush
+    output          load_flush
 
     );
 
@@ -98,7 +95,5 @@ module hazard_unit(
 
     assign load_stall                   = (EX_load & (ID_rs1 != 5'b0) & (EX_rd == ID_rs1)) | (EX_load & (ID_rs2 != 5'b0) & (EX_rd == ID_rs2));
     assign load_flush                   = load_stall;
-
-    assign calc_flush                   = calc_stall;
 
 endmodule

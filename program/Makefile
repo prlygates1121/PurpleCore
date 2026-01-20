@@ -20,7 +20,7 @@ CFLAGS := -O3 -march=rv32imzicsr -mabi=ilp32 -nostdlib -fomit-frame-pointer -fno
 TARGET := output/my_program
 
 # Define source files
-SRCS := user/main.c user/user_ecall.s lib/utils.c lib/keyboard/keyboard.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c lib/switch/switch.c lib/button/button.c lib/vga/vga.c sys/trap_handler.c sys/trap.s sys/csr.c
+SRCS := user/main.c user/user_ecall.s lib/utils.c lib/keyboard/keyboard.c lib/uart/uart.c lib/led/led.c lib/seg_display/seg_display.c lib/switch/switch.c lib/button/button.c lib/vga/vga.c sys/trap_handler.c sys/trap.s sys/csr.c sys/plic.c
 
 ifeq ($(ENTRY), yes)
 	SRCS += sys/entry.s

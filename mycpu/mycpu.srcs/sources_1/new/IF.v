@@ -29,7 +29,7 @@ module IF (
 
     input [31:0]    EX_trap_dest,
     
-    input           EX_excp,
+    input           EX_trap,
     input           EX_mret,
     input           EX_pc_sel,
     input           EX_false_direction,
@@ -54,14 +54,14 @@ module IF (
     reg [31:0] pc;
 
 `ifdef BRANCH_PREDICT_ENA
-    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest :
+    wire [31:0] pc_next = (EX_trap | EX_mret) ? EX_trap_dest :
                           EX_false_target ? (EX_pc_sel ? EX_alu_result : EX_pc_plus_4) : 
                           EX_false_direction ? (EX_branch_predict ? EX_pc_plus_4 : EX_alu_result) :
                           stall ? pc :
                           branch_predict ? branch_target :
                           (pc + 4);
 `else 
-    wire [31:0] pc_next = (EX_excp | EX_mret) ? EX_trap_dest : 
+    wire [31:0] pc_next = (EX_trap | EX_mret) ? EX_trap_dest : 
                           EX_pc_sel ? EX_alu_result : 
                           stall ? pc : 
                           (pc + 4);
@@ -70,7 +70,7 @@ module IF (
     always @(posedge clk) begin
         if (reset) begin
             `ifdef SIMULATION
-                `ifdef LOAD_AT_0X200
+                `ifdef LOAD_OFFSET_200
                     pc <= `S_TEXT;
                 `else
                     pc <= `S_BOOTLOADER;

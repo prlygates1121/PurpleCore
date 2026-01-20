@@ -46,6 +46,8 @@ module ID(
     input [31:0]        WB_w_mepc,
     input [31:0]        WB_w_mcause,
 
+    input               plic_eip,
+
     output [3:0]        ID_alu_op_sel,
     output              ID_alu_src1_sel,
     output              ID_alu_src2_sel,
@@ -77,7 +79,11 @@ module ID(
 
     output [31:0]       ID_mtvec,
     output [31:0]       ID_mepc,
-    output [31:0]       ID_mboot
+    output [31:0]       ID_mboot,
+
+    output [31:0]       ID_mstatus,
+    output [31:0]       ID_mie,
+    output [31:0]       ID_mip
 
 
     );
@@ -179,14 +185,16 @@ module ID(
         .w_mip          (`CSR_NO_WRITE),
         .w_mboot        (`CSR_NO_WRITE),
 
-        .r_mstatus      (),
-        .r_mie          (),
+        .plic_eip       (plic_eip),
+
+        .r_mstatus      (ID_mstatus),
+        .r_mie          (ID_mie),
         .r_mtvec        (ID_mtvec),
         .r_mscratch     (),
         .r_mepc         (ID_mepc),
         .r_mcause       (),
         .r_mtval        (),
-        .r_mip          (),
+        .r_mip          (ID_mip),
         .r_mboot        (ID_mboot)
     );
 

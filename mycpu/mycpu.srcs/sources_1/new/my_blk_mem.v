@@ -53,7 +53,7 @@ module my_blk_mem(
         end
 
         // Determine starting address based on configuration
-        `ifdef LOAD_AT_0X200
+        `ifdef LOAD_OFFSET_200
             i = 32'h80;  // 0x200/4 = 0x80 (word address)
         `else
             i = 32'h0;

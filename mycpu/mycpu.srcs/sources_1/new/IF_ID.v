@@ -40,7 +40,7 @@ module IF_ID(
     always @(posedge clk) begin
         if (reset) begin
             `ifdef SIMULATION
-                `ifdef LOAD_AT_0X200
+                `ifdef LOAD_OFFSET_200
                     ID_pc <= `S_TEXT;
                 `else
                     ID_pc <= `S_BOOTLOADER;

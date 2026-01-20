@@ -31,13 +31,15 @@ module cpu_quicksort_test(
     parameter UART_PERIOD = CLK_100_PERIOD * (CLK_100_FREQ / `UART_FREQ + 1);
 
     reg clk_100, reset_n, uart_rx_in;
+    reg [4:0] bts;
     wire uart_tx_out;
 
     top top0(
         .clk_100(clk_100),
         .reset_n(reset_n),    
         .uart_rx_in(uart_rx_in),
-        .uart_tx_out(uart_tx_out)
+        .uart_tx_out(uart_tx_out),
+        .bts(bts)
     );
 
     task send_byte(input reg [7:0] data_byte);
@@ -89,6 +91,14 @@ module cpu_quicksort_test(
         // send_instruction(32'h0054A023);
 
 
+    end
+
+    initial begin
+        bts = 0;
+        wait(top0.core_0.if_0.IF_pc == 32'h800002B0);
+        bts[2] = 1;
+        repeat(20) @(posedge top0.clk_main);
+        bts[2] = 0;
     end
 
     always @(posedge top0.clk_main) begin

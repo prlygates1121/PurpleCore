@@ -1,12 +1,12 @@
 // `define SIMULATION
 
 `ifdef SIMULATION
-    // `define LOAD_AT_0X200
+    `define LOAD_OFFSET_200
 `else
     // `define DEBUG
 `endif
 
-`define VGA
+// `define VGA
 `define BRANCH_PREDICT_ENA
 
 `define S_BOOTLOADER            32'h8000_0000
@@ -139,6 +139,10 @@
 `define MSTATUS_MIE             32'h0000_0008
 
 `define CSR_NO_WRITE            32'hFFFFFFFF
+
+// PLIC
+`define PLIC_SOURCES            8
+`define PLIC_PRIORITY_BITS      3
 
 // VGA parameters
 

@@ -40,6 +40,19 @@ module memory(
     input [2:0]         D_load_width,
     input               D_load_un,
 
+    output reg [(`PLIC_SOURCES * `PLIC_PRIORITY_BITS)-1:0] plic_priorities,
+    output reg [`PLIC_SOURCES-1:0]                           plic_enables,
+    output reg [`PLIC_PRIORITY_BITS-1:0]                   plic_threshold,
+    output [`PLIC_SOURCES-1:0]                               plic_clear,
+
+    output [31:0]       plic_control,
+
+    output              plic_claim,
+    output              plic_complete,
+
+    input [3:0]         plic_winner_id,
+    input [`PLIC_SOURCES-1:0] plic_pending,
+
     input [7:0]         sws_l,
     input [7:0]         sws_r,
 
@@ -69,12 +82,14 @@ module memory(
     wire            store, load;
     wire [1:0]      byte_offset;
     wire [31:0]     load_word;
-    wire [31:0]     mem_load_word, vga_load_word, uart_load_word;
+    wire [31:0]     mem_load_word, plic_load_word, vga_load_word, uart_load_word;
     wire [31:0]     mem_store_data;
     wire [3:0]      we, web, wevga;
     wire            io_en;
     wire [10:0]     io_sel;
     wire [31:0]     io_load_word;
+    wire [14:0]     plic_sel;
+    wire [2:0]      plic_word_sel;
     wire [3:0]      uart_sel;
 
 `ifdef SIMULATION
@@ -110,6 +125,7 @@ module memory(
     );
 `endif
 
+    localparam [10:0] PLIC          = 11'd1;
     localparam [10:0] LED           = 11'd2;    // _w
     localparam [10:0] SW            = 11'd3;    // r_
     localparam [10:0] VGA           = 11'd4;    // rw
@@ -117,6 +133,13 @@ module memory(
     localparam [10:0] BUTTON        = 11'd6;    // r_
     localparam [10:0] SEG_DISPLAY   = 11'd7;    // _w
     localparam [10:0] UART          = 11'd8;    // rw
+
+    localparam [14:0] PLIC_PRIORITIES   = 14'd0;
+    localparam [14:0] PLIC_ENABLES      = 14'd1;
+    localparam [14:0] PLIC_THRESHOLD    = 14'd2;
+    localparam [14:0] PLIC_PENDING      = 14'd3;
+    localparam [14:0] PLIC_CONTROL      = 14'd4;
+    localparam [14:0] PLIC_CLEAR        = 14'd5;
 
     localparam [3:0] UART_DATA_REG      = 4'd0;
     localparam [3:0] UART_STATUS_REG    = 4'd1;
@@ -142,6 +165,18 @@ module memory(
     assign store            = D_store_width != 2'h3;
     assign load             = D_load_width  != 3'h3;
 
+    assign plic_sel         = D_addr_real[19:5];
+    assign plic_word_sel    = D_addr_real[4:2];
+
+    assign plic_claim       = (io_sel == PLIC) & (plic_sel == PLIC_CONTROL) & (plic_word_sel == 0) & load;
+    assign plic_complete    = (io_sel == PLIC) & (plic_sel == PLIC_CONTROL) & (plic_word_sel == 0) & store;
+    assign plic_control     = plic_complete ? { (we[3] ? mem_store_data[31:24] : 8'b0), 
+                                                (we[2] ? mem_store_data[23:16] : 8'b0),
+                                                (we[1] ? mem_store_data[15:8]  : 8'b0),
+                                                (we[0] ? mem_store_data[7:0]   : 8'b0) } 
+                                                : {32{1'b1}};
+    assign plic_clear       = (io_sel == PLIC) & (plic_sel == PLIC_CLEAR) & (plic_word_sel == 0) & store ? (we[0] ? mem_store_data[7:0] : 0) : 0;
+
     // select from uart data register and uart status register
     assign uart_sel         = D_addr_real[5:2];
     // 
@@ -153,12 +188,21 @@ module memory(
     // io_sel: select a type of I/O
     assign io_sel           = D_addr_real[30:20];
     // io_load_word: the data loaded from memory mapped I/O
-    assign io_load_word     = io_sel == SW          ? {16'h0, sws_l, sws_r} : 
+    assign io_load_word     = io_sel == PLIC        ? plic_load_word :
+                              io_sel == SW          ? {16'h0, sws_l, sws_r} : 
                               io_sel == VGA         ? vga_load_word :
                               io_sel == KEYBOARD    ? {24'h0, key_code} :
                               io_sel == BUTTON      ? {27'h0, bts_state} :
                               io_sel == UART        ? uart_load_word :
                               32'h0;
+
+    assign plic_load_word   =  plic_sel == PLIC_PRIORITIES                        ? plic_priorities[(plic_word_sel) * `PLIC_PRIORITY_BITS +: `PLIC_PRIORITY_BITS] :
+                              (plic_sel == PLIC_ENABLES     & plic_word_sel == 0) ? plic_enables :
+                              (plic_sel == PLIC_THRESHOLD   & plic_word_sel == 0) ? plic_threshold :
+                              (plic_sel == PLIC_PENDING     & plic_word_sel == 0) ? plic_pending :
+                              (plic_sel == PLIC_CONTROL     & plic_word_sel == 0) ? plic_winner_id :
+                              32'h0;
+
 
     assign uart_load_word   = uart_sel == UART_DATA_REG ? {24'b0, uart_rx_data} :
                               uart_sel == UART_STATUS_REG ? {30'b0, uart_tx_ready, uart_rx_ready} :
@@ -199,8 +243,12 @@ module memory(
                               D_store_width == `STORE_WORD ? (byte_offset == 2'h0 ? D_store_data : 32'h0) : 
                                                               32'h0;
 
+    integer i;
     always @(posedge clk) begin
         if (reset) begin
+            plic_priorities <= 0;
+            plic_enables   <= 0;
+            plic_threshold <= 0;
             leds_l <= 8'b0;
             leds_r <= 8'b0;
             seg_display_hex <= 32'h0;
@@ -210,6 +258,23 @@ module memory(
             if (io_en & store) begin
                 // here lists all the writable I/O
                 case (io_sel)
+                    PLIC: begin
+                        case (plic_sel)
+                            PLIC_PRIORITIES: begin
+                                if (we[0]) plic_priorities[(plic_word_sel) * `PLIC_PRIORITY_BITS +: `PLIC_PRIORITY_BITS] <= mem_store_data[`PLIC_PRIORITY_BITS-1:0];
+                            end
+                            PLIC_ENABLES: begin
+                                if (plic_word_sel == 0) begin
+                                    if (we[0]) plic_enables <= mem_store_data[7:0];
+                                end
+                            end
+                            PLIC_THRESHOLD: begin
+                                if (plic_word_sel == 0) begin
+                                    if (we[0]) plic_threshold <= mem_store_data[7:0];
+                                end
+                            end
+                        endcase
+                    end
                     LED: begin
                         if (we[0]) leds_r <= mem_store_data[7:0];
                         if (we[1]) leds_l <= mem_store_data[15:8];

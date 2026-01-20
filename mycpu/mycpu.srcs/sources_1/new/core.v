@@ -47,7 +47,22 @@ module core(
     output          uart_write,
     input           uart_rx_ready,
     input           uart_tx_ready,
-    output [31:0]   uart_ctrl
+    output [31:0]   uart_ctrl,
+
+    output [(`PLIC_SOURCES * `PLIC_PRIORITY_BITS)-1:0] plic_priorities,
+    output [`PLIC_SOURCES-1:0]                         plic_enables,
+    output [`PLIC_PRIORITY_BITS-1:0]                   plic_threshold,
+
+    output [31:0]              plic_control,
+
+    output [`PLIC_SOURCES-1:0] plic_clear,
+
+    output                     plic_claim,
+    output                     plic_complete,
+
+    input [3:0]                plic_winner_id,
+    input [`PLIC_SOURCES-1:0]  plic_pending,
+    input                      plic_eip
     );
 
     `ifdef DEBUG
@@ -94,6 +109,9 @@ module core(
     wire [31:0]     ID_out_mtvec;
     wire [31:0]     ID_out_mepc;
     wire [31:0]     ID_out_mboot;
+    wire [31:0]     ID_out_mstatus;
+    wire [31:0]     ID_out_mie;
+    wire [31:0]     ID_out_mip;
 
     wire [3:0]      EX_in_alu_op_sel;
     wire            EX_in_alu_src1_sel;
@@ -126,6 +144,10 @@ module core(
     wire [31:0]     EX_in_mtvec;
     wire [31:0]     EX_in_mepc;
     wire [31:0]     EX_in_mboot;
+    wire [31:0]     EX_in_mstatus;
+    wire [31:0]     EX_in_mie;
+    wire [31:0]     EX_in_mip;
+    
     wire            ID_EX_reset;
 
     wire [31:0]     EX_out_alu_result;
@@ -154,7 +176,7 @@ module core(
     wire [31:0]     EX_out_w_mstatus;
     wire [31:0]     EX_out_w_mepc;
     wire [31:0]     EX_out_w_mcause;
-    wire            EX_out_excp;
+    wire            EX_out_trap;
 
     wire [31:0]     MEM_reg_w_data_forwarded;
     wire [31:0]     WB_reg_w_data_forwarded;
@@ -229,7 +251,6 @@ module core(
 
     // hazard_unit
     wire            load_stall, load_flush;
-    wire            calc_stall, calc_flush;
 
     // Memory
     wire [3:0]      wea = 4'b0;
@@ -244,11 +265,11 @@ module core(
     IF if_0 (
         .clk                        (clk),
         .reset                      (reset),
-        .stall                      (load_stall | calc_stall),
+        .stall                      (load_stall),
         .inst_access_fault          (inst_access_fault),
 
         .EX_trap_dest               (EX_out_trap_dest),
-        .EX_excp                    (EX_out_excp),
+        .EX_trap                    (EX_out_trap),
         .EX_mret                    (EX_out_mret),
         .EX_pc_sel                  (EX_out_pc_sel),
         .EX_false_direction         (EX_false_direction),
@@ -270,8 +291,8 @@ module core(
 
     IF_ID if_id_0(
         .clk                    (clk),
-        .reset                  (reset | EX_branch_flush | EX_out_excp | EX_out_mret),
-        .stall                  (load_stall | calc_stall),
+        .reset                  (reset | EX_branch_flush | EX_out_trap | EX_out_mret),
+        .stall                  (load_stall),
 
         .IF_pc                  (IF_out_pc),
         .IF_pc_plus_4           (IF_out_pc_plus_4),
@@ -294,7 +315,7 @@ module core(
         `endif
         .clk                    (clk),
         .reset                  (reset),
-        .stall                  (calc_stall),
+        .stall                  (0),
         .IF_pc                  (ID_in_pc),
         .IF_pc_plus_4           (ID_in_pc_plus_4),
         .IF_inst                (ID_in_inst),
@@ -308,41 +329,8 @@ module core(
         .WB_w_mstatus           (WB_out_w_mstatus),
         .WB_w_mepc              (WB_out_w_mepc),
         .WB_w_mcause            (WB_out_w_mcause),
-        .ID_alu_op_sel          (ID_out_alu_op_sel),
-        .ID_alu_src1_sel        (ID_out_alu_src1_sel),
-        .ID_alu_src2_sel        (ID_out_alu_src2_sel),
-        .ID_reg_w_en            (ID_out_reg_w_en),
-        .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
-        .ID_store_width         (ID_out_store_width),
-        .ID_load_width          (ID_out_load_width),
-        .ID_load_un             (ID_out_load_un),
-        .ID_imm                 (ID_out_imm),
-        .ID_br_un               (ID_out_br_un),
-        .ID_rs1_data            (ID_out_rs1_data),
-        .ID_rs2_data            (ID_out_rs2_data),
-        .ID_rs1                 (ID_out_rs1),
-        .ID_rs2                 (ID_out_rs2),
-        .ID_rd                  (ID_out_rd),
-        .ID_pc                  (ID_out_pc),
-        .ID_pc_plus_4           (ID_out_pc_plus_4),
-        .ID_jal                 (ID_out_jal),
-        .ID_jalr                (ID_out_jalr),
-        .ID_branch_type         (ID_out_branch_type),
-        .ID_branch_predict      (ID_out_branch_predict),
-        .ID_inst                (ID_out_inst),
-        .ID_ecall               (ID_out_ecall),
-        .ID_mret                (ID_out_mret),
-        .ID_csr_addr            (ID_out_csr_addr),
-        .ID_csr_op              (ID_out_csr_op),
-        .ID_csr_r_data          (ID_out_csr_r_data),
-        .ID_mtvec               (ID_out_mtvec),
-        .ID_mepc                (ID_out_mepc),
-        .ID_mboot               (ID_out_mboot)
-    );
+        .plic_eip               (plic_eip),
 
-    ID_EX id_ex_0 (
-        .clk                    (clk),
-        .reset                  (reset | load_flush | calc_flush | EX_branch_flush | EX_out_excp | EX_out_mret),
         .ID_alu_op_sel          (ID_out_alu_op_sel),
         .ID_alu_src1_sel        (ID_out_alu_src1_sel),
         .ID_alu_src2_sel        (ID_out_alu_src2_sel),
@@ -373,6 +361,47 @@ module core(
         .ID_mtvec               (ID_out_mtvec),
         .ID_mepc                (ID_out_mepc),
         .ID_mboot               (ID_out_mboot),
+        .ID_mstatus             (ID_out_mstatus),
+        .ID_mie                 (ID_out_mie),
+        .ID_mip                 (ID_out_mip)
+    );
+
+    ID_EX id_ex_0 (
+        .clk                    (clk),
+        .reset                  (reset | load_flush | EX_branch_flush | EX_out_trap | EX_out_mret),
+        .ID_alu_op_sel          (ID_out_alu_op_sel),
+        .ID_alu_src1_sel        (ID_out_alu_src1_sel),
+        .ID_alu_src2_sel        (ID_out_alu_src2_sel),
+        .ID_reg_w_en            (ID_out_reg_w_en),
+        .ID_reg_w_data_sel      (ID_out_reg_w_data_sel),
+        .ID_store_width         (ID_out_store_width),
+        .ID_load_width          (ID_out_load_width),
+        .ID_load_un             (ID_out_load_un),
+        .ID_imm                 (ID_out_imm),
+        .ID_br_un               (ID_out_br_un),
+        .ID_rs1_data            (ID_out_rs1_data),
+        .ID_rs2_data            (ID_out_rs2_data),
+        .ID_rs1                 (ID_out_rs1),
+        .ID_rs2                 (ID_out_rs2),
+        .ID_rd                  (ID_out_rd),
+        .ID_pc                  (ID_out_pc),
+        .ID_pc_plus_4           (ID_out_pc_plus_4),
+        .ID_jal                 (ID_out_jal),
+        .ID_jalr                (ID_out_jalr),
+        .ID_branch_type         (ID_out_branch_type),
+        .ID_branch_predict      (ID_out_branch_predict),
+        .ID_inst                (ID_out_inst),
+        .ID_ecall               (ID_out_ecall),
+        .ID_mret                (ID_out_mret),
+        .ID_csr_addr            (ID_out_csr_addr),
+        .ID_csr_op              (ID_out_csr_op),
+        .ID_csr_r_data          (ID_out_csr_r_data),
+        .ID_mtvec               (ID_out_mtvec),
+        .ID_mepc                (ID_out_mepc),
+        .ID_mboot               (ID_out_mboot),
+        .ID_mstatus             (ID_out_mstatus),
+        .ID_mie                 (ID_out_mie),
+        .ID_mip                 (ID_out_mip),
         .ID_reset               (IF_ID_reset),
 
         .EX_alu_op_sel          (EX_in_alu_op_sel),
@@ -405,6 +434,9 @@ module core(
         .EX_mtvec               (EX_in_mtvec),
         .EX_mepc                (EX_in_mepc),
         .EX_mboot               (EX_in_mboot),
+        .EX_mstatus             (EX_in_mstatus),
+        .EX_mie                 (EX_in_mie),
+        .EX_mip                 (EX_in_mip),
         .EX_reset               (ID_EX_reset)
     );
 
@@ -441,6 +473,9 @@ module core(
         .ID_mtvec                   (EX_in_mtvec),
         .ID_mepc                    (EX_in_mepc),
         .ID_mboot                   (EX_in_mboot),
+        .ID_mip_meip                (EX_in_mip[11]),
+        .ID_mie_meie                (EX_in_mie[11]),
+        .ID_mstatus_mie             (EX_in_mstatus[3]),
 
         .ID_reset                   (ID_EX_reset),
 
@@ -483,7 +518,7 @@ module core(
         .EX_w_mstatus               (EX_out_w_mstatus),
         .EX_w_mepc                  (EX_out_w_mepc),
         .EX_w_mcause                (EX_out_w_mcause),
-        .EX_excp                    (EX_out_excp),
+        .EX_trap                    (EX_out_trap),
 
         .inst_access_fault          (inst_access_fault)
     );
@@ -654,9 +689,7 @@ module core(
         .EX_rd                       (EX_out_rd),
         .EX_load                     (EX_out_load_width != `NO_LOAD),
         .load_stall                  (load_stall),
-        .load_flush                  (load_flush),
-        .calc_stall                  (calc_stall),
-        .calc_flush                  (calc_flush)
+        .load_flush                  (load_flush)
     );
 
 `ifdef BRANCH_PREDICT_ENA
@@ -724,7 +757,17 @@ module core(
         .uart_rx_ready              (uart_rx_ready),
         .uart_tx_ready              (uart_tx_ready),
 
-        .uart_ctrl                  (uart_ctrl)
+        .uart_ctrl                  (uart_ctrl),
+
+        .plic_priorities            (plic_priorities),
+        .plic_enables               (plic_enables),
+        .plic_threshold             (plic_threshold),
+        .plic_control               (plic_control),
+        .plic_claim                 (plic_claim),
+        .plic_complete              (plic_complete),
+        .plic_winner_id             (plic_winner_id),
+        .plic_pending               (plic_pending),
+        .plic_clear                 (plic_clear)
     );
 
     `ifdef DEBUG

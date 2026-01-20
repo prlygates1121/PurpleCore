@@ -59,9 +59,14 @@ clear_bss_end:
     la t1, m_trap_handler
     sw t1, 4(t0)
 
-    # enable global interrupt
+    # enable (machine) global interrupt
     li t0, 8
     csrrs zero, mstatus, t0
+
+    # enable (machine) external interrupt
+    li t0, 1
+    slli t0, t0, 11
+    csrrs zero, mie, t0
 
     # go to main function
     call main

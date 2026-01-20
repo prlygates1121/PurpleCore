@@ -68,6 +68,9 @@ module EX(
     input [31:0]        ID_mtvec,
     input [31:0]        ID_mepc,
     input [31:0]        ID_mboot,
+    input               ID_mip_meip,
+    input               ID_mie_meie,
+    input               ID_mstatus_mie,
 
     input               ID_reset,
 
@@ -105,8 +108,10 @@ module EX(
     output [31:0]       EX_w_mepc,
     output [31:0]       EX_w_mcause,
 
-    output              EX_excp,
-    output              inst_access_fault
+    output              EX_trap,
+    output              inst_access_fault,
+
+    output              EX_intr
 
     );
 
@@ -116,7 +121,11 @@ module EX(
     wire [31:0] alu_src1;
     wire [31:0] alu_src2;
     reg [30:0] excp_code;
+    wire [30:0] intr_excp_code;
     wire EX_br_eq, EX_br_lt;
+
+    assign EX_intr = ID_mstatus_mie & ID_mie_meie & ID_mip_meip;
+    assign intr_excp_code = 11;
 
     always @(*) begin
         excp_code = `NO_EXCP;
@@ -156,8 +165,11 @@ module EX(
     assign alu_src1     = (ID_alu_src1_sel == `ALU_SRC1_RS1) ? fwd_rs1_data : ID_pc;
     assign alu_src2     = (ID_alu_src2_sel == `ALU_SRC2_RS2) ? fwd_rs2_data : ID_imm;
 
-    assign EX_w_mcause  = EX_excp ? {1'b0, excp_code} : `CSR_NO_WRITE;
-    assign EX_w_mepc    = EX_excp ? ID_pc : `CSR_NO_WRITE;
+    assign EX_w_mcause  = EX_excp ? {1'b0, excp_code} : 
+                          EX_intr ? {1'b1, intr_excp_code} : 
+                          `CSR_NO_WRITE;
+
+    assign EX_w_mepc    = (EX_excp | EX_intr) ? ID_pc : `CSR_NO_WRITE;
 
     assign branch       = ID_branch_type == `BEQ  ?   EX_br_eq :
                           ID_branch_type == `BNE  ?  ~EX_br_eq :
@@ -197,7 +209,7 @@ module EX(
     end
 
     always @(*) begin
-        if (ID_ecall) begin
+        if (ID_ecall | EX_intr) begin
             EX_w_mstatus  = 32'h0;
         end else if (ID_mret) begin
             EX_w_mstatus  = `MSTATUS_MIE;
@@ -223,7 +235,7 @@ module EX(
     assign EX_branch_type       = ID_branch_type;
     assign EX_ecall             = ID_ecall;
     assign EX_mret              = ID_mret;
-    assign EX_trap_dest         = (ID_ecall | EX_excp) ? 
+    assign EX_trap_dest         = EX_trap ? 
                                              ((forward_csr_sel == `FORWARD_PREV)       ? MEM_csr_w_data_forwarded : 
                                               (forward_csr_sel == `FORWARD_PREV_PREV)  ? WB_csr_w_data_forwarded  :
                                                 ID_mtvec) :
@@ -239,4 +251,5 @@ module EX(
     assign EX_csr_w_en          = (ID_csr_op == `CSRRW | ID_csr_op == `CSRRWI) | 
                                   (ID_csr_op == `CSRRC | ID_csr_op == `CSRRCI | ID_csr_op == `CSRRS | ID_csr_op == `CSRRSI) & (ID_rs1 != 5'h0);
     assign EX_excp              = excp_code != `NO_EXCP;
+    assign EX_trap              = EX_excp | EX_intr;
 endmodule

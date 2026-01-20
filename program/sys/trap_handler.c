@@ -1,5 +1,6 @@
 #include "trap_handler.h"
 #include "csr.h"
+#include "plic.h"
 #include "../lib/uart/uart.h"
 #include "../lib/utils.h"
 #include "../lib/led/led.h"
@@ -9,34 +10,66 @@ volatile struct trapframe trapframe;
 
 extern void m_ret(uint32_t a0);
 
+void plic_handler() {
+    uint32_t irq = plic_claim();
+    switch (irq) {
+        case (PLIC_BT_UP):
+            uart_puts("UP");
+            break;
+        case (PLIC_BT_DOWN):
+            uart_puts("DOWN");
+            break;
+        case (PLIC_BT_LEFT):
+            uart_puts("LEFT");
+            break;
+        case (PLIC_BT_RIGHT):
+            uart_puts("RIGHT");
+            break;
+        case (PLIC_BT_CENTER):
+            uart_puts("CENTER");
+            break;
+    }
+    plic_clear(1 << irq);
+    plic_complete(irq);
+}
+
 void m_trap_handler() {
     // save user trap pc in trapframe
     trapframe.user_pc = r_mepc();
     
-    // ecall
     uint32_t cause = r_mcause();
-    switch (cause) {
-        case (ECALL_M):
-            trapframe.user_pc += 4;
-            ecall();
-            break;
-        case (INST_ACCESS_FAULT): 
-        case (STORE_ACCESS_FAULT):
-        case (LOAD_ACCESS_FAULT):
-            char *s1 = "Exception Occurred.\n";
-            uart_puts(s1);
-            char *s2 = "mcause:\t\t";
-            uart_puts(s2);
-            uart_put_num_hex(r_mcause());
-            uart_putc('\n');
-            char *s3 = "mepc:\t\t";
-            uart_puts(s3);
-            uart_put_num_hex(r_mepc());
-            uart_putc('\n');
-            while (1);
-        default:
-            break;
+    if (cause & MCAUSE_INTERRUPT) {
+        uint32_t code = cause & MCAUSE_INTERRUPT_CODE_MASK;
+        switch (code) {
+            case (MACHINE_EXTERNAL_INTERRUPT):
+                plic_handler();
+                break;
+        }
+    } else {
+        switch (cause) {
+            case (ECALL_M):
+                trapframe.user_pc += 4;
+                ecall();
+                break;
+            case (INST_ACCESS_FAULT): 
+            case (STORE_ACCESS_FAULT):
+            case (LOAD_ACCESS_FAULT):
+                char *s1 = "Exception Occurred.\n";
+                uart_puts(s1);
+                char *s2 = "mcause:\t\t";
+                uart_puts(s2);
+                uart_put_num_hex(r_mcause());
+                uart_putc('\n');
+                char *s3 = "mepc:\t\t";
+                uart_puts(s3);
+                uart_put_num_hex(r_mepc());
+                uart_putc('\n');
+                while (1);
+            default:
+                break;
+        }
     }
+    
     m_trap_done();
 }
 

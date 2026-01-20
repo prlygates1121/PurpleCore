@@ -53,7 +53,7 @@ module top(
     wire locked_main, locked_pixel;
     wire locked = locked_main & locked_pixel;
 
-    wire [4:0]  bts_state;
+    wire [4:0]  bts_state, bts_pressed;
     wire [31:0] seg_display_hex;
     wire [31:0] vga_addr, vga_data;
     wire [7:0]  key_code;
@@ -62,6 +62,17 @@ module top(
     wire        uart_read, uart_write;
     wire        uart_rx_ready, uart_tx_ready;
     wire [31:0] uart_ctrl;
+
+    wire [(`PLIC_SOURCES * `PLIC_PRIORITY_BITS)-1:0]    plic_priorities;
+    wire [`PLIC_SOURCES-1:0]                              plic_enables;
+    wire [`PLIC_PRIORITY_BITS-1:0]                      plic_threshold;
+    wire [31:0]                                         plic_control;
+    wire                                                plic_claim;
+    wire                                                plic_complete;
+    wire [3:0]                                          plic_winner_id;
+    wire [`PLIC_SOURCES-1:0]                              plic_pending;
+    wire [`PLIC_SOURCES-1:0]                              plic_clear;
+    wire                                                plic_eip;
 
     wire clk_main;                    // generates clk_main from clk_100
     clk_main_gen clk_main_gen_0(
@@ -142,7 +153,39 @@ module top(
         .uart_write                     (uart_write),
         .uart_rx_ready                  (uart_rx_ready),
         .uart_tx_ready                  (uart_tx_ready),
-        .uart_ctrl                      (uart_ctrl)
+        .uart_ctrl                      (uart_ctrl),
+
+        .plic_priorities                (plic_priorities),
+        .plic_enables                   (plic_enables),
+        .plic_threshold                 (plic_threshold),
+        .plic_control                   (plic_control),
+        .plic_claim                     (plic_claim),
+        .plic_complete                  (plic_complete),
+        .plic_winner_id                 (plic_winner_id),
+        .plic_pending                   (plic_pending),
+        .plic_clear                     (plic_clear),
+        .plic_eip                       (plic_eip)
+    );
+
+    plic plic_0(
+        .clk                            (clk_main),
+        .reset                          (reset_sync_main_s2),
+
+        .irq_sources                    ({3'b0, bts_pressed[4], bts_pressed[3], bts_pressed[2], bts_pressed[1], bts_pressed[0]}),
+        .irq_clear                      (plic_clear),
+        
+        .claim                          (plic_claim),
+        .complete                       (plic_complete),
+        .control                        (plic_control),
+        
+        .priorities                     (plic_priorities),
+        .enables                        (plic_enables),
+        .threshold                      (plic_threshold),
+        
+        .pending_gates                  (plic_pending),
+        .winner_id                      (plic_winner_id),
+        
+        .eip                            (plic_eip)
     );
 
     vga_top vga(
@@ -200,7 +243,8 @@ module top(
                 .clk         	        (clk_main),
                 .reset       	        (reset_sync_main_s2),
                 .bt_raw      	        (bts[i]),
-                .bt_state    	        (bts_state[i])
+                .bt_state    	        (bts_state[i]),
+                .bt_pressed             (bts_pressed[i])
             );
         end
     endgenerate

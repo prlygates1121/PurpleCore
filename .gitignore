@@ -42,3 +42,4 @@ mycpu/vivado_pid25048.str
 mycpu/vivado_pid29692.str
 mycpu/dfx_runtime.txt
 *.dcp
+mycpu/mycpu.srcs/sources_1/new/program.hex

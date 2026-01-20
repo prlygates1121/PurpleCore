@@ -39,6 +39,8 @@ module csr(
     input [31:0]        w_mip,
     input [31:0]        w_mboot,
 
+    input               plic_eip,
+
     output [31:0]       r_mstatus,
     output [31:0]       r_mie,
     output [31:0]       r_mtvec,
@@ -57,7 +59,7 @@ module csr(
     reg [31:0] mepc;
     reg [31:0] mcause;
     reg [31:0] mtval;
-    reg [31:0] mip;
+    // reg [31:0] mip;
     reg [31:0] mboot;
 
     always @(negedge clk) begin
@@ -69,9 +71,10 @@ module csr(
             mepc        <= 32'h0;
             mcause      <= 32'h0;
             mtval       <= 32'h0;
-            mip         <= 32'h0;
+            // mip         <= 32'h0;
             mboot       <= 32'h1;
         end else if (csr_w_en) begin
+            // programs write to CSRs via Zicsr instructions
             case (csr_w_addr)
                 `MSTATUS    :   mstatus     <= csr_w_data;
                 `MIE        :   mie         <= csr_w_data;
@@ -80,10 +83,11 @@ module csr(
                 `MEPC       :   mepc        <= csr_w_data;
                 `MCAUSE     :   mcause      <= csr_w_data;
                 `MTVAL      :   mtval       <= csr_w_data;
-                `MIP        :   mip         <= csr_w_data;
+                // `MIP        :   mip         <= csr_w_data;
                 `MBOOT      :   mboot       <= csr_w_data;
             endcase
         end else begin
+            // the core writes to CSRs directly via the following probes
             if (w_mstatus   != `CSR_NO_WRITE) mstatus   <= w_mstatus    ;
             if (w_mie       != `CSR_NO_WRITE) mie       <= w_mie        ;
             if (w_mtvec     != `CSR_NO_WRITE) mtvec     <= w_mtvec      ;
@@ -91,11 +95,12 @@ module csr(
             if (w_mepc      != `CSR_NO_WRITE) mepc      <= w_mepc       ;
             if (w_mcause    != `CSR_NO_WRITE) mcause    <= w_mcause     ;
             if (w_mtval     != `CSR_NO_WRITE) mtval     <= w_mtval      ;
-            if (w_mip       != `CSR_NO_WRITE) mip       <= w_mip        ;
+            // if (w_mip       != `CSR_NO_WRITE) mip       <= w_mip        ;
             if (w_mboot     != `CSR_NO_WRITE) mboot     <= w_mboot      ;
         end
     end
 
+    // programs read CSRs via Zicsr instructions
     always @(*) begin
         case (csr_r_addr)
             `MSTATUS    :   csr_r_data = mstatus    ;
@@ -105,12 +110,13 @@ module csr(
             `MEPC       :   csr_r_data = mepc       ;
             `MCAUSE     :   csr_r_data = mcause     ;
             `MTVAL      :   csr_r_data = mtval      ;
-            `MIP        :   csr_r_data = mip        ;
+            `MIP        :   csr_r_data = {20'b0, plic_eip, 11'b0};
             `MBOOT      :   csr_r_data = mboot      ;
             default:        csr_r_data = 32'h0;
         endcase
     end
 
+    // the core reads CSRs directly via the following probes
     assign r_mstatus    = mstatus;
     assign r_mie        = mie;
     assign r_mtvec      = mtvec;
@@ -118,6 +124,6 @@ module csr(
     assign r_mepc       = mepc;
     assign r_mcause     = mcause;
     assign r_mtval      = mtval;
-    assign r_mip        = mip;
+    assign r_mip        = {20'b0, plic_eip, 11'b0};
     assign r_mboot      = mboot;
 endmodule

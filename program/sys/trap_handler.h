@@ -1,5 +1,10 @@
 #include <stdint.h>
 
+#define MCAUSE_INTERRUPT            ((uint32_t)1 << 31)
+#define MCAUSE_INTERRUPT_CODE_MASK  (((uint32_t)1 << 31) - 1)
+
+#define MACHINE_EXTERNAL_INTERRUPT  11
+
 #define INST_ACCESS_FAULT  1
 #define LOAD_ACCESS_FAULT  5
 #define STORE_ACCESS_FAULT 7
@@ -43,6 +48,7 @@ struct trapframe {
     /* 132 */ uint32_t t6;
 };
 
+void plic_handler();
 void m_trap_handler();
 void m_trap_done();
 void ecall();
