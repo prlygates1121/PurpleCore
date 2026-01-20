@@ -14,7 +14,7 @@ endif
 #				3. discard standard library
 #				4. eliminate the weird .eh_frame sections that otherwise would be included in .text section
 #				5. specify linker script
-CFLAGS := -O3 -march=rv32imzicsr -mabi=ilp32 -nostdlib -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -T $(LINKER)
+CFLAGS := -O3 -march=rv32izicsr -mabi=ilp32 -nostdlib -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -T $(LINKER)
 
 # Define the executable name
 TARGET := output/my_program
